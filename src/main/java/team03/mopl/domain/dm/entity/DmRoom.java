@@ -26,7 +26,7 @@ public class DmRoom {
   @Column(name = "sender_id")
   private UUID senderId;
 
-  @Column(name = "recevier_id")
+  @Column(name = "receiver_id")
   private UUID receiverId;
 
   @CreatedDate
