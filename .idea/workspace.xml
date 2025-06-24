@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b45e8969-7f85-40f2-8c2f-9e9e2fe32781" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <list id="fe31bc01-1675-4883-90be-a2364cc6cc56" name="Changes by qwert" comment="" />
     <list id="eb5c57d5-1535-4de9-8e2f-49fc291ea46b" name="Changes by User" comment="" />
@@ -84,6 +85,9 @@
       <recent name="$PROJECT_DIR$/src/main/java/team03/mopl/domain/notification" />
       <recent name="$PROJECT_DIR$/src/main/java/team03/mopl/domain/follow" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration name="MoplApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
@@ -109,7 +113,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1750745110253</updated>
-      <workItem from="1750745111914" duration="11401000" />
+      <workItem from="1750745111914" duration="12044000" />
     </task>
     <servers />
   </component>
