@@ -31,7 +31,7 @@ public class ChatMessage {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name="room_id")
-  private Room room;
+  private ChatRoom chatRoom;
 
   @Column(name = "content", nullable = false)
   private String content;
