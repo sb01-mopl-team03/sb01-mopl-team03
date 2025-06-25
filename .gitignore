@@ -219,19 +219,19 @@ $RECYCLE.BIN/
 # Edit at https://www.toptal.com/developers/gitignore?templates=react
 
 ### react ###
-.DS_*
-*.log
-logs
+**/.DS_*
+**/*.log
+**/logs
 **/*.backup.*
 **/*.back.*
 
-node_modules
-bower_components
+**/node_modules
+**/bower_components
 
-*.sublime*
+**/*.sublime*
 
-psd
-thumb
-sketch
+**/psd
+**/thumb
+**/sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/react
