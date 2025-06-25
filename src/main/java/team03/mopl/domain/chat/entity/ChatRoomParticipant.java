@@ -1,4 +1,4 @@
-package team03.mopl.domain.chat;
+package team03.mopl.domain.chat.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
