@@ -1,8 +1,7 @@
-package team03.mopl.domain.user;
+package team03.mopl.jwt;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,11 +11,21 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import team03.mopl.domain.user.User;
 
 
 @Entity
 @Table(name = "jwt_sessions")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class JwtSession {
 
   @Id
@@ -41,5 +50,5 @@ public class JwtSession {
   private LocalDateTime expiresAt;
 
   @Column(name = "is_active", nullable = false)
-  private boolean isActive = true;
+  private boolean isActive;
 }
