@@ -212,3 +212,6 @@ $RECYCLE.BIN/
 
 # 환경변수
 .env
+
+# build
+build/
