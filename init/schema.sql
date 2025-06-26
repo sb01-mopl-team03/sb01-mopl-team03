@@ -111,7 +111,7 @@ CREATE TABLE "follows"
 );
 
 -- 채팅&시청방 테이블
-CREATE TABLE "rooms"
+CREATE TABLE "chat_rooms"
 (
     "id"         UUID PRIMARY KEY        NOT NULL,
     "content_id" UUID                    NOT NULL,
@@ -127,12 +127,12 @@ CREATE TABLE "chat_messages"
     "sender_id"  UUID                    NOT NULL,
     "content"    VARCHAR(255)            NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
-    FOREIGN KEY ("room_id") REFERENCES "rooms" ("id"),
+    FOREIGN KEY ("room_id") REFERENCES "chat_rooms" ("id"),
     FOREIGN KEY ("sender_id") REFERENCES "users" ("id")
 );
 
 -- 채팅방 참가자 테이블
-CREATE TABLE "room_participants"
+CREATE TABLE "chat_room_participants"
 (
     "id"         UUID PRIMARY KEY        NOT NULL,
     "user_id"    UUID                    NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE "room_participants"
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("user_id", "room_id"),
     FOREIGN KEY ("user_id") REFERENCES "users" ("id"),
-    FOREIGN KEY ("room_id") REFERENCES "rooms" ("id")
+    FOREIGN KEY ("room_id") REFERENCES "chat_rooms" ("id")
 );
 
 -- DM 룸 테이블
