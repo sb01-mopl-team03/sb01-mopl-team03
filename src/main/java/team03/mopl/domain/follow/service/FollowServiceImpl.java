@@ -19,7 +19,7 @@ public class FollowServiceImpl implements FollowService {
   public void follow(UUID followerId, UUID followingId) {
     User follower = userRepository.findById(followerId).orElseThrow();
     User following = userRepository.findById(followingId).orElseThrow();
-    if( !follower.equals(following) ) {
+    if( !followingId.equals(followerId) ) {
       throw new IllegalArgumentException(); //자신을 팔로잉할 수 없음
     }
     boolean alreadyFollowing = followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
@@ -36,15 +36,20 @@ public class FollowServiceImpl implements FollowService {
     User following = userRepository.findById(followingId).orElseThrow();
     followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
   }
-
+  /*
+  * 
+  * UserDto 받고나서 반환 값 List<UUID> -> List<UserDto> 로 수정하기
+  * 
+  * */
+  //나의 팔로잉 목록
   @Override
   public List<UUID> getFollowing(UUID userId) {
     return followRepository.findAllByFollowerId(userId).stream().map(Follow::getFollowingId).toList();
   }
-
+  //나를 팔로우하는 사람들 목록
   @Override
   public List<UUID> getFollowers(UUID userId) {
-    return followRepository.findAllByFollowerId(userId).stream().map(Follow::getFollowerId).toList();
+    return followRepository.findAllByFollowingId(userId).stream().map(Follow::getFollowerId).toList();
   }
 
   @Override
