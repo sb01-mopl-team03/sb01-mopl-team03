@@ -3,7 +3,9 @@ name : Run Tests
 on:
   pull_request:
     branches:
-      - "*"
+      - "main"
+      - "dev"
+      - "release/**"
 
 jobs:
   test:
