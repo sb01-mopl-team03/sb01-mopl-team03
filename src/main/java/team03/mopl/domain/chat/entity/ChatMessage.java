@@ -9,8 +9,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.user.User;
 
@@ -20,7 +23,9 @@ import java.util.UUID;
 @Entity
 @Getter
 @Table(name="chat_messages")
-@RequiredArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessage {
 
   @Id
@@ -42,9 +47,4 @@ public class ChatMessage {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  public ChatMessage(User sender, ChatRoom chatRoom, String content) {
-    this.sender = sender;
-    this.chatRoom = chatRoom;
-    this.content = content;
-  }
 }
