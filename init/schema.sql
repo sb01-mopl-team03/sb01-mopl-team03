@@ -54,7 +54,7 @@ CREATE TABLE "reviews"
     "content_id" UUID                    NOT NULL,
     "title"      VARCHAR(255)            NOT NULL,
     "comment"    TEXT                    NULL,
-    "rating"     REAL                    NOT NULL CHECK (rating >= 0.0 AND rating <= 5.0),
+    "rating"     DECIMAL(2,1)            NOT NULL CHECK (rating >= 0.0 AND rating <= 5.0),
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("user_id", "content_id"),
