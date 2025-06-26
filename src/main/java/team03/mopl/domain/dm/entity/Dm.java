@@ -14,7 +14,7 @@ import java.util.UUID;
 import lombok.Getter;
 
 @Entity
-@Table(name = "dm")
+@Table(name = "dms")
 @Getter
 public class Dm {
 
