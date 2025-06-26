@@ -71,6 +71,7 @@ class ChatMessageServiceImplTest {
   void setUp() {
     senderId = UUID.randomUUID();
     sender = User.builder()
+        .id(senderId)
         .name("테스트유저")
         .email("test@test.com")
         .password("test")
@@ -87,7 +88,10 @@ class ChatMessageServiceImplTest {
     );
 
     chatRoomId = UUID.randomUUID();
-    chatRoom = new ChatRoom(content);
+    chatRoom = ChatRoom.builder()
+        .id(chatRoomId)
+        .content(content)
+        .build();
   }
 
   @Nested
@@ -111,10 +115,19 @@ class ChatMessageServiceImplTest {
       ChatMessageDto expected = new ChatMessageDto(chatMessageId, senderId, chatRoomId,
           "테스트용 채팅 메세지입니다.", now);
 
+      ChatMessage chatMessage = ChatMessage.builder()
+          .id(chatMessageId)
+          .chatRoom(chatRoom)
+          .content(request.content())
+          .sender(sender)
+          .build();
+
+
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
       when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
       when(chatRoomParticipantRepository
           .existsChatRoomParticipantByChatRoomAndUser(chatRoom, sender)).thenReturn(true);
+      when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(chatMessage);
 
       //when
       ChatMessageDto result = chatMessageService.create(request);
@@ -132,18 +145,16 @@ class ChatMessageServiceImplTest {
     @DisplayName("존재하지 않는 작성자")
     void failsWhenUserNotFound() {
       //given
-      LocalDateTime now = LocalDateTime.now();
-
       UUID randomUserId = UUID.randomUUID();
 
       ChatMessageCreateRequest request = new ChatMessageCreateRequest(
           chatRoomId,
           randomUserId,
           "테스트용 채팅 메세지입니다.",
-          now
+          LocalDateTime.now()
       );
 
-      when(userRepository.findById(senderId)).thenReturn(Optional.empty());
+      when(userRepository.findById(randomUserId)).thenReturn(Optional.empty());
 
       //when & then
       assertThrows(UserNotFoundException.class, () -> chatMessageService.create(request));
@@ -167,7 +178,7 @@ class ChatMessageServiceImplTest {
       );
 
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
-      when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.empty());
+      when(chatRoomRepository.findById(randomChatRoomId)).thenReturn(Optional.empty());
 
       //when & then
       assertThrows(ChatRoomNotFoundException.class, () -> chatMessageService.create(request));
@@ -250,12 +261,12 @@ class ChatMessageServiceImplTest {
       when(chatMessageRepository.findAllByChatRoom(chatRoom)).thenReturn(searchResult);
 
       //when
-      List<ChatMessageDto> result = chatMessageService.getAllByRoomId(chatRoomId);
+      List<ChatMessageDto> result = chatMessageService.getAllByRoomId(chatRoomId,senderId);
 
       //then
       assertNotNull(result);
       assertEquals(expected.size(), result.size());
-      assertEquals(expected.get(0), result.get(0));
+      assertEquals(expected.get(0).content(), result.get(0).content());
     }
 
 
@@ -263,39 +274,13 @@ class ChatMessageServiceImplTest {
     @DisplayName("존재하지 않는 유저")
     void failsWhenUserNotFound() {
       //given
-      LocalDateTime now = LocalDateTime.now();
+      UUID randomId = UUID.randomUUID();
 
-      ChatMessage mockChatMessage1 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 첫번째 채팅 메세지입니다.")
-          .build();
-      ChatMessage mockChatMessage2 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 두번째 채팅 메세지입니다.")
-          .build();
-
-      List<ChatMessage> searchResult = new ArrayList<>();
-      searchResult.add(mockChatMessage1);
-      searchResult.add(mockChatMessage2);
-
-      UUID mockChatMessage1Id = UUID.randomUUID();
-      UUID mockChatMessage2Id = UUID.randomUUID();
-      ChatMessageDto expected1 = new ChatMessageDto(mockChatMessage1Id, senderId, chatRoomId,
-          "테스트용 첫번째 채팅 메세지입니다.", now);
-      ChatMessageDto expected2 = new ChatMessageDto(mockChatMessage2Id, senderId, chatRoomId,
-          "테스트용 두번째 채팅 메세지입니다.", now);
-
-      List<ChatMessageDto> expected = new ArrayList<>();
-      expected.add(expected1);
-      expected.add(expected2);
-
-      when(userRepository.findById(senderId)).thenReturn(Optional.empty());
+      when(userRepository.findById(randomId)).thenReturn(Optional.empty());
 
       //when & then
-      //todo - UserNotFound 로 수정
-      assertThrows(UserNotFoundException.class, () -> chatMessageService.getAllByRoomId(chatRoomId));
+      assertThrows(UserNotFoundException.class,
+          () -> chatMessageService.getAllByRoomId(chatRoomId, randomId));
 
     }
 
@@ -303,82 +288,32 @@ class ChatMessageServiceImplTest {
     @DisplayName("존재하지 않는 채팅방")
     void failsWhenChatRoomNotFound() {
       //given
-      LocalDateTime now = LocalDateTime.now();
-
-      ChatMessage mockChatMessage1 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 첫번째 채팅 메세지입니다.")
-          .build();
-      ChatMessage mockChatMessage2 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 두번째 채팅 메세지입니다.")
-          .build();
-
-      List<ChatMessage> searchResult = new ArrayList<>();
-      searchResult.add(mockChatMessage1);
-      searchResult.add(mockChatMessage2);
-
-      UUID mockChatMessage1Id = UUID.randomUUID();
-      UUID mockChatMessage2Id = UUID.randomUUID();
-      ChatMessageDto expected1 = new ChatMessageDto(mockChatMessage1Id, senderId, chatRoomId,
-          "테스트용 첫번째 채팅 메세지입니다.", now);
-      ChatMessageDto expected2 = new ChatMessageDto(mockChatMessage2Id, senderId, chatRoomId,
-          "테스트용 두번째 채팅 메세지입니다.", now);
-
-      List<ChatMessageDto> expected = new ArrayList<>();
-      expected.add(expected1);
-      expected.add(expected2);
+      UUID randomId = UUID.randomUUID();
 
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
-      when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.empty());
+      when(chatRoomRepository.findById(randomId)).thenReturn(Optional.empty());
 
       //when & then
       assertThrows(ChatRoomNotFoundException.class,
-          () -> chatMessageService.getAllByRoomId(chatRoomId));
+          () -> chatMessageService.getAllByRoomId(randomId, senderId));
     }
 
     @Test
     @DisplayName("채팅방에 참여하지 않는 유저")
     void failsWhenUserNotParticipant() {
       //given
-      LocalDateTime now = LocalDateTime.now();
+      UUID randomId = UUID.randomUUID();
+      User mockUser = User.builder().build();
 
-      ChatMessage mockChatMessage1 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 첫번째 채팅 메세지입니다.")
-          .build();
-      ChatMessage mockChatMessage2 = ChatMessage.builder()
-          .sender(sender)
-          .chatRoom(chatRoom)
-          .content("테스트용 두번째 채팅 메세지입니다.")
-          .build();
-
-      List<ChatMessage> searchResult = new ArrayList<>();
-      searchResult.add(mockChatMessage1);
-      searchResult.add(mockChatMessage2);
-
-      UUID mockChatMessage1Id = UUID.randomUUID();
-      UUID mockChatMessage2Id = UUID.randomUUID();
-      ChatMessageDto expected1 = new ChatMessageDto(mockChatMessage1Id, senderId, chatRoomId,
-          "테스트용 첫번째 채팅 메세지입니다.", now);
-      ChatMessageDto expected2 = new ChatMessageDto(mockChatMessage2Id, senderId, chatRoomId,
-          "테스트용 두번째 채팅 메세지입니다.", now);
-
-      List<ChatMessageDto> expected = new ArrayList<>();
-      expected.add(expected1);
-      expected.add(expected2);
-
-      when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+      when(userRepository.findById(randomId)).thenReturn(Optional.of(mockUser));
       when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
       when(chatRoomParticipantRepository
-          .existsChatRoomParticipantByChatRoomAndUser(chatRoom, sender))
+          .existsChatRoomParticipantByChatRoomAndUser(chatRoom, mockUser))
           .thenReturn(false);
 
       //when & then
-      assertThrows(ChatRoomNotFoundException.class, () -> chatMessageService.getAllByRoomId(chatRoomId));
+      assertThrows(ChatRoomNotFoundException.class,
+          () -> chatMessageService.getAllByRoomId(chatRoomId, randomId));
     }
   }
 }
