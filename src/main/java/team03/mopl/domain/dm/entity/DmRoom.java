@@ -36,12 +36,6 @@ public class DmRoom {
   @OneToMany(mappedBy = "dmRoom", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Dm> messages = new ArrayList<>();
 
-  //== 연관 관계 편의 메서드==//
-  public void addMessage(Dm dm) {
-    messages.add(dm);
-    dm.setDmRoom(this);
-  }
-
   // 기본 생성자 & 생성자
   protected DmRoom() {}
 
@@ -49,4 +43,22 @@ public class DmRoom {
     this.senderId = senderId;
     this.receiverId = receiverId;
   }
+  // 도메인 메서드
+  public boolean setSenderId(UUID senderId) {
+    this.senderId = senderId;
+    return true;
+  }
+  public boolean nobodyInRoom() {
+    if( senderId == null && receiverId == null ) {
+      return true;
+    }
+    return false;
+  }
+
+  //== 연관 관계 편의 메서드==//
+  public void addMessage(Dm dm) {
+    messages.add(dm);
+    dm.setDmRoom(this);
+  }
+
 }

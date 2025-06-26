@@ -16,7 +16,6 @@ import org.springframework.data.annotation.CreatedDate;
 @Entity
 @Table(name = "follows")
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Follow {
 
@@ -36,4 +35,8 @@ public class Follow {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
+  public Follow(UUID followerId, UUID followingId) {
+    this.followerId = followerId;
+    this.followingId = followingId;
+  }
 }

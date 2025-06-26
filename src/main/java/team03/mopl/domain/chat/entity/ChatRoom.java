@@ -1,4 +1,4 @@
-package team03.mopl.domain.chat;
+package team03.mopl.domain.chat.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,14 +11,16 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.content.Content;
 
 
 @Entity
-@Table(name = "rooms")
+@Table(name = "chat_rooms")
 @Getter
-public class Room {
+@NoArgsConstructor
+public class ChatRoom {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -31,4 +33,8 @@ public class Room {
   @ManyToOne
   @JoinColumn(name = "content_id", nullable = false)
   private Content content;
+
+  public ChatRoom(Content content) {
+    this.content = content;
+  }
 }
