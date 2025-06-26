@@ -1,4 +1,4 @@
-package team03.mopl.domain.user;
+package team03.mopl.domain.auth;
 
 import jakarta.validation.constraints.NotBlank;
 
