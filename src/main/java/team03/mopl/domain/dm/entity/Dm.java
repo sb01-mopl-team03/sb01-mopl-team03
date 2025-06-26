@@ -14,7 +14,7 @@ import java.util.UUID;
 import lombok.Getter;
 
 @Entity
-@Table(name = "dm")
+@Table(name = "dms")
 @Getter
 public class Dm {
 
@@ -44,6 +44,10 @@ public class Dm {
     if (!dmRoom.getMessages().contains(this)) {
       dmRoom.getMessages().add(this);
     }
+  }
+
+  public void setRead(){
+    isRead = true;
   }
 
   protected Dm() {}
