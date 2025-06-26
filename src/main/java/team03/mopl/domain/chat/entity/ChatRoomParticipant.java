@@ -15,7 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.user.User;
 
 @Entity
-@Table(name = "room_participants", uniqueConstraints = {
+@Table(name = "chat_room_participants", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "room_id"})
 })
 public class ChatRoomParticipant {

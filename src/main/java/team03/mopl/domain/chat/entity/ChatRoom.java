@@ -17,7 +17,7 @@ import team03.mopl.domain.content.Content;
 
 
 @Entity
-@Table(name = "rooms")
+@Table(name = "chat_rooms")
 @Getter
 @NoArgsConstructor
 public class ChatRoom {
