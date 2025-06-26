@@ -19,7 +19,8 @@ public class DmRoomServiceImpl implements DmRoomService {
   @Override
   @Transactional
   public DmRoom createRoom(UUID senderId, UUID receiverId) {
-    return findOrCreateRoom(senderId, receiverId);
+    //추후 유저 검증 필요
+    return dmRoomRepository.save(new DmRoom(senderId, receiverId));
   }
 
   @Override
@@ -32,11 +33,13 @@ public class DmRoomServiceImpl implements DmRoomService {
   public DmRoom findOrCreateRoom(UUID userA, UUID userB) {
     return dmRoomRepository.findByRoomBetweenUsers(userA, userB).orElseGet(()->dmRoomRepository.save(createRoom(userA, userB)));
   }
+
   // 유저의 모든 채팅방
   @Override
   public List<DmRoom> getAllRoomsForUser(UUID userId) {
     return dmRoomRepository.findBySenderIdOrReceiverId(userId, userId);
   }
+
   // 두 유저의 개인 채팅방 존재 여부
   @Override
   public boolean existsBetween(UUID userA, UUID userB) {
