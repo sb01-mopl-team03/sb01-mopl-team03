@@ -24,7 +24,7 @@ import team03.mopl.domain.user.User;
 @Table(name = "jwt_sessions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class JwtSession {
 

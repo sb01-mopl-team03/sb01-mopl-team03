@@ -25,10 +25,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class User {
 
   @Id
@@ -59,10 +58,12 @@ public class User {
   @Column(nullable = false)
   private boolean isLocked;
 
-  public User(String email, String name, String password, Role role){
-    this.email = email;
-    this.name = name;
-    this.password = password;
-    this.role = role;
+  public void update(String name, String password) {
+    if (name != null && !name.equals(this.name)) {
+      this.name = name;
+    }
+    if (password != null && !password.equals(this.password)) {
+      this.password = password;
+    }
   }
 }

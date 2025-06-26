@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import team03.mopl.common.exception.user.DuplicatedEmailException;
+import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 
 @Service
@@ -20,6 +22,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserResponse create(UserCreateRequest request) {
+    if(userRepository.existsByEmail(request.email())){
+      throw new DuplicatedEmailException();
+    }
+    if (userRepository.existsByName(request.name())){
+      throw new DuplicatedNameException();
+    }
     User user = User.builder()
         .name(request.name())
         .email(request.email())
@@ -39,7 +47,10 @@ public class UserServiceImpl implements UserService {
   public UserResponse update(UUID userId, UserUpdateRequest request) {
     User user= userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
-    user.setPassword(passwordEncoder.encode(request.password()));
+    if(request.newPassword()!=null) {
+      String encodedPassword = passwordEncoder.encode(request.newPassword());
+      user.update(request.newName(),encodedPassword);
+    }
     return UserResponse.from(user);
   }
 
