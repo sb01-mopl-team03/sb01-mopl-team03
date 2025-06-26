@@ -115,7 +115,9 @@ CREATE TABLE "chat_rooms"
 (
     "id"         UUID PRIMARY KEY        NOT NULL,
     "content_id" UUID                    NOT NULL,
+    "owner_id"   UUID                    NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
+    FOREIGN KEY ("owner_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
 );
 
