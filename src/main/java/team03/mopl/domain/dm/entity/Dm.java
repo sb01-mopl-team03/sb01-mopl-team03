@@ -46,6 +46,10 @@ public class Dm {
     }
   }
 
+  public void setRead(){
+    isRead = true;
+  }
+
   protected Dm() {}
 
   public Dm(UUID senderId, String content) {
