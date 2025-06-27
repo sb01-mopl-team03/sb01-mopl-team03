@@ -12,5 +12,5 @@ public interface ChatMessageService {
   ChatMessageDto create(ChatMessageCreateRequest request);
 
   //메세지 조회
-  List<ChatMessageDto> getAllByRoomId(UUID chatRoomId);
+  List<ChatMessageDto> getAllByRoomId(UUID chatRoomId, UUID userId);
 }
