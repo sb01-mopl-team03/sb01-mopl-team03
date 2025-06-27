@@ -39,4 +39,11 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
+  public Content(String title, String description, ContentType contentType, LocalDateTime releaseDate) {
+    this.title = title;
+    this.description = description;
+    this.contentType = contentType;
+    this.releaseDate = releaseDate;
+  }
+
 }
