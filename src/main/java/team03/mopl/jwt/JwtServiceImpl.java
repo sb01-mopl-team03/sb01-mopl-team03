@@ -1,5 +1,6 @@
 package team03.mopl.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -14,6 +15,7 @@ public class JwtServiceImpl implements JwtService {
 
   private final JwtSessionRepository jwtSessionRepository;
   private final JwtProvider jwtProvider;
+  private final JwtBlacklist jwtBlacklist;
 
   @Override
   @Transactional
@@ -67,7 +69,14 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public void invalidateSessionByRefreshToken(String refreshToken) {
-    jwtSessionRepository.deleteByRefreshToken(refreshToken);
+  public void invalidateSessionByRefreshToken(String refreshToken, boolean useBlacklist) {
+    jwtSessionRepository.findByRefreshToken(refreshToken).ifPresent(session -> {
+      if (useBlacklist) {
+        String accessToken=session.getAccessToken();
+        long exp = jwtProvider.getClaims(accessToken).getExpiration().getTime();
+        jwtBlacklist.addBlacklist(session.getAccessToken(), exp);
+      }
+      jwtSessionRepository.delete(session);
+    });
   }
 }

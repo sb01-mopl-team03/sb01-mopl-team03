@@ -33,8 +33,13 @@ class JwtProviderTest {
   @TestConfiguration
   static class Config {
     @Bean
+    public JwtBlacklist jwtBlacklist() {
+      return new JwtBlacklist();
+    }
+
+    @Bean
     public JwtProvider jwtProvider() {
-      return new JwtProvider();
+      return new JwtProvider(jwtBlacklist());
     }
   }
 

@@ -1,5 +1,6 @@
 package team03.mopl.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -20,6 +21,7 @@ import team03.mopl.domain.user.User;
 @Slf4j
 public class JwtProvider {
 
+  private final JwtBlacklist jwtBlacklist;
   @Value("${jwt.secret}")
   private String jwtSecret;
 
@@ -61,6 +63,9 @@ public class JwtProvider {
 
 
   public boolean validateToken(String token) {
+    if (jwtBlacklist.blacklisted(token)){
+      return false;
+    }
     try{
       Jwts.parser()
           .verifyWith(getSigningKey())
@@ -74,6 +79,14 @@ public class JwtProvider {
       log.warn("유효하지 않는 토큰입니다. : {}" , e.getMessage());
       return false;
     }
+  }
+
+  public Claims getClaims(String token) {
+    return Jwts.parser()
+        .setSigningKey(getSigningKey())
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
   }
 
   public String extractEmail(String token) {
