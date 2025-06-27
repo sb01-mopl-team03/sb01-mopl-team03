@@ -23,13 +23,12 @@ import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.chat.dto.ChatRoomCreateRequest;
 import team03.mopl.domain.chat.dto.ChatRoomDto;
 import team03.mopl.domain.chat.entity.ChatRoom;
-import team03.mopl.domain.chat.entity.ChatRoomParticipant;
 import team03.mopl.domain.chat.exception.ChatRoomNotFoundException;
 import team03.mopl.domain.chat.repository.ChatRoomParticipantRepository;
 import team03.mopl.domain.chat.repository.ChatRoomRepository;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentRepository;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
@@ -264,7 +263,7 @@ class ChatRoomServiceImplTest {
       when(chatRoomParticipantRepository.countByChatRoomId(chatRoomId)).thenReturn(1L);
 
       //when
-      ChatRoomDto chatRoomDto = chatRoomService.join(participantId);
+      ChatRoomDto chatRoomDto = chatRoomService.join(chatRoomId ,participantId);
 
       //then
       assertEquals(expected.id(), chatRoomDto.id());
@@ -289,7 +288,7 @@ class ChatRoomServiceImplTest {
       when(userRepository.findById(randomId)).thenReturn(Optional.empty());
 
       //when & then
-      assertThrows(UserNotFoundException.class, ()->  chatRoomService.join(randomId));
+      assertThrows(UserNotFoundException.class, ()->  chatRoomService.join(chatRoomId, randomId));
 
       verify(chatRoomParticipantRepository, never())
           .existsChatRoomParticipantByChatRoomAndUser(chatRoom, any(User.class));
@@ -317,7 +316,7 @@ class ChatRoomServiceImplTest {
       // vs chatRoomParticipantRepository 로 채널 있는지 검사 -> 같은 걸로 이미 참여한 유저인지 검사
 
       //when & then
-      assertThrows(ChatRoomNotFoundException.class , () -> chatRoomService.join(participantId));
+      assertThrows(ChatRoomNotFoundException.class , () -> chatRoomService.join(randomId, participantId));
 
       verify(chatRoomParticipantRepository, never())
           .existsChatRoomParticipantByChatRoomAndUser(any(ChatRoom.class), participant);
