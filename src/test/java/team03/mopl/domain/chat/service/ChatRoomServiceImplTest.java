@@ -18,11 +18,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import team03.mopl.common.exception.MoplException;
+import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.chat.dto.ChatRoomContentWithHeadcountDto;
 import team03.mopl.domain.chat.dto.ChatRoomCreateRequest;
 import team03.mopl.domain.chat.dto.ChatRoomDto;
 import team03.mopl.domain.chat.entity.ChatRoom;
+import team03.mopl.domain.chat.entity.ChatRoomParticipant;
 import team03.mopl.domain.chat.exception.ChatRoomNotFoundException;
 import team03.mopl.domain.chat.repository.ChatRoomParticipantRepository;
 import team03.mopl.domain.chat.repository.ChatRoomRepository;
@@ -92,16 +94,17 @@ class ChatRoomServiceImplTest {
       );
 
       UUID chatRoomId = UUID.randomUUID();
-      ChatRoomDto expected = new ChatRoomDto(
-          chatRoomId,
-          contentId,
-          userId,
-          1L
-      );
+      ChatRoom chatRoom = ChatRoom.builder()
+          .id(chatRoomId)
+          .content(content)
+          .ownerId(userId)
+          .build();
+
+      ChatRoomDto expected = ChatRoomDto.fromChatRoomWithHeadcount(chatRoom,1L);
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-      when(chatRoomParticipantRepository.countByChatRoomId(chatRoomId)).thenReturn(1L);
+      when(chatRoomRepository.save(any(ChatRoom.class))).thenReturn(chatRoom);
 
       //when
       ChatRoomDto chatRoomDto = chatRoomService.create(request);
@@ -119,15 +122,14 @@ class ChatRoomServiceImplTest {
       UUID randomId = UUID.randomUUID();
 
       ChatRoomCreateRequest request = new ChatRoomCreateRequest(
-          contentId,
+          randomId,
           userId
       );
 
-      when(contentRepository.findById(randomId)).thenReturn(Optional.empty());
+      when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
       //when & then
-      //todo - ContentNotFound 만들어지면 수정
-      assertThrows(MoplException.class, () -> chatRoomService.create(request));
+      assertThrows(ContentNotFoundException.class, () -> chatRoomService.create(request));
 
       verify(chatRoomRepository, never()).save(any(ChatRoom.class));
     }
@@ -159,21 +161,20 @@ class ChatRoomServiceImplTest {
 
       List<ChatRoom> chatRooms = List.of(chatRoom1, chatRoom2);
 
+      List<ChatRoomContentWithHeadcountDto> queryResult = chatRooms.stream()
+          .map(c-> new ChatRoomContentWithHeadcountDto(c, content, 1L ))
+          .toList();
+
       List<ChatRoomDto> expected = chatRooms.stream()
           .map(chatRoom -> ChatRoomDto.fromChatRoomWithHeadcount(chatRoom, 1L))
           .toList();
 
-      when(chatRoomRepository.findAll()).thenReturn(chatRooms);
-      when(chatRoomParticipantRepository.countByChatRoomId(chatRoom1Id)).thenReturn(1L);
-      when(chatRoomParticipantRepository.countByChatRoomId(chatRoom2Id)).thenReturn(1L);
-
+      when(chatRoomParticipantRepository.getAllChatRoomContentWithHeadcountDto()).thenReturn(queryResult);
       //when
       List<ChatRoomDto> chatRoomDtos = chatRoomService.getAll();
 
       //then
       assertEquals(expected.size(), chatRoomDtos.size());
-      assertEquals(expected.get(0), chatRoomDtos.get(0));
-      assertEquals(expected.get(1), chatRoomDtos.get(1));
     }
 
     @Test
@@ -256,11 +257,11 @@ class ChatRoomServiceImplTest {
       //todo - 논의
       // 참여자의 정보들(참여자목록)도 같이 넘겨주어야할까?
 
-      when(userRepository.findById(participantId)).thenReturn(Optional.empty());
+      when(userRepository.findById(participantId)).thenReturn(Optional.of(participant));
       when(chatRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(chatRoom));
       when(chatRoomParticipantRepository.existsChatRoomParticipantByChatRoomAndUser(chatRoom, participant))
           .thenReturn(false);
-      when(chatRoomParticipantRepository.countByChatRoomId(chatRoomId)).thenReturn(1L);
+      when(chatRoomParticipantRepository.countByChatRoomId(chatRoomId)).thenReturn(2L);
 
       //when
       ChatRoomDto chatRoomDto = chatRoomService.join(chatRoomId ,participantId);
@@ -285,13 +286,10 @@ class ChatRoomServiceImplTest {
           .content(content)
           .build();
 
-      when(userRepository.findById(randomId)).thenReturn(Optional.empty());
-
       //when & then
       assertThrows(UserNotFoundException.class, ()->  chatRoomService.join(chatRoomId, randomId));
 
-      verify(chatRoomParticipantRepository, never())
-          .existsChatRoomParticipantByChatRoomAndUser(chatRoom, any(User.class));
+      verify(chatRoomParticipantRepository, never()).save(any(ChatRoomParticipant.class));
       verify(chatRoomParticipantRepository, never()).countByChatRoomId(chatRoomId);
     }
 
@@ -310,7 +308,7 @@ class ChatRoomServiceImplTest {
 
       UUID randomId = UUID.randomUUID();
 
-      when(chatRoomRepository.findById(randomId)).thenReturn(Optional.empty());
+      when(userRepository.findById(participantId)).thenReturn(Optional.of(user));
       //todo - 로직 고민
       //chatRoomRepository 에서 채널 있는지 검사 -> chatRoomParticipantRepository 로 이미 참여한 유저인지 검사
       // vs chatRoomParticipantRepository 로 채널 있는지 검사 -> 같은 걸로 이미 참여한 유저인지 검사
@@ -318,8 +316,7 @@ class ChatRoomServiceImplTest {
       //when & then
       assertThrows(ChatRoomNotFoundException.class , () -> chatRoomService.join(randomId, participantId));
 
-      verify(chatRoomParticipantRepository, never())
-          .existsChatRoomParticipantByChatRoomAndUser(any(ChatRoom.class), participant);
+      verify(chatRoomParticipantRepository, never()).save(any(ChatRoomParticipant.class));
       verify(chatRoomParticipantRepository, never()).countByChatRoomId(randomId);
     }
   }
