@@ -12,9 +12,8 @@ public enum ErrorCode {
 
   CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONTENT_001", "존재하지 않는 콘텐츠입니다."),
 
-  REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다."),
+  REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다.");
 
-  CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다.");
 
   private HttpStatus status;
   // 추적하기 쉽도록하는 필드
