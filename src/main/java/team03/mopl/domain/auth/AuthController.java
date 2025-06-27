@@ -3,10 +3,13 @@ package team03.mopl.domain.auth;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
+import team03.mopl.jwt.CustomUserDetails;
 import team03.mopl.jwt.JwtProvider;
 import team03.mopl.jwt.JwtService;
 import team03.mopl.jwt.TokenPair;
@@ -24,21 +28,23 @@ import team03.mopl.jwt.TokenPair;
 @RequiredArgsConstructor
 public class AuthController {
 
-  private final JwtService jwtService;
-  private AuthService authService;
+  private final AuthService authService;
+  private final UserRepository userRepository;
 
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExpiration;
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-    TokenPair tokenPair = authService.login(request.email());
+    TokenPair tokenPair = authService.login(request.email(), request.password());
 
     Cookie cookie = CookeUtil.createResponseCookie(tokenPair.getRefreshToken(),
         refreshTokenExpiration);
     response.addCookie(cookie);
 
-    return ResponseEntity.ok().body(tokenPair.getAccessToken());
+    User user = userRepository.findByEmail(request.email()).orElseThrow();
+    return ResponseEntity.ok().body(new LoginResponse(tokenPair.getAccessToken(),user.isTempPassword()));
+    //isTempPassword true 면 change-password 로
   }
 
   @PostMapping("/logout")
@@ -84,5 +90,18 @@ public class AuthController {
             .map(ResponseEntity::ok)
             .orElseGet(
                 () -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token invalid"));
+  }
+
+  @PostMapping("/temp-password")
+  public ResponseEntity<?> resetPassword(@RequestBody TempPasswordRequest request){
+    authService.resetPassword(request.email());
+    return ResponseEntity.ok("임시 비밀번호 발급");
+  }
+
+  @PostMapping("/change-password")
+  public ResponseEntity<?> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
+      @RequestBody ChangePasswordRequest request){
+    authService.changePassword(userDetails.getId(),request.newPassword());
+    return ResponseEntity.ok("비밀번호 변경완료");
   }
 }

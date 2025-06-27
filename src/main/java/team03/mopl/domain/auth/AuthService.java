@@ -1,9 +1,12 @@
 package team03.mopl.domain.auth;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.user.User;
@@ -19,13 +22,29 @@ public class AuthService {
   private final UserRepository userRepository;
   private final JwtService jwtService;
   private final JwtProvider jwtProvider;
+  private final PasswordEncoder passwordEncoder;
+  private final EmailService emailService;
 
-  @Value("${jwt.refresh-token-expriation}")
+
+  @Value("${auth.temp-password-expiration}")
+  private long tempPasswordExpirationMinutes;
+
+  @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExp;
 
-  public TokenPair login(String email) {
+  public TokenPair login(String email, String password) {
     User user = userRepository.findByEmail(email)
         .orElseThrow(UserNotFoundException::new);
+
+    if(!passwordEncoder.matches(password, user.getPassword())) {
+      throw new IllegalStateException("비밀번호가 일치x");
+    }
+
+    if(user.isTempPassword()){
+      if (user.getTempPasswordExpiredAt().isBefore(LocalDateTime.now())){
+        throw new IllegalStateException("Temporary password expired");
+      }
+    }
 
     jwtService.delete(user);
 
@@ -47,5 +66,37 @@ public class AuthService {
 
   public void invalidateSessionByRefreshToken(String refreshToken) {
     jwtService.invalidateSessionByRefreshToken(refreshToken);
+  }
+
+  public void resetPassword(String email) {
+    User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+
+    String tempPassword=generateSecureTempPassword();
+    String encoded= passwordEncoder.encode(tempPassword);
+
+    User updatedUser= user.toBuilder()
+        .password(encoded)
+        .isTempPassword(true)
+        .tempPasswordExpiredAt(LocalDateTime.now().plusMinutes(tempPasswordExpirationMinutes))
+        .build();
+
+    userRepository.save(updatedUser);
+    emailService.sendTempPassword(user.getEmail(),tempPassword);
+  }
+
+  private String generateSecureTempPassword() {
+    return "M0pl!"+ UUID.randomUUID().toString().substring(0,4);
+  }
+
+  public void changePassword(UUID userId, String newPassword) {
+    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+
+    User updatedUser=user.toBuilder()
+        .password(passwordEncoder.encode(newPassword))
+        .isTempPassword(false)
+        .tempPasswordExpiredAt(null)
+        .build();
+
+    userRepository.save(updatedUser);
   }
 }
