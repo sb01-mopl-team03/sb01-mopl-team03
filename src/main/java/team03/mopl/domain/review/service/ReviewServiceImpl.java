@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.review.dto.ReviewCreateRequest;
 import team03.mopl.domain.review.dto.ReviewResponse;
@@ -29,17 +30,19 @@ public class ReviewServiceImpl implements ReviewService {
   @Override
   public ReviewResponse create(ReviewCreateRequest request) {
 
-    if (!userRepository.existsById(request.user().getId())) {
-      log.debug("존재하지 않는 유저입니다. 유저 이름: ", request.user().getName());
+    if (!userRepository.existsById(request.userId())) {
+      log.debug("존재하지 않는 유저입니다. 유저 ID: ", request.userId());
       throw new UserNotFoundException();
     }
 
-    if (!contentRepository.existsById(request.content().getId())) {
-      log.debug("존재하지 않는 콘텐츠입니다. 콘텐츠 이름: ", request.content().getTitle());
+    if (!contentRepository.existsById(request.contentId())) {
+      log.debug("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: ", request.contentId());
       throw new ContentNotFoundException();
     }
 
-    Review review = new Review(request.user(), request.content(), request.title(), request.comment(), request.rating());
+    User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
+    Content content = contentRepository.findById(request.contentId()).orElseThrow(ContentNotFoundException::new);
+    Review review = new Review(user, content, request.title(), request.comment(), request.rating());
     return ReviewResponse.from(reviewRepository.save(review));
   }
 
