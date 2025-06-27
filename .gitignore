@@ -219,6 +219,9 @@ $RECYCLE.BIN/
 # build
 build/
 
+# Problems Report
+**/reports/problems
+
 # frontend 프론트엔드
 
  Created by https://www.toptal.com/developers/gitignore/api/react
