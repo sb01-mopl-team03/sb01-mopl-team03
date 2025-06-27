@@ -10,6 +10,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -19,12 +22,17 @@ import team03.mopl.domain.content.Content;
 @Entity
 @Table(name = "chat_rooms")
 @Getter
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatRoom {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
+
+  @Column(name = "owner_id", nullable = false)
+  private UUID ownerId;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
