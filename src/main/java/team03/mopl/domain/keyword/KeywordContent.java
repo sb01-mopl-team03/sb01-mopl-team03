@@ -12,7 +12,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.content.Content;
 
@@ -21,6 +25,9 @@ import team03.mopl.domain.content.Content;
 @Table(name = "keyword_contents", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"keyword_id", "content_id"})
 })
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class KeywordContent {
 
   @Id
