@@ -48,6 +48,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // Prometheus
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // 한국어 형태소 분석기 (선택사항)
+    implementation 'org.apache.lucene:lucene-analysis-nori:9.7.0'
+
+    // 텍스트 유사도 계산
+    implementation 'org.apache.commons:commons-text:1.10.0'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
 }
 
 tasks.named('test') {

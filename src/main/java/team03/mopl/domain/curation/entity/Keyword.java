@@ -1,4 +1,4 @@
-package team03.mopl.domain.keyword;
+package team03.mopl.domain.curation.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -31,8 +31,8 @@ public class Keyword {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @OneToMany(mappedBy = "keyword", cascade = CascadeType.ALL)
-  private List<KeywordContent> keywordContents;
+  @Column(nullable = false)
+  private String keyword;
 
   @CreatedDate
   @Column(nullable = false)

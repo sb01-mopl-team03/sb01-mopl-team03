@@ -1,4 +1,4 @@
-package team03.mopl.domain.keyword;
+package team03.mopl.domain.curation.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

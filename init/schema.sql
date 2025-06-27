@@ -22,10 +22,14 @@ CREATE TABLE "contents"
     "description"  TEXT                    NULL,
     "content_type" VARCHAR(50)             NOT NULL,
     "release_date" TIMESTAMP               NOT NULL,
+    "avg_rating"   DECIMAL(3,2)            NULL CHECK (rating >= 0.0 AND rating <= 5.0),
+    "view_count"   INTEGER DEFAULT 0       NULL,
     "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
     "url"          TEXT                    NULL
 );
 COMMENT ON COLUMN "contents"."content_type" IS 'ENUM';
+CREATE INDEX idx_content_title ON content(title);
+CREATE INDEX idx_content_description ON content(description);
 
 -- 키워드 테이블
 CREATE TABLE "keywords"

@@ -8,14 +8,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 
 @Getter
 @Entity
 @Table(name = "contents")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Content {
 
   @Id
@@ -23,7 +27,7 @@ public class Content {
   private UUID id;
 
   @CreatedDate
-  @Column(name = "created_at", nullable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
   @Column(name = "title", nullable = false)
@@ -39,11 +43,34 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
-  public Content(String title, String description, ContentType contentType, LocalDateTime releaseDate) {
+  @Column(name = "avg_rating", precision = 3, scale = 2)
+  private BigDecimal avgRating;
+
+  @Column(name = "view_count")
+  private Integer viewCount;
+
+  @Column(name = "url")
+  private String url;
+
+  public Content(String title, String description, ContentType contentType, LocalDateTime releaseDate, String url) {
     this.title = title;
     this.description = description;
     this.contentType = contentType;
     this.releaseDate = releaseDate;
+    this.url = url;
+    this.viewCount = 0;
+  }
+
+  public void setAvgRating(BigDecimal avgRating) {
+    this.avgRating = avgRating;
+  }
+
+  public void setViewCount(int count) {
+    this.viewCount += count;
+  }
+
+  public void incrementViewCount() {
+    this.viewCount++;
   }
 
 }
