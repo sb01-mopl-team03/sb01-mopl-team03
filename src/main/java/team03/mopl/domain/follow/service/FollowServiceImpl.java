@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team03.mopl.domain.follow.entity.Follow;
 import team03.mopl.domain.follow.repository.FollowRepository;
-import team03.mopl.domain.follow.repository.UserRepository;
+import team03.mopl.domain.user.UserRepository;
 import team03.mopl.domain.user.User;
 
 @Service
