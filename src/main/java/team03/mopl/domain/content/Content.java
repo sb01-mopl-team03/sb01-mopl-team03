@@ -10,10 +10,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "contents")
 public class Content {
@@ -39,11 +46,7 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
-  public Content(String title, String description, ContentType contentType, LocalDateTime releaseDate) {
-    this.title = title;
-    this.description = description;
-    this.contentType = contentType;
-    this.releaseDate = releaseDate;
-  }
+  @Column(name = "url")
+  private String url;
 
 }
