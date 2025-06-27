@@ -10,10 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 
-@Getter
 @Entity
 @Table(name = "contents")
 public class Content {
