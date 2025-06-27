@@ -35,6 +35,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth->auth
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST,"/api/auth/change-password").permitAll()
+            .requestMatchers(HttpMethod.POST,"/api/auth/temp-password").permitAll()
             .anyRequest().hasRole("USER")
         )
         .addFilterBefore(new JwtAuthenticationFilter(jwtProvider,customUserDetailsService,jwtSessionRepository),

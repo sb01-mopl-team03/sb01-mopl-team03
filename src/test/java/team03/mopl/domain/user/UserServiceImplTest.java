@@ -105,7 +105,7 @@ class UserServiceImplTest {
         .role(Role.USER)
         .build();
 
-    UserUpdateRequest request = new UserUpdateRequest("newpass");
+    UserUpdateRequest request = new UserUpdateRequest("ㅎㅎ","newpass");
     given(userRepository.findById(id)).willReturn(Optional.of(user));
     given(passwordEncoder.encode("newpass")).willReturn("encoded-newpass");
 
