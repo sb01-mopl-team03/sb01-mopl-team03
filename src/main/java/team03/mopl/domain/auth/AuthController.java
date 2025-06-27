@@ -2,25 +2,19 @@ package team03.mopl.domain.auth;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 import team03.mopl.jwt.CustomUserDetails;
-import team03.mopl.jwt.JwtProvider;
-import team03.mopl.jwt.JwtService;
 import team03.mopl.jwt.TokenPair;
 
 @RestController
@@ -36,14 +30,13 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-    TokenPair tokenPair = authService.login(request.email(), request.password());
+    LoginResult result = authService.login(request.email(), request.password());
 
-    Cookie cookie = CookeUtil.createResponseCookie(tokenPair.getRefreshToken(),
-        refreshTokenExpiration);
+    Cookie cookie = CookeUtil.createResponseCookie(result.refreshToken(), refreshTokenExpiration);
     response.addCookie(cookie);
 
-    User user = userRepository.findByEmail(request.email()).orElseThrow();
-    return ResponseEntity.ok().body(new LoginResponse(tokenPair.getAccessToken(),user.isTempPassword()));
+
+    return ResponseEntity.ok().body(new LoginResponse(result.accessToken(),result.isTempPassword()));
     //isTempPassword true 면 change-password 로
   }
 

@@ -1,7 +1,6 @@
 package team03.mopl.domain.auth;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,7 @@ public class EmailServiceImpl implements EmailService {
     SimpleMailMessage message = new SimpleMailMessage();
     message.setTo(to);
     message.setSubject("[모두의 플리] 임시 비밀번호 안내");
-    message.setBcc("""
+    message.setText("""
         요청하신 임시 비밀번호는 아래와 같습니다.
         
         %s

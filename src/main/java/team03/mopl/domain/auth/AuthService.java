@@ -32,7 +32,7 @@ public class AuthService {
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExp;
 
-  public TokenPair login(String email, String password) {
+  public LoginResult login(String email, String password) {
     User user = userRepository.findByEmail(email)
         .orElseThrow(UserNotFoundException::new);
 
@@ -53,7 +53,7 @@ public class AuthService {
 
     jwtService.save(user, accessToken, refreshToken, refreshTokenExp);
 
-    return new TokenPair(accessToken, refreshToken);
+    return new LoginResult(accessToken, refreshToken,user.isTempPassword());
   }
 
   public TokenPair refresh(String refreshToken) {
