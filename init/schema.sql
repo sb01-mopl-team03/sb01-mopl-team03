@@ -1,14 +1,16 @@
 -- 사용자 테이블
 CREATE TABLE "users"
 (
-    "id"         UUID PRIMARY KEY           NOT NULL,
-    "email"      VARCHAR(100) UNIQUE        NOT NULL,
-    "name"       VARCHAR(100) UNIQUE        NOT NULL,
-    "password"   VARCHAR(255)               NOT NULL,
-    "created_at" TIMESTAMP   DEFAULT now()  NOT NULL,
-    "updated_at" TIMESTAMP   DEFAULT now()  NOT NULL,
-    "is_locked"  BOOLEAN     DEFAULT false  NOT NULL,
-    "role"       VARCHAR(50) DEFAULT 'USER' NOT NULL
+    "id"                       UUID PRIMARY KEY           NOT NULL,
+    "email"                    VARCHAR(100) UNIQUE        NOT NULL,
+    "name"                     VARCHAR(100) UNIQUE        NOT NULL,
+    "password"                 VARCHAR(255)               NOT NULL,
+    "created_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
+    "updated_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
+    "is_locked"                BOOLEAN     DEFAULT false  NOT NULL,
+    "role"                     VARCHAR(50) DEFAULT 'USER' NOT NULL,
+    "is_temp_password"         BOOLEAN     DEFAULT false  NOT NULL,
+    "temp_password_expired_at" TIMESTAMP                  NULL
 );
 COMMENT ON COLUMN "users"."role" IS 'ENUM';
 
@@ -20,7 +22,8 @@ CREATE TABLE "contents"
     "description"  TEXT                    NULL,
     "content_type" VARCHAR(50)             NOT NULL,
     "release_date" TIMESTAMP               NOT NULL,
-    "created_at"   TIMESTAMP DEFAULT now() NOT NULL
+    "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
+    "url"          TEXT                    NULL
 );
 COMMENT ON COLUMN "contents"."content_type" IS 'ENUM';
 
