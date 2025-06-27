@@ -5,12 +5,11 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
-import team03.mopl.domain.content.Content;
-import team03.mopl.domain.user.User;
+import java.util.UUID;
 
 public record ReviewCreateRequest(
-    User user,
-    Content content,
+    UUID userId,
+    UUID contentId,
 
     @NotBlank(message = "제목은 필수입니다.")
     String title,
