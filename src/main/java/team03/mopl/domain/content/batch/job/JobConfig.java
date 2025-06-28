@@ -17,7 +17,7 @@ public class JobConfig {
   private final Step initialSportsStep;
 
   @Bean
-  public Job initailSportsJob(){
+  public Job initialSportsJob(){
     return new JobBuilder("initialSportsJob", jobRepository)
         .start(initialSportsStep)
         .build();

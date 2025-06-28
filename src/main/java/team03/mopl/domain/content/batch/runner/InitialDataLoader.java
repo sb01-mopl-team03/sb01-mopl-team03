@@ -1,0 +1,48 @@
+package team03.mopl.domain.content.batch.runner;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.stereotype.Component;
+import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.ContentType;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class InitialDataLoader implements ApplicationRunner {
+
+  private final JobLauncher jobLauncher;
+  private final Job initialSportsJob;
+  private final ContentRepository contentRepository;
+
+
+  @Override
+  public void run(ApplicationArguments args) throws Exception {
+
+    if (contentRepository.existsByContentType(ContentType.SPORTS)) {
+      log.info("초기 데이터가 이미 존재합니다.");
+      return;
+    }
+
+    log.info("초기 스포츠 데이터 적재 시작");
+
+    JobParameters jobParameters = new JobParametersBuilder()
+        .addLong("timestamp", System.currentTimeMillis())
+        .addString("mode", "initial")
+        .toJobParameters();
+
+    try {
+      JobExecution jobExecution = jobLauncher.run(initialSportsJob, jobParameters);
+      log.info("배치 작업 완료 : {}", jobExecution.getStatus());
+    } catch (Exception e) {
+      log.error("배치 작업 실패", e);
+    }
+  }
+}

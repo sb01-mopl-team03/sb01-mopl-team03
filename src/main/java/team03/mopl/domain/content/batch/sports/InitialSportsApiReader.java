@@ -85,7 +85,7 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
   public List<ApiRequestInfo> buildApiRequestInfo() {
     List<ApiRequestInfo> requestInfos = new ArrayList<>();
     List<String> leagueIds = List.of("4328", "4335", "4331");
-    List<String> seasons = List.of("2022-2023", "2023-2024");
+    List<String> seasons = List.of("2022-2023", "2023-2024", "2024-2025");
     for (String leagueId : leagueIds) {
       for (String season : seasons) {
         requestInfos.add(new ApiRequestInfo(leagueId, season));
