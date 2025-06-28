@@ -21,17 +21,20 @@ public class SportsItemDto {
   @JsonProperty("strAwayTeam")
   private String strAwayTeam;
 
-  @JsonProperty("homeScore")
-  private String homeScore;
+  @JsonProperty("intHomeScore")
+  private String intHomeScore;
 
-  @JsonProperty("awayScore")
-  private String awayScore;
+  @JsonProperty("intAwayScore")
+  private String intAwayScore;
 
   @JsonProperty("dateEvent")
   private String dateEvent;
 
   @JsonProperty("strTime")
   private String strTime;
+
+  @JsonProperty("strTimeLocal")
+  private String strTimeLocal;
 
   @JsonProperty("strVideo")
   private String strVideo;

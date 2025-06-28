@@ -3,16 +3,18 @@ package team03.mopl.domain.content.batch.sports;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.springframework.batch.item.ItemProcessor;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 
-public class InitialSportsApiProcessor implements ItemProcessor<SportsItemDto, Content> {
+public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content> {
 
   @Override
   public Content process(SportsItemDto item) throws Exception {
 
-    // 1. description 준비
+    // 1. description 생성
     StringBuilder description = new StringBuilder();
     if (item.getStrLeague() != null) {
       description.append("리그: ").append(item.getStrLeague()).append("\n");
@@ -21,20 +23,24 @@ public class InitialSportsApiProcessor implements ItemProcessor<SportsItemDto, C
       description.append("장소: ").append(item.getStrVenue()).append("\n\n");
     }
     if (item.getStrHomeTeam() != null && item.getStrAwayTeam() != null) {
-      description.append(item.getStrHomeTeam()).append("vs").append(item.getStrAwayTeam())
+      description.append(item.getStrHomeTeam()).append(" vs ").append(item.getStrAwayTeam())
           .append("\n");
     }
-    if (item.getHomeScore() != null && item.getAwayScore() != null) {
-      description.append(item.getHomeScore()).append(":").append(item.getAwayScore());
+    if (item.getIntHomeScore() != null && item.getIntAwayScore() != null) {
+      description.append(item.getIntHomeScore()).append(":").append(item.getIntAwayScore());
     }
+
+    // 2. dateTime 생성
     String date = item.getDateEvent();
     String time = item.getStrTime();
     LocalDateTime dateTime = null;
     if (date != null || !date.isEmpty() || time != null || !time.isEmpty()) {
-      dateTime = LocalDateTime.of(
-          LocalDate.parse(date),
-          LocalTime.parse(time)
-      );
+      LocalDate localDate = LocalDate.parse(date);
+      LocalTime localTime = LocalTime.parse(time);
+
+      ZonedDateTime utcDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.of("UTC"));
+      ZonedDateTime kstDateTime = utcDateTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+      dateTime = kstDateTime.toLocalDateTime();
     }
 
     // 2. content 객체 생성및 반환

@@ -1,4 +1,4 @@
-package team03.mopl.domain.content.batch.runner;
+package team03.mopl.domain.content.batch.launcher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,20 @@ import team03.mopl.domain.content.ContentType;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class InitialDataLoader implements ApplicationRunner {
 
   private final JobLauncher jobLauncher;
   private final Job initialSportsJob;
   private final ContentRepository contentRepository;
+
+  public InitialDataLoader(
+      JobLauncher jobLauncher,
+      @Qualifier("initialSportsJob") Job initialSportsJob,
+      ContentRepository contentRepository) {
+    this.jobLauncher = jobLauncher;
+    this.initialSportsJob = initialSportsJob;
+    this.contentRepository = contentRepository;
+  }
 
 
   @Override

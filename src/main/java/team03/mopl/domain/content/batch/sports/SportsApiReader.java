@@ -1,8 +1,10 @@
 package team03.mopl.domain.content.batch.sports;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
@@ -10,7 +12,8 @@ import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
+@Slf4j
+public class SportsApiReader implements ItemReader<SportsItemDto> {
 
   private final RestTemplate restTemplate;
   private final List<SportsApiRequestInfo> apiRequestInfos;
@@ -19,10 +22,10 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
   private List<SportsItemDto> sportsItemDtos;
   private int nextItemIndex = 0;
 
-  public InitialSportsApiReader(RestTemplate restTemplate, String baseUrl) {
+  public SportsApiReader(RestTemplate restTemplate, String baseUrl) {
     this.restTemplate = restTemplate;
-    this.baseUrl = baseUrl;
     this.apiRequestInfos = buildApiRequestInfo();
+    this.baseUrl = baseUrl;
     this.sportsItemDtos = new ArrayList<>();
   }
 
@@ -46,7 +49,7 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
     }
   }
 
-  public boolean fetchSportsFromApi() {
+  private boolean fetchSportsFromApi() {
     // 1. Info를 전부 순회했는지 확인
     if (nextRequestIndex >= apiRequestInfos.size()) {
       return false;
@@ -59,10 +62,11 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
     // 3. info 객체 정보로 API URL 생성한다.
     URI uri = UriComponentsBuilder
         .fromUriString(baseUrl)
-        .path("/{apiKey}/eventsseason.php")
-        .queryParam("id", info.getLeagueId())
-        .queryParam("s", info.getSeason())
+        .path("/{apiKey}/eventsday.php")
+        .queryParam("d", info.getDate())
+        .queryParam("l", info.getLeagueName())
         .build("123");
+    log.info("uri={}", uri);
 
     // 4. RestTemplate으로 API를 호출하고 SportsApiResponse 객체로 받는다.
     SportsApiResponse response = restTemplate.getForObject(uri, SportsApiResponse.class);
@@ -80,19 +84,18 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
   /**
    * API 호출을 위한 Info 객체 생성
    * <p>
-   * 영국 프리미엄 리그, 스페인 라리가, 독일 분데스리가 2022-2023, 2023-2024
+   * MLB, KBO | 어제 날짜
    */
-  public List<SportsApiRequestInfo> buildApiRequestInfo() {
+  private List<SportsApiRequestInfo> buildApiRequestInfo() {
     List<SportsApiRequestInfo> requestInfos = new ArrayList<>();
-    List<String> leagueIds = List.of("4328", "4335", "4331");
-    List<String> seasons = List.of("2022-2023", "2023-2024", "2024-2025");
-    for (String leagueId : leagueIds) {
-      for (String season : seasons) {
-        requestInfos.add(SportsApiRequestInfo.builder()
-            .leagueId(leagueId)
-            .season(season)
-            .build());
-      }
+    String yesterday = LocalDate.now().minusDays(1).toString();
+    log.info("yesterday={}", yesterday);
+    List<String> leagues = List.of("MLB", "Korean KBO League");
+    for (String league : leagues) {
+      requestInfos.add(SportsApiRequestInfo.builder()
+          .date(yesterday)
+          .leagueName(league)
+          .build());
     }
     return requestInfos;
   }

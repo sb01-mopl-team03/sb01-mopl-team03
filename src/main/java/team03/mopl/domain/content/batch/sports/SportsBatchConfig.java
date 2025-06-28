@@ -14,6 +14,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.batch.common.ApiWriter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -32,8 +33,18 @@ public class SportsBatchConfig {
     return new StepBuilder("initialSportsStep", jobRepository)
         .<SportsItemDto, Content>chunk(20, transactionManager)
         .reader(initialSportsReader())
-        .processor(initialSportsProcessor())
-        .writer(initialSportsWriter())
+        .processor(sportsProcessor())
+        .writer(itemWriter())
+        .build();
+  }
+
+  @Bean
+  public Step sportsStep(){
+    return new StepBuilder("sportsStep", jobRepository)
+        .<SportsItemDto, Content>chunk(5, transactionManager)
+        .reader(sportsReader())
+        .processor(sportsProcessor())
+        .writer(itemWriter())
         .build();
   }
 
@@ -43,12 +54,17 @@ public class SportsBatchConfig {
   }
 
   @Bean
-  public ItemProcessor<SportsItemDto, Content> initialSportsProcessor(){
-    return new InitialSportsApiProcessor();
+  public ItemReader<SportsItemDto> sportsReader(){
+    return new SportsApiReader(restTemplate, baseUrl);
   }
 
   @Bean
-  public ItemWriter<Content> initialSportsWriter(){
-    return new InitialSportsApiWriter(contentRepository);
+  public ItemProcessor<SportsItemDto, Content> sportsProcessor(){
+    return new SportsApiProcessor();
+  }
+
+  @Bean
+  public ItemWriter<Content> itemWriter(){
+    return new ApiWriter(contentRepository);
   }
 }
