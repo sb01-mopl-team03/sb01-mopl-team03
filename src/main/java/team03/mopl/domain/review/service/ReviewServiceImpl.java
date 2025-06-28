@@ -9,7 +9,7 @@ import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.content.ContentRepository;
 import team03.mopl.domain.review.dto.ReviewCreateRequest;
 import team03.mopl.domain.review.dto.ReviewResponse;
 import team03.mopl.domain.review.dto.ReviewUpdateRequest;
