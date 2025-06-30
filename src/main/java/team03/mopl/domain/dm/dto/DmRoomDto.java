@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import team03.mopl.domain.dm.entity.DmRoom;
 
 @Getter
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class DmRoomDto {
     this.createdAt = createdAt;
   }
 
-  public static DmRoomDto from(team03.mopl.domain.dm.entity.DmRoom room) {
+  public static DmRoomDto from(DmRoom room) {
     return new DmRoomDto(
         room.getId(),
         room.getSenderId(),
