@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import team03.mopl.domain.auth.RoleUpdateRequest;
 import team03.mopl.domain.user.UserResponse;
 
 @RestController

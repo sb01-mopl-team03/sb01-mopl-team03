@@ -1,4 +1,4 @@
-package team03.mopl.domain.auth;
+package team03.mopl.domain.admin;
 
 import java.util.UUID;
 import team03.mopl.domain.user.Role;
