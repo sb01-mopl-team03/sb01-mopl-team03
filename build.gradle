@@ -22,6 +22,10 @@ jacoco {
     toolVersion = "0.8.11" // jacoco 버전 명시
 }
 
+ext {
+    queryDslVersion = "5.1.0"
+}
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -29,6 +33,12 @@ dependencies {
     implementation 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    //queryDsl
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
     //jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'

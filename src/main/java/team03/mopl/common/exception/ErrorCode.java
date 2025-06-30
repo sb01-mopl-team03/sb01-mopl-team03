@@ -14,7 +14,8 @@ public enum ErrorCode {
 
   REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다."),
 
-  CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다.");
+  CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다."),
+  ALREADY_JOINED_CHATROOM(HttpStatus.CREATED, "CHATROOM_002", "이미 참여중인 채팅방입니다.");
 
   private HttpStatus status;
   // 추적하기 쉽도록하는 필드

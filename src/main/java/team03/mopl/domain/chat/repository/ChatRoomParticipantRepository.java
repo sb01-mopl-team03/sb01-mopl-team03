@@ -7,11 +7,15 @@ import team03.mopl.domain.chat.entity.ChatRoom;
 import team03.mopl.domain.chat.entity.ChatRoomParticipant;
 import team03.mopl.domain.user.User;
 
-public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomParticipant, UUID> {
+public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomParticipant, UUID>,
+ ChatRoomParticipantRepositoryCustom {
 
   Optional<ChatRoomParticipant> findByUserAndChatRoom(User user, ChatRoom chatRoom);
 
   boolean existsChatRoomParticipantByChatRoomAndUser(ChatRoom chatRoom, User user);
 
+  //todo - 개선: N+1 문제 발생 가능
+  /** deprecated **/
   long countByChatRoomId(UUID chatRoomId);
+
 }
