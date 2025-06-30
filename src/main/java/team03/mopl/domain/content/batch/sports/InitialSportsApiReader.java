@@ -82,7 +82,7 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
    * <p>
    * 영국 프리미엄 리그, 스페인 라리가, 독일 분데스리가 2022-2023, 2023-2024
    */
-  public List<SportsApiRequestInfo> buildApiRequestInfo() {
+  private List<SportsApiRequestInfo> buildApiRequestInfo() {
     List<SportsApiRequestInfo> requestInfos = new ArrayList<>();
     List<String> leagueIds = List.of("4328", "4335", "4331");
     List<String> seasons = List.of("2022-2023", "2023-2024", "2024-2025");

@@ -7,9 +7,9 @@ import lombok.Getter;
 @Builder
 public class SportsApiRequestInfo{
   // Sports API init 정보
-  String leagueId;
-  String season;
+  private String leagueId;
+  private String season;
   // Sports API 주기적 적재 저옵
-  String leagueName;
-  String date;
+  private String leagueName;
+  private String date;
 }
