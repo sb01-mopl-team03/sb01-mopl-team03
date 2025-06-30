@@ -13,7 +13,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,8 +39,8 @@ public class Dm {
   private List<UUID> isRead = false;*/
   @ElementCollection
   @CollectionTable(name = "dm_read_users", joinColumns = @JoinColumn(name = "dm_id"))
-  @Column(name = "user_id")
-  private List<UUID> readUserIds = new ArrayList<>();
+  @Column(name = "user_id", unique = true)
+  private Set<UUID> readUserIds = new HashSet<>();
 
   @Column(name = "created_at", updatable = false, nullable = false)
   private LocalDateTime createdAt = LocalDateTime.now();
