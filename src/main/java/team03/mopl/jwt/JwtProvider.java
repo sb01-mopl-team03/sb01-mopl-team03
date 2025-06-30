@@ -8,6 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 
@@ -96,6 +97,15 @@ public class JwtProvider {
         .parseSignedClaims(token)
         .getPayload()
         .get("email",String.class);
+  }
+
+  public UUID extractUserId(String token) {
+    return UUID.fromString(Jwts.parser()
+        .verifyWith(getSigningKey())
+        .build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .getSubject());
   }
 
   private SecretKey getSigningKey() {
