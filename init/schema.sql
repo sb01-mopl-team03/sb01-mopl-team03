@@ -212,6 +212,14 @@ CREATE TABLE "temporary_passwords"
     FOREIGN KEY ("user_id") REFERENCES "users" ("id")
 );
 
+CREATE TABLE "dm_read_users"
+(
+    "dm_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    PRIMARY KEY ("dm_id", "user_id"),
+    FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
+);
+
 -- 소셜 계정 테이블
 -- CREATE TABLE "social_accounts"
 -- (
