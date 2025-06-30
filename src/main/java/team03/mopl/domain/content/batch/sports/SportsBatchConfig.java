@@ -22,7 +22,7 @@ public class SportsBatchConfig {
 
   private final RestTemplate restTemplate;
   private final PlatformTransactionManager transactionManager;
-  private final ContentRepository contentRepository;
+  private final ItemWriter<Content> itemWriter;
   private final JobRepository jobRepository;
 
   @Value("${sports.baseurl}")
@@ -34,7 +34,7 @@ public class SportsBatchConfig {
         .<SportsItemDto, Content>chunk(20, transactionManager)
         .reader(initialSportsReader())
         .processor(sportsProcessor())
-        .writer(itemWriter())
+        .writer(itemWriter)
         .build();
   }
 
@@ -44,7 +44,7 @@ public class SportsBatchConfig {
         .<SportsItemDto, Content>chunk(5, transactionManager)
         .reader(sportsReader())
         .processor(sportsProcessor())
-        .writer(itemWriter())
+        .writer(itemWriter)
         .build();
   }
 
@@ -61,10 +61,5 @@ public class SportsBatchConfig {
   @Bean
   public ItemProcessor<SportsItemDto, Content> sportsProcessor(){
     return new SportsApiProcessor();
-  }
-
-  @Bean
-  public ItemWriter<Content> itemWriter(){
-    return new ApiWriter(contentRepository);
   }
 }
