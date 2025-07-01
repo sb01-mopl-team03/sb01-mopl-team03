@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.content.ContentType;
 
 @Component

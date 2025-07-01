@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.repository.ContentRepository;
 
 @Configuration
 @RequiredArgsConstructor

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.repository.ContentRepository;
 
 @Slf4j
 @RequiredArgsConstructor

@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.content.ContentType;
 
 @Slf4j
