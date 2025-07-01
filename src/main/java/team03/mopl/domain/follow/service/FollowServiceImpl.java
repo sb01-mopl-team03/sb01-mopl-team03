@@ -39,11 +39,11 @@ public class FollowServiceImpl implements FollowService {
       throw new AlreadyFollowingException(); //이미 팔로잉 중
     }
     Follow follow = new Follow(followerId, followingId);
+    followRepository.save(follow);
 
     // 알림 전송 추가
     notificationService.sendNotification(following.getId(), NotificationType.FOLLOWED, following.getName()+"이(가) 팔로우 했습니다.");
 
-    followRepository.save(follow);
   }
 
   @Override
