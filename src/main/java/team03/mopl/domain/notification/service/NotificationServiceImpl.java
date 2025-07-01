@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.repository.NotificationRepository;
@@ -22,8 +23,8 @@ public class NotificationServiceImpl implements NotificationService{
   }
 
   @Override
-  public List<Notification> getNotifications(UUID receiverId) {
-    return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId);
+  public List<NotificationDto> getNotifications(UUID receiverId) {
+    return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId).stream().map(NotificationDto::from).toList();
   }
 
   @Override

@@ -35,7 +35,7 @@ public class NotificationController {
    */
   @GetMapping("/{userId}")
   public ResponseEntity<List<NotificationDto>> getNotifications(@PathVariable UUID userId) {
-    List<NotificationDto> list = notificationService.getNotifications(userId).stream().map(NotificationDto::from).toList();
+    List<NotificationDto> list = notificationService.getNotifications(userId);
 
     //알림 내역을 조회했다는 건 읽었다는 것
     notificationService.markAllAsRead(userId);
