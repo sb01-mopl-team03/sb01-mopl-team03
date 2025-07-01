@@ -128,7 +128,7 @@ public class TmdbApiReader implements ItemStreamReader<TmdbItemDto> {
    * API 호출및 호출 여부 반환
    */
   public boolean fetchTmdbfromApi() {
-    // 1. info 를 전부 순회했는지 확인
+    // 1. info를 전부 순회했는지 확인
     if (nextRequestIndex >= apiRequestInfos.size()) {
       return false;
     }
@@ -223,7 +223,7 @@ public class TmdbApiReader implements ItemStreamReader<TmdbItemDto> {
    */
   @Override
   public void open(ExecutionContext executionContext) throws ItemStreamException {
-    if(executionContext.containsKey("nextRequestIndex")){
+    if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
       log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
     } else {
@@ -231,7 +231,7 @@ public class TmdbApiReader implements ItemStreamReader<TmdbItemDto> {
       log.info("Job 신규 시작");
     }
 
-    if (executionContext.containsKey("nextItemIndex")){
+    if (executionContext.containsKey("nextItemIndex")) {
       this.nextItemIndex = executionContext.getInt("nextItemIndex");
     } else {
       this.nextItemIndex = 0;
@@ -240,7 +240,7 @@ public class TmdbApiReader implements ItemStreamReader<TmdbItemDto> {
 
   /**
    * Chunk 처리가 끝날 때마다 호출하여 상태를 저장한다.
-   * */
+   */
   @Override
   public void update(ExecutionContext executionContext) throws ItemStreamException {
     executionContext.putInt("nextRequestIndex", this.nextRequestIndex);

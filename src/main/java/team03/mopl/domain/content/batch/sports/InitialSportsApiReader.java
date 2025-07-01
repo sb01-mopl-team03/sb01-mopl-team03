@@ -13,6 +13,10 @@ import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+
+/**
+ * 영국 프리미엄 리그, 스페인 라리가, 독일 분데스리가 | 2022-2023, 2023-2024, 2024-2025를 호출한다.
+ */
 @Slf4j
 public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
 
@@ -50,8 +54,11 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
     }
   }
 
+  /**
+   * API 호출및 호출 여부 반환
+   */
   public boolean fetchSportsFromApi() {
-    // 1. Info를 전부 순회했는지 확인
+    // 1. info를 전부 순회했는지 확인
     if (nextRequestIndex >= apiRequestInfos.size()) {
       return false;
     }
@@ -84,7 +91,7 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
   /**
    * API 호출을 위한 Info 객체 생성
    * <p>
-   * 영국 프리미엄 리그, 스페인 라리가, 독일 분데스리가 2022-2023, 2023-2024
+   * 영국 프리미엄 리그, 스페인 라리가, 독일 분데스리가 | 2022-2023, 2023-2024, 2024-2025
    */
   private List<SportsApiRequestInfo> buildApiRequestInfo() {
     List<SportsApiRequestInfo> requestInfos = new ArrayList<>();
@@ -108,7 +115,7 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
    */
   @Override
   public void open(ExecutionContext executionContext) throws ItemStreamException {
-    if(executionContext.containsKey("nextRequestIndex")){
+    if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
       log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
     } else {
@@ -116,7 +123,7 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
       log.info("Job 신규 시작");
     }
 
-    if (executionContext.containsKey("nextItemIndex")){
+    if (executionContext.containsKey("nextItemIndex")) {
       this.nextItemIndex = executionContext.getInt("nextItemIndex");
     } else {
       this.nextItemIndex = 0;
@@ -125,7 +132,7 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   /**
    * Chunk 처리가 끝날 때마다 호출하여 상태를 저장한다.
-   * */
+   */
   @Override
   public void update(ExecutionContext executionContext) throws ItemStreamException {
     executionContext.putInt("nextRequestIndex", this.nextRequestIndex);
