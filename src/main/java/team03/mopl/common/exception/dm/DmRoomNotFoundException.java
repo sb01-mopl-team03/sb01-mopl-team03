@@ -3,7 +3,7 @@ package team03.mopl.common.exception.dm;
 import java.util.Map;
 import team03.mopl.common.exception.ErrorCode;
 
-public class DmRoomNotFoundException extends DmException {
+public class DmRoomNotFoundException extends DmRoomException {
   public DmRoomNotFoundException() {
     super(ErrorCode.DM_ROOM_NOT_FOUND);
   }
