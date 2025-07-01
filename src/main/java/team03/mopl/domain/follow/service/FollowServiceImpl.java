@@ -50,11 +50,10 @@ public class FollowServiceImpl implements FollowService {
   public void unfollow(UUID followerId, UUID followingId) {
     User unFollower = userRepository.findById(followerId).orElseThrow(FollowNotFoundException::new);
     User unFollowing = userRepository.findById(followingId).orElseThrow(FollowNotFoundException::new);
-
+    followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
     // 알림 전송 추가
     notificationService.sendNotification(unFollowing.getId(), NotificationType.UNFOLLOWED, unFollowing.getName()+"이(가) 언팔로우 했습니다.");
 
-    followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
   }
 
   //나의 팔로잉 목록
