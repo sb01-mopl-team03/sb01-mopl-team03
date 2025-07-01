@@ -11,6 +11,5 @@ public interface UserService {
   UserResponse update(UUID userId, UserUpdateRequest request);
   void delete(UUID userId);
   List<UserResponse> findAll();
-  User loginOrRegisterByGoogle(GoogleUserInfo googleUser);
-  User loginOrRegisterByKakao(KakaoUserInfo kakaoUser);
+  User loginOrRegisterOAuth(String email,String name);
 }

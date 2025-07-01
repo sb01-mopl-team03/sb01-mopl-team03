@@ -72,12 +72,12 @@ public class KakaoOAuthService {
     Map<String, Object> KakaoAccount = (Map<String, Object>) body.get("kakao_account");
     Map<String, Object> properties = (Map<String, Object>) body.get("properties");
 
-    String nickname = (String) properties.getOrDefault("nickname","kakaoUser");
+    String name = (String) properties.getOrDefault("name","kakaoUser");
     String email = (KakaoAccount != null && KakaoAccount.get("email" )!= null)
       ? (String) KakaoAccount.get("email")
-        : nickname.replaceAll("\\s","_")+"@kakao.com";
+        : name.replaceAll("\\s","_")+"@kakao.com";
 
-    return new KakaoUserInfo(email, nickname);
+    return new KakaoUserInfo(email, name);
   }
 
 

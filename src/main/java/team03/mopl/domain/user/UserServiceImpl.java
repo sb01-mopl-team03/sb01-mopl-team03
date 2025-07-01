@@ -5,6 +5,7 @@ import static team03.mopl.domain.user.Role.*;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -67,38 +68,17 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User loginOrRegisterByGoogle(GoogleUserInfo googleUser) {
-    return userRepository.findByEmail(googleUser.email())
-        .orElseGet(()-> registerGoogleUser(googleUser));
-  }
-
-  @Override
-  public User loginOrRegisterByKakao(KakaoUserInfo kakaoUser) {
-    return userRepository.findByEmail(kakaoUser.email())
-        .orElseGet(()-> registerKakaoUser(kakaoUser));
-  }
-
-  private User registerGoogleUser(GoogleUserInfo googleUser) {
-    String randomPassword = UUID.randomUUID().toString();
-    User user = User.builder()
-        .email(googleUser.email())
-        .name(googleUser.name())
-        .password(passwordEncoder.encode(randomPassword))
-        .role(USER)
-        .isLocked(false)
-        .build();
-    return userRepository.save(user);
-  }
-
-  private User registerKakaoUser(KakaoUserInfo kakaoUser) {
-    String randomPassword = UUID.randomUUID().toString();
-    User user = User.builder()
-        .email(kakaoUser.email())
-        .name(kakaoUser.nickname())
-        .password(passwordEncoder.encode(randomPassword))
-        .role(USER)
-        .isLocked(false)
-        .build();
-    return userRepository.save(user);
+  public User loginOrRegisterOAuth(String email,String name){
+    return userRepository.findByEmail(email)
+        .orElseGet(()->{
+          String randomPassword  = UUID.randomUUID().toString();
+          return userRepository.save(User.builder()
+              .email(email)
+              .name(name)
+              .password(passwordEncoder.encode(randomPassword ))
+              .role(USER)
+              .isLocked(false)
+              .build());
+        });
   }
 }
