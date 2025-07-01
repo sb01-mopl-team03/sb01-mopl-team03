@@ -200,16 +200,13 @@ CREATE TABLE "jwt_sessions"
     FOREIGN KEY ("user_id") REFERENCES "users" ("id")
 );
 
--- 임시 비밀번호 테이블
-CREATE TABLE "temporary_passwords"
+
+CREATE TABLE "dm_read_users"
 (
-    "id"            UUID PRIMARY KEY        NOT NULL,
-    "user_id"       UUID                    NOT NULL,
-    "temp_password" VARCHAR(255)            NOT NULL,
-    "created_at"    TIMESTAMP DEFAULT now() NOT NULL,
-    "expired_at"    TIMESTAMP               NOT NULL,
-    "is_used"       BOOLEAN                 NOT NULL,
-    FOREIGN KEY ("user_id") REFERENCES "users" ("id")
+    "dm_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    PRIMARY KEY ("dm_id", "user_id"),
+    FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
 );
 
 -- 소셜 계정 테이블
