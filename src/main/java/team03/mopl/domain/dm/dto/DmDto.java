@@ -2,6 +2,7 @@ package team03.mopl.domain.dm.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,13 +13,13 @@ public class DmDto {
   private final UUID id;
   private final UUID senderId;
   private final String content;
-  private final List<UUID> readUserIds;  // ← 대문자 U
+  private final Set<UUID> readUserIds;
   private final int unreadCount;
   private final LocalDateTime createdAt;
   private final UUID roomId;
 
   @Builder
-  public DmDto(UUID id, UUID senderId, String content, List<UUID> readUserIds,
+  public DmDto(UUID id, UUID senderId, String content, Set<UUID> readUserIds,
       int unreadCount, LocalDateTime createdAt, UUID roomId) {
     this.id = id;
     this.senderId = senderId;

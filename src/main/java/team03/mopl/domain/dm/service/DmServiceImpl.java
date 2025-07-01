@@ -6,24 +6,32 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRepository;
 import team03.mopl.domain.dm.repository.DmRoomRepository;
+import team03.mopl.domain.notification.entity.NotificationType;
+import team03.mopl.domain.notification.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
 public class DmServiceImpl implements DmService {
   private final DmRepository dmRepository;
   private final DmRoomRepository dmRoomRepository;
+  private final NotificationService notificationService;
 
   @Override
   public DmDto sendDm(UUID senderId, UUID roomId, String content) {
-    DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("DM 방을 찾을 수 없습니다."));
+    DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(DmRoomNotFoundException::new);
 
     Dm dm = new Dm(senderId, content);
     dm.setDmRoom(dmRoom); // 연관관계 설정
+
+    // 알림 전송 추가
+    UUID receiverId = dmRoom.getReceiverId();
+    notificationService.sendNotification(receiverId, NotificationType.DM_RECEIVED, content);
 
     return DmDto.from(dmRepository.save(dm));
   }
