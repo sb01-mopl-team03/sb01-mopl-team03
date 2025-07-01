@@ -12,6 +12,7 @@ import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.oauth2.GoogleUserInfo;
+import team03.mopl.domain.oauth2.KakaoUserInfo;
 
 @Service
 @RequiredArgsConstructor
@@ -71,11 +72,29 @@ public class UserServiceImpl implements UserService {
         .orElseGet(()-> registerGoogleUser(googleUser));
   }
 
+  @Override
+  public User loginOrRegisterByKakao(KakaoUserInfo kakaoUser) {
+    return userRepository.findByEmail(kakaoUser.email())
+        .orElseGet(()-> registerKakaoUser(kakaoUser));
+  }
+
   private User registerGoogleUser(GoogleUserInfo googleUser) {
     String randomPassword = UUID.randomUUID().toString();
     User user = User.builder()
         .email(googleUser.email())
         .name(googleUser.name())
+        .password(passwordEncoder.encode(randomPassword))
+        .role(USER)
+        .isLocked(false)
+        .build();
+    return userRepository.save(user);
+  }
+
+  private User registerKakaoUser(KakaoUserInfo kakaoUser) {
+    String randomPassword = UUID.randomUUID().toString();
+    User user = User.builder()
+        .email(kakaoUser.email())
+        .name(kakaoUser.nickname())
         .password(passwordEncoder.encode(randomPassword))
         .role(USER)
         .isLocked(false)

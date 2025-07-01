@@ -21,6 +21,7 @@ import team03.mopl.jwt.JwtProvider;
 @RequiredArgsConstructor
 public class OAuthController {
 
+  private final KakaoOAuthService kakaoOAuthService;
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExpiration;
 
@@ -34,12 +35,34 @@ public class OAuthController {
     response.sendRedirect(redirectUrl);
   }
 
+  @GetMapping("/login/kakao")
+  public void redirectToKakao(HttpServletResponse response) throws IOException {
+    String redirectUrl = kakaoOAuthService.buildKakaoOAuthUrl();
+    response.sendRedirect(redirectUrl);
+  }
+
   @GetMapping("/callback/google")
   public ResponseEntity<?> handleGoogleOAuthCallback(@RequestParam String code,
       HttpServletResponse response) {
-    GoogleUserInfo googleUser = googleOAuthService.getUserInfoFromCode(code);
+    GoogleUserInfo googleUser = googleOAuthService.getUserInfoFromGoogleCode(code);
 
     User user = userService.loginOrRegisterByGoogle(googleUser);
+
+    String accessToken = jwtProvider.generateToken(user);
+    String refreshToken = jwtProvider.generateRefreshToken(user);
+
+    Cookie cookie = CookieUtil.createResponseCookie(refreshToken, refreshTokenExpiration);
+    response.addCookie(cookie);
+
+    return ResponseEntity.ok(Map.of("accessToken", accessToken));
+  }
+
+  @GetMapping("/callback/kakao")
+  public ResponseEntity<?> handleKakaoOAuthCallback(@RequestParam String code,
+      HttpServletResponse response) {
+    KakaoUserInfo kakaoUser = kakaoOAuthService.getUserInfoFromKakaoToken(code);
+
+    User user = userService.loginOrRegisterByKakao(kakaoUser);
 
     String accessToken = jwtProvider.generateToken(user);
     String refreshToken = jwtProvider.generateRefreshToken(user);
