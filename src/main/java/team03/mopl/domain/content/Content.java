@@ -46,9 +46,6 @@ public class Content {
   @Column(name = "avg_rating", precision = 3, scale = 2)
   private BigDecimal avgRating;
 
-  @Column(name = "view_count")
-  private Integer viewCount;
-
   @Column(name = "url")
   private String url;
 
@@ -58,19 +55,10 @@ public class Content {
     this.contentType = contentType;
     this.releaseDate = releaseDate;
     this.url = url;
-    this.viewCount = 0;
   }
 
   public void setAvgRating(BigDecimal avgRating) {
     this.avgRating = avgRating;
-  }
-
-  public void setViewCount(int count) {
-    this.viewCount += count;
-  }
-
-  public void incrementViewCount() {
-    this.viewCount++;
   }
 
 }

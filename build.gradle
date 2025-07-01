@@ -44,17 +44,10 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // Actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    // Prometheus
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
-    // 한국어 형태소 분석기 (선택사항)
-    implementation 'org.apache.lucene:lucene-analysis-nori:9.7.0'
-
-    // 텍스트 유사도 계산
-    implementation 'org.apache.commons:commons-text:1.10.0'
-    implementation 'org.apache.commons:commons-math3:3.6.1'
+    // AI
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
+    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
 }
 
 tasks.named('test') {
@@ -68,4 +61,8 @@ tasks.named('jacocoTestReport'){
         xml.required = true
         html.required =true
     }
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs = ['-Xmx4g', '-Xms1g']
 }
