@@ -12,4 +12,8 @@ public class CookieUtil {
     cookie.setMaxAge((int) (maxAgeInMs / 1000));
     return cookie;
   }
+
+  public static void deleteResponseCookie(Cookie cookie) {
+
+  }
 }
