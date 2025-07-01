@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -36,9 +37,14 @@ public class Content {
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
+  @Column(name = "data_id")
+  private String dataId;
+
   @Column(name = "title", nullable = false)
   private String title;
 
+  // docker 이용시 create-drop 을 사용하여 Lob 선언
+  @Lob
   @Column(name = "description")
   private String description;
 

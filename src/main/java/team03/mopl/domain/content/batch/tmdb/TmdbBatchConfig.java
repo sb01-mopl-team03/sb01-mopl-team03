@@ -13,11 +13,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.ContentRepository;
 
 @Configuration
 @RequiredArgsConstructor
 public class TmdbBatchConfig {
 
+  private final ContentRepository contentRepository;
   private final RestTemplate restTemplate;
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
@@ -39,12 +41,27 @@ public class TmdbBatchConfig {
   }
 
   @Bean
+  public Step tmdbStep(){
+    return new StepBuilder("tmdbStep", jobRepository)
+        .<TmdbItemDto, Content>chunk(10, transactionManager)
+        .reader(tmdbReader())
+        .processor(tmdbProcessor())
+        .writer(itemWriter)
+        .build();
+  }
+
+  @Bean
   public ItemStreamReader<TmdbItemDto> initialTmdbReader(){
     return new InitialTmdbApiReader(restTemplate, baseurl, apiToken);
   }
 
   @Bean
+  public ItemStreamReader<TmdbItemDto> tmdbReader(){
+    return new TmdbApiReader(restTemplate, baseurl, apiToken);
+  }
+
+  @Bean
   public ItemProcessor<TmdbItemDto, Content> tmdbProcessor(){
-    return new InitialTmdbApiProcessor(restTemplate, baseurl, apiToken);
+    return new TmdbApiProcessor(contentRepository, restTemplate, baseurl, apiToken);
   }
 }

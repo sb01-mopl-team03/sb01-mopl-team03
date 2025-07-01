@@ -17,6 +17,12 @@ public class TmdbApiResponse {
   /**
    * API 응답 JSON의 "results" 배열과 맵핑
    */
-  @JsonProperty
+  @JsonProperty("results")
   private List<TmdbItemDto> results;
+
+  @JsonProperty("total_pages")
+  private String totalPages;
+
+  @JsonProperty("total_results")
+  private String totalResults;
 }

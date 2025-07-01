@@ -22,16 +22,21 @@ public class JobConfig {
   @Qualifier("initialTmdbStep")
   private final Step initialTmdbStep;
 
+  @Qualifier("tmdbStep")
+  private final Step tmdbStep;
+
 
   public JobConfig(
       JobRepository jobRepository,
       @Qualifier("initialSportsStep") Step initialSportsStep,
       @Qualifier("sportsStep") Step sportsStep,
-      @Qualifier("initialTmdbStep") Step initialTmdbStep) {
+      @Qualifier("initialTmdbStep") Step initialTmdbStep,
+      @Qualifier("tmdbStep") Step tmdbStep) {
     this.jobRepository = jobRepository;
     this.initialSportsStep = initialSportsStep;
     this.sportsStep = sportsStep;
     this.initialTmdbStep = initialTmdbStep;
+    this.tmdbStep = tmdbStep;
   }
 
   @Bean
@@ -52,6 +57,13 @@ public class JobConfig {
   public Job initialTmdbJob(){
     return new JobBuilder("initialTmdbJob", jobRepository)
         .start(initialTmdbStep)
+        .build();
+  }
+
+  @Bean
+  public Job TmdbJob(){
+    return new JobBuilder("TmdbJob", jobRepository)
+        .start(tmdbStep)
         .build();
   }
 }

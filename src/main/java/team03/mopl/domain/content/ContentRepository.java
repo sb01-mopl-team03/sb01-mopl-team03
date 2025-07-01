@@ -7,4 +7,5 @@ public interface ContentRepository extends JpaRepository<Content, UUID> {
 
   boolean existsByContentType(ContentType contentType);
 
+  boolean existsByDataId(String dataId);
 }
