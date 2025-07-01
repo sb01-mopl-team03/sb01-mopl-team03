@@ -3,14 +3,18 @@ package team03.mopl.domain.content.batch.sports;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.batch.item.ItemReader;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
+@Slf4j
+public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   private final RestTemplate restTemplate;
   private final List<SportsApiRequestInfo> apiRequestInfos;
@@ -95,5 +99,41 @@ public class InitialSportsApiReader implements ItemReader<SportsItemDto> {
       }
     }
     return requestInfos;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  /**
+   * Step이 시작될 때, 또는 재시작할 때 호출되는 동작
+   */
+  @Override
+  public void open(ExecutionContext executionContext) throws ItemStreamException {
+    if(executionContext.containsKey("nextRequestIndex")){
+      this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
+      log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
+    } else {
+      this.nextRequestIndex = 0;
+      log.info("Job 신규 시작");
+    }
+
+    if (executionContext.containsKey("nextItemIndex")){
+      this.nextItemIndex = executionContext.getInt("nextItemIndex");
+    } else {
+      this.nextItemIndex = 0;
+    }
+  }
+
+  /**
+   * Chunk 처리가 끝날 때마다 호출하여 상태를 저장한다.
+   * */
+  @Override
+  public void update(ExecutionContext executionContext) throws ItemStreamException {
+    executionContext.putInt("nextRequestIndex", this.nextRequestIndex);
+    executionContext.putInt("nextItemIndex", this.nextItemIndex);
+  }
+
+  @Override
+  public void close() throws ItemStreamException {
+    log.info("InitialTmdbApiReader 종료");
   }
 }
