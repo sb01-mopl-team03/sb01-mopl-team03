@@ -28,7 +28,7 @@ import team03.mopl.domain.chat.exception.ChatRoomNotFoundException;
 import team03.mopl.domain.chat.repository.ChatRoomParticipantRepository;
 import team03.mopl.domain.chat.repository.ChatRoomRepository;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentRepository;
+import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
@@ -71,12 +71,12 @@ class ChatRoomServiceImplTest {
 
     //todo - 빌더 또는 생성자 구현해주시면 수정하기
     contentId = UUID.randomUUID();
-    content = new Content(
-        "테스트콘텐츠",
-        "테스트용 콘텐츠 입니다.",
-        ContentType.DRAMA,
-        LocalDateTime.now()
-    );
+    content = Content.builder()
+        .title("테스트콘텐츠")
+        .description("테스트용 콘텐츠 입니다.")
+        .contentType(ContentType.TV)
+        .releaseDate(LocalDateTime.now())
+        .build();
   }
 
   @Nested
