@@ -22,23 +22,23 @@ public class DmRoomController {
   private final DmService dmService;
 
   @GetMapping("/{dmRoomId}") // 룸 ID를 통한 조회
-  public ResponseEntity<DmRoomDto> getRoom(@PathVariable UUID dmRoomId) {
+  public ResponseEntity<DmRoomDto> getRoom(@PathVariable(name = "dmRoomId") UUID dmRoomId) {
     return ResponseEntity.ok(dmRoomService.getRoom(dmRoomId));
   }
   @GetMapping("/userRoom") // UserA와 UserB가 연결된 룸 조회 / 없으면 생성
   public ResponseEntity<UUID> getOrCreateRoom(
-      @RequestParam UUID userA,
-      @RequestParam UUID userB
+      @RequestParam(name = "userA") UUID userA,
+      @RequestParam(name = "userB") UUID userB
   ) {
     DmRoomDto dmRoomDto = dmRoomService.findOrCreateRoom(userA, userB);
     return ResponseEntity.ok(dmRoomDto.getId());
   }
   @GetMapping("/") //유저의 모든 룸 조회
-  public ResponseEntity<List<DmRoomDto>> getAllRooms(@RequestParam UUID userId) {
+  public ResponseEntity<List<DmRoomDto>> getAllRooms(@RequestParam(name = "userId") UUID userId) {
     return ResponseEntity.ok().body(dmRoomService.getAllRoomsForUser(userId));
   }
   @DeleteMapping("/{roomId}") // 유저가 속한 룸 삭제
-  public ResponseEntity<Void> deleteRoom(@PathVariable UUID roomId, @RequestParam UUID userId) {
+  public ResponseEntity<Void> deleteRoom(@PathVariable(name = "roomId") UUID roomId, @RequestParam(name = "userId") UUID userId) {
     dmRoomService.deleteRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }

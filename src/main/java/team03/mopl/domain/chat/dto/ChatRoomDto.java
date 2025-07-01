@@ -3,7 +3,7 @@ package team03.mopl.domain.chat.dto;
 import java.util.UUID;
 import team03.mopl.domain.chat.entity.ChatRoom;
 import team03.mopl.domain.chat.entity.ChatRoomParticipant;
-import team03.mopl.domain.content.dto.ContentDto;
+//import team03.mopl.domain.content.dto.ContentDto;
 
 public record ChatRoomDto(
 
