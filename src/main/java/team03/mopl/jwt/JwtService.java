@@ -13,5 +13,5 @@ public interface JwtService {
 
   TokenPair reissueTokenPair(String refreshToken, long refreshTokenExpiration);
 
-  void invalidateSessionByRefreshToken(String refreshToken);
+  void invalidateSessionByRefreshToken(String refreshToken ,boolean useBlacklist);
 }

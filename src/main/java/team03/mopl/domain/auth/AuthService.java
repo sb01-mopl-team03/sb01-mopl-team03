@@ -9,10 +9,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
+import team03.mopl.domain.user.UserResponse;
 import team03.mopl.jwt.JwtProvider;
 import team03.mopl.jwt.JwtService;
+import team03.mopl.jwt.JwtSession;
+import team03.mopl.jwt.JwtSessionRepository;
 import team03.mopl.jwt.TokenPair;
 
 @Service
@@ -24,6 +28,7 @@ public class AuthService {
   private final JwtProvider jwtProvider;
   private final PasswordEncoder passwordEncoder;
   private final EmailService emailService;
+  private final JwtSessionRepository jwtSessionRepository;
 
 
   @Value("${auth.temp-password-expiration}")
@@ -35,6 +40,11 @@ public class AuthService {
   public LoginResult login(String email, String password) {
     User user = userRepository.findByEmail(email)
         .orElseThrow(UserNotFoundException::new);
+
+    if(user.isLocked()){
+      jwtSessionRepository.deleteByUser(user);
+      throw new IllegalStateException("잠긴 계정");
+    }
 
     if(!passwordEncoder.matches(password, user.getPassword())) {
       throw new IllegalStateException("비밀번호가 일치x");
@@ -65,7 +75,7 @@ public class AuthService {
   }
 
   public void invalidateSessionByRefreshToken(String refreshToken) {
-    jwtService.invalidateSessionByRefreshToken(refreshToken);
+    jwtService.invalidateSessionByRefreshToken(refreshToken,false);
   }
 
   public void resetPassword(String email) {

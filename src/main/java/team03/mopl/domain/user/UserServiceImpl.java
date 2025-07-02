@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.oauth2.GoogleUserInfo;
 
 @Service
 @RequiredArgsConstructor
@@ -62,5 +63,23 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<UserResponse> findAll() {
     return userRepository.findAll().stream().map(UserResponse::from).toList();
+  }
+
+  @Override
+  public User loginOrRegisterByGoogle(GoogleUserInfo googleUser) {
+    return userRepository.findByEmail(googleUser.email())
+        .orElseGet(()-> registerGoogleUser(googleUser));
+  }
+
+  private User registerGoogleUser(GoogleUserInfo googleUser) {
+    String randomPassword = UUID.randomUUID().toString();
+    User user = User.builder()
+        .email(googleUser.email())
+        .name(googleUser.name())
+        .password(passwordEncoder.encode(randomPassword))
+        .role(USER)
+        .isLocked(false)
+        .build();
+    return userRepository.save(user);
   }
 }

@@ -6,15 +6,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
+import team03.mopl.domain.user.UserResponse;
 import team03.mopl.jwt.CustomUserDetails;
+import team03.mopl.jwt.JwtService;
 import team03.mopl.jwt.TokenPair;
 
 @RestController
@@ -23,7 +26,6 @@ import team03.mopl.jwt.TokenPair;
 public class AuthController {
 
   private final AuthService authService;
-  private final UserRepository userRepository;
 
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExpiration;
@@ -32,7 +34,7 @@ public class AuthController {
   public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
     LoginResult result = authService.login(request.email(), request.password());
 
-    Cookie cookie = CookeUtil.createResponseCookie(result.refreshToken(), refreshTokenExpiration);
+    Cookie cookie = CookieUtil.createResponseCookie(result.refreshToken(), refreshTokenExpiration);
     response.addCookie(cookie);
 
 
@@ -61,7 +63,7 @@ public class AuthController {
     try {
       TokenPair tokenPair = authService.refresh(refreshToken);
 
-      Cookie cookie = CookeUtil.createResponseCookie(tokenPair.getRefreshToken(),
+      Cookie cookie = CookieUtil.createResponseCookie(tokenPair.getRefreshToken(),
           refreshTokenExpiration);
       response.addCookie(cookie);
 

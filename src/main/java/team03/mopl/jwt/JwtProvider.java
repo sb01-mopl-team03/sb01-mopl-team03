@@ -1,5 +1,6 @@
 package team03.mopl.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -7,6 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +22,7 @@ import team03.mopl.domain.user.User;
 @Slf4j
 public class JwtProvider {
 
+  private final JwtBlacklist jwtBlacklist;
   @Value("${jwt.secret}")
   private String jwtSecret;
 
@@ -61,6 +64,9 @@ public class JwtProvider {
 
 
   public boolean validateToken(String token) {
+    if (jwtBlacklist.blacklisted(token)){
+      return false;
+    }
     try{
       Jwts.parser()
           .verifyWith(getSigningKey())
@@ -76,6 +82,14 @@ public class JwtProvider {
     }
   }
 
+  public Claims getClaims(String token) {
+    return Jwts.parser()
+        .setSigningKey(getSigningKey())
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+  }
+
   public String extractEmail(String token) {
     return Jwts.parser()
         .verifyWith(getSigningKey())
@@ -83,6 +97,15 @@ public class JwtProvider {
         .parseSignedClaims(token)
         .getPayload()
         .get("email",String.class);
+  }
+
+  public UUID extractUserId(String token) {
+    return UUID.fromString(Jwts.parser()
+        .verifyWith(getSigningKey())
+        .build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .getSubject());
   }
 
   private SecretKey getSigningKey() {
