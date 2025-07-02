@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.dm.dto.DmRoomDto;
 import team03.mopl.domain.dm.service.DmRoomService;
 import team03.mopl.domain.dm.service.DmService;
+import team03.mopl.jwt.CustomUserDetails;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,18 +29,24 @@ public class DmRoomController {
   }
   @GetMapping("/userRoom") // UserA와 UserB가 연결된 룸 조회 / 없으면 생성
   public ResponseEntity<UUID> getOrCreateRoom(
-      @RequestParam(name = "userA") UUID userA,
+      @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestParam(name = "userB") UUID userB
   ) {
+    UUID userA = userDetails.getId();
     DmRoomDto dmRoomDto = dmRoomService.findOrCreateRoom(userA, userB);
     return ResponseEntity.ok(dmRoomDto.getId());
   }
   @GetMapping("/") //유저의 모든 룸 조회
-  public ResponseEntity<List<DmRoomDto>> getAllRooms(@RequestParam(name = "userId") UUID userId) {
+  public ResponseEntity<List<DmRoomDto>> getAllRooms(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    UUID userId = userDetails.getId();
     return ResponseEntity.ok().body(dmRoomService.getAllRoomsForUser(userId));
   }
   @DeleteMapping("/{roomId}") // 유저가 속한 룸 삭제
-  public ResponseEntity<Void> deleteRoom(@PathVariable(name = "roomId") UUID roomId, @RequestParam(name = "userId") UUID userId) {
+  public ResponseEntity<Void> deleteRoom(
+      @PathVariable(name = "roomId") UUID roomId,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    UUID userId = userDetails.getId();
     dmRoomService.deleteRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }

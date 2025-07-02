@@ -3,6 +3,7 @@ package team03.mopl.domain.dm.controller;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,6 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.dm.dto.DmRoomDto;
 import team03.mopl.domain.dm.service.DmRoomService;
 import team03.mopl.domain.dm.service.DmService;
+import team03.mopl.domain.user.Role;
+import team03.mopl.domain.user.User;
+import team03.mopl.jwt.CustomUserDetails;
 
 @WebMvcTest(DmRoomController.class)
 @WithMockUser(roles = "USER")
@@ -58,12 +62,22 @@ class DmRoomControllerTest {
     UUID userA = UUID.randomUUID();
     UUID userB = UUID.randomUUID();
     UUID roomId = UUID.randomUUID();
+    User user;
+    user = User.builder()
+        .id(userA)
+        .email("user@test.com")
+        .name("user")
+        .password("pw")
+        .role(Role.USER)
+        .build();
+    CustomUserDetails principal = new CustomUserDetails(user);
+
 
     given(dmRoomService.findOrCreateRoom(userA, userB))
         .willReturn(new DmRoomDto(roomId, userA, userB, LocalDateTime.now()));
 
     mockMvc.perform(get("/api/dmRooms/userRoom")
-            .param("userA", userA.toString())
+            .with(user(principal))
             .param("userB", userB.toString()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").value(roomId.toString()));
@@ -81,10 +95,21 @@ class DmRoomControllerTest {
         new DmRoomDto(roomId2, userId, UUID.randomUUID(), LocalDateTime.now())
     );
 
+    User user;
+    user = User.builder()
+        .id(userId)
+        .email("user@test.com")
+        .name("user")
+        .password("pw")
+        .role(Role.USER)
+        .build();
+
     given(dmRoomService.getAllRoomsForUser(userId)).willReturn(rooms);
 
+    CustomUserDetails principal = new CustomUserDetails(user);
+
     mockMvc.perform(get("/api/dmRooms/")
-            .param("userId", userId.toString()))
+            .with(user(principal)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(roomId1.toString()))
         .andExpect(jsonPath("$[1].id").value(roomId2.toString()));
@@ -95,11 +120,20 @@ class DmRoomControllerTest {
   void deleteRoom() throws Exception {
     UUID roomId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    User user;
+    user = User.builder()
+        .id(userId)
+        .email("user@test.com")
+        .name("user")
+        .password("pw")
+        .role(Role.USER)
+        .build();
+    CustomUserDetails principal = new CustomUserDetails(user);
 
     doNothing().when(dmRoomService).deleteRoom(userId, roomId);
 
     mockMvc.perform(delete("/api/dmRooms/{roomId}", roomId)
-            .param("userId", userId.toString())
+            .with(user(principal))
             .with(csrf()))
         .andExpect(status().isNoContent());
   }
