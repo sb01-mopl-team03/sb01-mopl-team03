@@ -42,11 +42,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
     Content content = contentRepository.findById(request.contentId()).orElseThrow(ContentNotFoundException::new);
-    Review review = Review.builder().user(user)
-            .content(content)
-        .title(request.title())
-        .comment(request.comment())
-        .rating(request.rating()).build();
+    Review review = new Review(user, content, request.title(), request.comment(), request.rating());
     return ReviewResponse.from(reviewRepository.save(review));
   }
 
