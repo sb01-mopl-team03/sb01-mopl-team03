@@ -31,7 +31,7 @@ public class FollowServiceImpl implements FollowService {
     User follower = userRepository.findById(followerId).orElseThrow(UserNotFoundException::new);
     //팔로우 당하는 사람
     User following = userRepository.findById(followingId).orElseThrow(UserNotFoundException::new);
-    if( !followingId.equals(followerId) ) {
+    if( followingId.equals(followerId) ) {
       throw new CantFollowSelfException(); //자신을 팔로잉할 수 없음
     }
     boolean alreadyFollowing = followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);

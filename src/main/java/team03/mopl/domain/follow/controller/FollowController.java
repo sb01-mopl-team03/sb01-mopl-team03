@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
 
@@ -20,24 +22,22 @@ public class FollowController {
 
   private final FollowService followService;
 
-  // 팔로우하기
-  @PostMapping("/{followerId}/follow/{followingId}")
-  public ResponseEntity<Void> follow(@PathVariable UUID followerId, @PathVariable UUID followingId) {
-    followService.follow(followerId, followingId);
+  @PostMapping("/follow")
+  public ResponseEntity<Void> follow(@RequestBody FollowRequest request) {
+    followService.follow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }
-  @DeleteMapping("/{followerId}/unfollow/{followingId}")
-  public ResponseEntity<Void> unfollow(
-      @PathVariable UUID followerId,
-      @PathVariable UUID followingId
-  ) {
-    followService.unfollow(followerId, followingId);
+
+  @DeleteMapping("/unfollow")
+  public ResponseEntity<Void> unfollow(@RequestBody FollowRequest request) {
+    followService.unfollow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }
+
   // 팔로잉 목록
   @GetMapping("/{userId}/following")
   public ResponseEntity<List<UserResponse>> getFollowing(
-      @PathVariable UUID userId
+      @PathVariable(name = "userId") UUID userId
   ) {
     return ResponseEntity.ok(followService.getFollowing(userId));
   }
@@ -45,7 +45,7 @@ public class FollowController {
   // 팔로워 목록
   @GetMapping("/{userId}/followers")
   public ResponseEntity<List<UserResponse>> getFollowers(
-      @PathVariable UUID userId
+      @PathVariable(name = "userId") UUID userId
   ) {
     return ResponseEntity.ok(followService.getFollowers(userId));
   }
@@ -53,8 +53,7 @@ public class FollowController {
   // 팔로우 여부 확인
   @GetMapping("/{followerId}/is-following/{followingId}")
   public ResponseEntity<Boolean> isFollowing(
-      @PathVariable UUID followerId,
-      @PathVariable UUID followingId
+      @PathVariable(name = "followerId") UUID followerId, @PathVariable(name = "followingId") UUID followingId
   ) {
     return ResponseEntity.ok(followService.isFollowing(followerId, followingId));
   }

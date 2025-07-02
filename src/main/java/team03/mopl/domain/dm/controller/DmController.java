@@ -22,7 +22,7 @@ public class DmController {
 
   // 유저가 룸안의 dm 메시지 가져오기 ( 커서 페이징 필요? )
   @GetMapping("/{roomId}/dm")
-  public ResponseEntity<List<DmDto>> getDm(@PathVariable UUID roomId, @RequestParam UUID userId) {
+  public ResponseEntity<List<DmDto>> getDm(@PathVariable("roomId") UUID roomId, @RequestParam("userId") UUID userId) {
     return ResponseEntity.ok(dmService.getDmList(roomId, userId));
   }
 }
