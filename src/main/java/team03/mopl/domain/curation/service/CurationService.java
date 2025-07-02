@@ -17,4 +17,5 @@ public interface CurationService {
 
   void batchCurationForNewContents(List<Content> newContents);
 
+  void updateContentRating(UUID contentId);
 }

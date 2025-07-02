@@ -14,18 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
-import team03.mopl.domain.curation.service.ContentRecommendService;
+import team03.mopl.domain.curation.service.CurationService;
 
 @RestController
 @RequestMapping("/api/curations")
 @RequiredArgsConstructor
 public class CurationController {
 
-  private final ContentRecommendService recommendService;
+  private final CurationService curationService;
 
   @PostMapping("/keywords")
   public ResponseEntity<Keyword> registerKeyword(@RequestBody KeywordRequest request) {
-    Keyword keyword = recommendService.registerKeyword(request.userId(), request.keyword());
+    Keyword keyword = curationService.registerKeyword(request.userId(), request.keyword());
     return ResponseEntity.ok(keyword);
   }
 
@@ -33,7 +33,7 @@ public class CurationController {
   public ResponseEntity<List<Content>> getRecommendations(
       @PathVariable UUID userId,
       @RequestParam(defaultValue = "10") int limit) {
-    List<Content> recommendations = recommendService.getRecommendationsForUser(userId, limit);
+    List<Content> recommendations = curationService.getRecommendationsForUser(userId, limit);
     return ResponseEntity.ok(recommendations);
   }
 

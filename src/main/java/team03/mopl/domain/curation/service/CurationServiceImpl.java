@@ -7,6 +7,8 @@ import edu.stanford.nlp.pipeline.CoreEntityMention;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import jakarta.annotation.PostConstruct;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
@@ -29,6 +32,8 @@ import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
 import team03.mopl.domain.curation.repository.KeywordRepository;
+import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.service.ReviewService;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
@@ -36,6 +41,7 @@ import team03.mopl.domain.user.UserRepository;
 @Slf4j
 @RequiredArgsConstructor
 public class CurationServiceImpl implements CurationService {
+  private final ReviewService reviewService;
   private final ContentRepository contentRepository;
   private final KeywordRepository keywordRepository;
   private final KeywordContentRepository keywordContentRepository;
@@ -64,6 +70,7 @@ public class CurationServiceImpl implements CurationService {
 
   // 사용자 키워드 등록
   @Override
+  @Transactional
   public Keyword registerKeyword(UUID userId, String keywordText) {
     User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
     Keyword keyword = new Keyword(user, keywordText);
@@ -78,6 +85,7 @@ public class CurationServiceImpl implements CurationService {
 
   // AI 기반 키워드별 콘텐츠 큐레이션
   @Override
+  @Transactional
   public List<Content> curateContentForKeyword(Keyword keyword) {
     String keywordText = keyword.getKeyword();
     List<Content> recommendations = new ArrayList<>();
@@ -119,7 +127,6 @@ public class CurationServiceImpl implements CurationService {
 
     // 3. 장르/타입 매칭 (20% 가중치)
     double typeScore = calculateTypeMatch(keyword, content.getContentType()) * 0.2;
-
     // 4. 평점 보너스 (10% 가중치)
     double ratingBonus = content.getAvgRating() != null ?
         content.getAvgRating().doubleValue() / 10.0 * 0.1 : 0.0;
@@ -305,6 +312,7 @@ public class CurationServiceImpl implements CurationService {
 
   // 배치 큐레이션 (새 콘텐츠에 대해 기존 키워드 매칭)
   @Override
+  @Transactional
   public void batchCurationForNewContents(List<Content> newContents) {
     List<Keyword> allKeywords = keywordRepository.findAll();
 
@@ -313,7 +321,6 @@ public class CurationServiceImpl implements CurationService {
         double score = calculateAIMatchingScore(keyword.getKeyword(), content);
 
         if (score > 0.3) {
-          // 중복 체크 후 저장
           boolean exists = keywordContentRepository.existsByKeywordIdAndContentId(
               keyword.getId(), content.getId());
 
@@ -326,5 +333,52 @@ public class CurationServiceImpl implements CurationService {
     }
 
     log.info("신규 콘텐츠 {}개에 대한 배치 큐레이션 완료", newContents.size());
+  }
+
+  @Override
+  @Transactional
+  public void updateContentRating(UUID contentId) {
+    try {
+      Content content = contentRepository.findById(contentId)
+          .orElseThrow(() -> new IllegalArgumentException("콘텐츠를 찾을 수 없습니다: " + contentId));
+
+      BigDecimal avgRating = getAvgRating(content);
+
+      content.setAvgRating(avgRating);
+      contentRepository.save(content);
+
+      log.info("콘텐츠 평점 업데이트: {} -> {}", content.getTitle(), content.getAvgRating());
+
+    } catch (Exception e) {
+      log.error("평점 업데이트 실패: contentId={}, error={}", contentId, e.getMessage());
+    }
+  }
+
+  private BigDecimal getAvgRating(Content content) {
+    try {
+      List<ReviewResponse> reviews = reviewService.findAllByContent(content.getId());
+
+      if (reviews.isEmpty()) {
+        log.info("콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());
+        return null;
+      }
+
+      double averageRating = reviews.stream()
+          .filter(review -> review.rating() != null)
+          .mapToDouble(review -> review.rating().doubleValue())
+          .average()
+          .orElse(0.0);
+
+      log.info("콘텐츠 {} 평점 계산: 총 {}개 리뷰, 평균 {}",
+          content.getId(), reviews.size(), averageRating);
+
+      // 소수점 둘째 자리까지 반올림
+      return BigDecimal.valueOf(averageRating)
+          .setScale(2, RoundingMode.HALF_UP);
+
+    } catch (Exception e) {
+      log.error("평균 평점 계산 실패: contentId={}, error={}", content.getId(), e.getMessage());
+      return null;
+    }
   }
 }

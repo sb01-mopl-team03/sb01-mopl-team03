@@ -23,7 +23,6 @@ CREATE TABLE "contents"
     "content_type" VARCHAR(50)             NOT NULL,
     "release_date" TIMESTAMP               NOT NULL,
     "avg_rating"   DECIMAL(3,2)            NULL CHECK (rating >= 0.0 AND rating <= 5.0),
-    "view_count"   INTEGER DEFAULT 0       NULL,
     "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
     "url"          TEXT                    NULL
 );
