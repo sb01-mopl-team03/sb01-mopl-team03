@@ -29,7 +29,7 @@ public class ChatRoomController {
   }
 
   @GetMapping("/{roomId}")
-  public ResponseEntity<ChatRoomDto> getChatRoom(@PathVariable String roomId) {
+  public ResponseEntity<ChatRoomDto> getChatRoom(@PathVariable("roomId") String roomId) {
     return ResponseEntity.ok(chatRoomService.getById(UUID.fromString(roomId)));
   }
 
