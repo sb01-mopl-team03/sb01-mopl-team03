@@ -28,7 +28,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "contents")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Content {
 
   @Id
@@ -45,9 +44,7 @@ public class Content {
   @Column(name = "title", nullable = false)
   private String title;
 
-  // docker 이용시 create-drop 을 사용하여 Lob 선언
-  @Lob
-  @Column(name = "description")
+  @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
   @Enumerated(EnumType.STRING)
