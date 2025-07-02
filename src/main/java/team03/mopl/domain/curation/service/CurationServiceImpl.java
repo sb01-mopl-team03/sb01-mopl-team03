@@ -255,6 +255,7 @@ public class CurationServiceImpl implements CurationService {
   }
 
   // 콘텐츠 타입 매칭
+  // TODO: 콘텐츠 데이터 어떻게 들어오는지 보고 리팩토링
   private double calculateTypeMatch(String keyword, ContentType contentType) {
     keyword = keyword.toLowerCase();
 
@@ -263,14 +264,16 @@ public class CurationServiceImpl implements CurationService {
         if (keyword.contains("영화") || keyword.contains("movie") ||
             keyword.contains("film") || keyword.contains("cinema")) return 1.0;
         break;
-      case DRAMA:
+      case TV:
         if (keyword.contains("드라마") || keyword.contains("drama") ||
-            keyword.contains("시리즈") || keyword.contains("series")) return 1.0;
+            keyword.contains("시리즈") || keyword.contains("series") ||
+            keyword.contains("애니메이션") || keyword.contains("animation") ||
+            keyword.contains("예능") || keyword.contains("entertainment")) return 1.0;
         break;
       case SPORTS:
         if (keyword.contains("스포츠") || keyword.contains("sports") ||
             keyword.contains("축구") || keyword.contains("농구") ||
-            keyword.contains("올림픽") || keyword.contains("월드컵")) return 1.0;
+            keyword.contains("야구") || keyword.contains("올림픽")) return 1.0;
         break;
     }
 

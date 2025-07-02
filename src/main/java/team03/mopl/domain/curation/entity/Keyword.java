@@ -31,7 +31,7 @@ public class Keyword {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @Column(nullable = false)
+  @Column(nullable = false, updatable = false)
   private String keyword;
 
   @CreatedDate
