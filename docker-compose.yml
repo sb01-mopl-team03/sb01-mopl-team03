@@ -12,6 +12,7 @@ services:
     env_file:
       - ./.env
     environment:
+      - TZ=Asia/Seoul
       - JVM_OPTS=-Xms256m -Xmx512m
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:${POSTGRES_PORT}/${POSTGRES_DB}
