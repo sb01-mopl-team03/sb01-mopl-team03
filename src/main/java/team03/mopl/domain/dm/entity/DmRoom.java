@@ -61,5 +61,10 @@ public class DmRoom {
     messages.add(dm);
     dm.setDmRoom(this);
   }
-
+  //테스트용 생성자
+  public DmRoom(UUID id, UUID senderId, UUID receiverId) {
+    this.id = id;
+    this.senderId = senderId;
+    this.receiverId = receiverId;
+  }
 }

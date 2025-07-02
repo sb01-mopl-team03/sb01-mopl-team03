@@ -26,7 +26,7 @@ public class NotificationController {
    * ResponseEntity나 JSON을 반환하면 SSE 프로토콜이 성립하지 않아서 EventSource나 SSE 클라이언트가 아예 수신을 못 합니다.
    */
   @GetMapping("/subscribe/{userId}")
-  public SseEmitter subscribe(@PathVariable UUID userId) {
+  public SseEmitter subscribe(@PathVariable(name = "userId") UUID userId) {
     return sseEmitterManager.subscribe(userId);
   }
 
@@ -34,7 +34,7 @@ public class NotificationController {
    * 알림 내역 조회
    */
   @GetMapping("/{userId}")
-  public ResponseEntity<List<NotificationDto>> getNotifications(@PathVariable UUID userId) {
+  public ResponseEntity<List<NotificationDto>> getNotifications(@PathVariable(name = "userId") UUID userId) {
     List<NotificationDto> list = notificationService.getNotifications(userId);
 
     //알림 내역을 조회했다는 건 읽었다는 것

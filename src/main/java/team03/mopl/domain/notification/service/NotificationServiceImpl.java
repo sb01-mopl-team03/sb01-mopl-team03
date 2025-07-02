@@ -29,7 +29,7 @@ public class NotificationServiceImpl implements NotificationService{
 
   @Override
   public void markAllAsRead(UUID receiverId) {
-    List<Notification> unread = notificationRepository.findByReceiverIdAndRead(receiverId, false);
+    List<Notification> unread = notificationRepository.findByReceiverIdAndIsRead(receiverId, false);
     unread.forEach(Notification::setIsRead);
     notificationRepository.saveAll(unread);
   }

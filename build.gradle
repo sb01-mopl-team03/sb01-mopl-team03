@@ -61,7 +61,11 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
-    
+
+    // Spring Batch
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+
     // Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // Prometheus

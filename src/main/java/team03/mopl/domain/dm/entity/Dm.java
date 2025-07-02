@@ -69,4 +69,10 @@ public class Dm {
     this.senderId = senderId;
     this.content = content;
   }
+  //테스트를 위한 생성자
+  public Dm(UUID id, UUID senderId, String content) {
+    this.id = id;
+    this.senderId = senderId;
+    this.content = content;
+  }
 }

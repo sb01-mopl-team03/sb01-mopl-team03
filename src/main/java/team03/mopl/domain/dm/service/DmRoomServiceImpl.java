@@ -73,21 +73,17 @@ public class DmRoomServiceImpl implements DmRoomService {
   public void deleteRoom(UUID userId, UUID roomId) { //파라미터 변경! ( 삭제하고자 하는 룸의 유저가 삭제가능 )
     // 둘 다 나가기 전까지는 채팅이 살아있어야 함
     DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(DmRoomNotFoundException::new);
-    if (dmRoom.getReceiverId().equals(userId) || dmRoom.getSenderId().equals(userId)) {
-      //둘 중 하나의 유저가 나가고 싶어함
-      if (dmRoom.getSenderId().equals(userId)) {
-        dmRoom.setSenderId(null);
-      } else {
-        dmRoom.setReceiverId(null);
+    if( dmRoom.getSenderId()!=null && dmRoom.getSenderId().equals(userId) ) {
+      dmRoom.setSenderId(null);
+    } else if ( dmRoom.getReceiverId()!=null && dmRoom.getReceiverId().equals(userId) ) {
+      dmRoom.setReceiverId(null);
+    }
+    if (dmRoom.nobodyInRoom()) {
+      List<Dm> messages = dmRoom.getMessages();
+      for (Dm message : messages) {
+        dmService.deleteDm(message.getId());
       }
-      //아무도 없는지 확인
-      if (dmRoom.nobodyInRoom()) {
-        List<Dm> messages = dmRoom.getMessages();
-        for (Dm message : messages) {
-          dmService.deleteDm(message.getId());
-        }
-        dmRoomRepository.delete(dmRoom);
-      }
+      dmRoomRepository.delete(dmRoom);
     }
   }
 

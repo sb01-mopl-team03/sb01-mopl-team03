@@ -80,12 +80,12 @@ class ChatMessageServiceImplTest {
 
     //todo - 빌더 또는 생성자 구현해주시면 수정하기
     contentId = UUID.randomUUID();
-    content = new Content(
-        "테스트콘텐츠",
-        "테스트용 콘텐츠 입니다.",
-        ContentType.DRAMA,
-        LocalDateTime.now()
-    );
+    content = Content.builder()
+        .title("테스트콘텐츠")
+        .description("테스트용 콘텐츠 입니다.")
+        .contentType(ContentType.TV)
+        .releaseDate(LocalDateTime.now())
+        .build();
 
     chatRoomId = UUID.randomUUID();
     chatRoom = ChatRoom.builder()

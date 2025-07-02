@@ -21,39 +21,45 @@ public class GoogleOAuthService {
   private final RestTemplate restTemplate;
 
   @Value("${spring.security.oauth2.client.registration.google.client-id}")
-  private String clientId;
+  private String googleClientId;
 
   @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-  private String clientSecret;
+  private String googleClientSecret;
 
   @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-  private String redirectUri;
+  private String googleRedirectUri;
 
-  private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-  private static final String GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+  @Value("${spring.security.oauth2.client.provider.google.token-uri}")
+  private String googleTokenUri;
+
+  @Value("${spring.security.oauth2.client.provider.google.user-info-uri}")
+  private String googleUserInfoUri;
+
+  @Value("${spring.security.oauth2.client.provider.google.authorization-uri}")
+  private String googleAuthorizationUri;
 
   public String buildGoogleOAuthUrl(){
     return UriComponentsBuilder
-        .fromUriString("https://accounts.google.com/o/oauth2/v2/auth")
-        .queryParam("client_id", clientId)
-        .queryParam("redirect_uri", redirectUri)
+        .fromUriString(googleAuthorizationUri)
+        .queryParam("client_id", googleClientId)
+        .queryParam("redirect_uri", googleRedirectUri)
         .queryParam("response_type", "code")
         .queryParam("scope", "email profile")
         .build().toUriString();
   }
 
-  public GoogleUserInfo getUserInfoFromCode(String code){
-    String accessToken= fetchAccessToken(code);
-    return fetchUserInfo(accessToken);
+  public GoogleUserInfo getUserInfoFromGoogleCode(String code){
+    String accessToken= getGoogleAccessToken(code);
+    return getGoogleUserInfo(accessToken);
   }
 
-  private GoogleUserInfo fetchUserInfo(String accessToken) {
+  private GoogleUserInfo getGoogleUserInfo(String accessToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(accessToken);
     HttpEntity<?> request = new HttpEntity<>(headers);
 
     ResponseEntity<Map> response = restTemplate.exchange(
-        GOOGLE_USER_INFO_URL, HttpMethod.GET, request, Map.class
+        googleUserInfoUri, HttpMethod.GET, request, Map.class
     );
 
     Map<String, Object> body = response.getBody();
@@ -64,20 +70,21 @@ public class GoogleOAuthService {
     );
   }
 
-  private String fetchAccessToken(String code) {
+  private String getGoogleAccessToken(String code) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
     MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
     body.add("code", code);
-    body.add("client_id", clientId);
-    body.add("client_secret", clientSecret);
-    body.add("redirect_uri", redirectUri);
+    body.add("client_id", googleClientId);
+    body.add("client_secret", googleClientSecret);
+    body.add("redirect_uri", googleRedirectUri);
     body.add("grant_type", "authorization_code");
 
     HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-    ResponseEntity<Map> response = restTemplate.postForEntity(GOOGLE_TOKEN_URL,request,Map.class);
+    ResponseEntity<Map> response = restTemplate.postForEntity(
+        googleTokenUri,request,Map.class);
     return (String) response.getBody().get("access_token");
   }
 }

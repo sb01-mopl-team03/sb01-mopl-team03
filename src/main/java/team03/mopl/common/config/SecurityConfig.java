@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import team03.mopl.jwt.CustomUserDetailsService;
 import team03.mopl.jwt.JwtAuthenticationFilter;
+import team03.mopl.jwt.JwtBlacklist;
 import team03.mopl.jwt.JwtProvider;
 import team03.mopl.jwt.JwtSessionRepository;
 
@@ -24,7 +25,7 @@ public class SecurityConfig {
 
   private final CustomUserDetailsService customUserDetailsService;
   private final JwtProvider jwtProvider;
-  private final JwtSessionRepository jwtSessionRepository;
+  private final JwtBlacklist jwtBlacklist;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,7 +41,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST,"/api/auth/temp-password").permitAll()
             .anyRequest().hasRole("USER")
         )
-        .addFilterBefore(new JwtAuthenticationFilter(jwtProvider,customUserDetailsService,jwtSessionRepository),
+        .addFilterBefore(new JwtAuthenticationFilter(jwtProvider,customUserDetailsService,jwtBlacklist),
             UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
