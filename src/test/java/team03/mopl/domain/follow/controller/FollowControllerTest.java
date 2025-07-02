@@ -11,14 +11,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
 
@@ -36,25 +39,36 @@ class FollowControllerTest {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
 
-    mockMvc.perform(post("/api/follows/{followerId}/follow/{followingId}", followerId, followingId)
+    FollowRequest request = new FollowRequest(followerId, followingId);
+
+    mockMvc.perform(post("/api/follows/follow")
             .with(csrf())
-            .with(user("testuser").roles("USER")))
+            .with(user("testuser").roles("USER"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(new ObjectMapper().writeValueAsString(request)))
         .andExpect(status().isOk());
 
     verify(followService).follow(followerId, followingId);
   }
+
 
   @Test
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
 
-    mockMvc.perform(delete("/api/follows/{followerId}/unfollow/{followingId}", followerId, followingId)
-            .with(csrf()).with(user("testuser").roles("USER")))
+    FollowRequest request = new FollowRequest(followerId, followingId);
+
+    mockMvc.perform(delete("/api/follows/unfollow")
+            .with(csrf())
+            .with(user("testuser").roles("USER"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(new ObjectMapper().writeValueAsString(request)))
         .andExpect(status().isOk());
 
     verify(followService).unfollow(followerId, followingId);
   }
+
 
   @Test
   @WithMockUser(username = "testuser", roles = "USER")
