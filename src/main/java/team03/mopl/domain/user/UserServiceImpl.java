@@ -5,6 +5,7 @@ import static team03.mopl.domain.user.Role.*;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.oauth2.GoogleUserInfo;
+import team03.mopl.domain.oauth2.KakaoUserInfo;
 
 @Service
 @RequiredArgsConstructor
@@ -66,20 +68,17 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User loginOrRegisterByGoogle(GoogleUserInfo googleUser) {
-    return userRepository.findByEmail(googleUser.email())
-        .orElseGet(()-> registerGoogleUser(googleUser));
-  }
-
-  private User registerGoogleUser(GoogleUserInfo googleUser) {
-    String randomPassword = UUID.randomUUID().toString();
-    User user = User.builder()
-        .email(googleUser.email())
-        .name(googleUser.name())
-        .password(passwordEncoder.encode(randomPassword))
-        .role(USER)
-        .isLocked(false)
-        .build();
-    return userRepository.save(user);
+  public User loginOrRegisterOAuth(String email,String name){
+    return userRepository.findByEmail(email)
+        .orElseGet(()->{
+          String randomPassword  = UUID.randomUUID().toString();
+          return userRepository.save(User.builder()
+              .email(email)
+              .name(name)
+              .password(passwordEncoder.encode(randomPassword ))
+              .role(USER)
+              .isLocked(false)
+              .build());
+        });
   }
 }

@@ -74,8 +74,8 @@ public class AuthService {
     return jwtService.getAccessTokenByRefreshToken(refreshToken);
   }
 
-  public void invalidateSessionByRefreshToken(String refreshToken) {
-    jwtService.invalidateSessionByRefreshToken(refreshToken,false);
+  public void invalidateSessionByRefreshToken(String refreshToken,boolean userBlackList) {
+    jwtService.invalidateSessionByRefreshToken(refreshToken,userBlackList);
   }
 
   public void resetPassword(String email) {
