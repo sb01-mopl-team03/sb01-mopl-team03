@@ -35,7 +35,7 @@ import team03.mopl.domain.user.UserRepository;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ContentRecommendServiceImpl implements ContentRecommendService {
+public class CurationServiceImpl implements CurationService {
   private final ContentRepository contentRepository;
   private final KeywordRepository keywordRepository;
   private final KeywordContentRepository keywordContentRepository;

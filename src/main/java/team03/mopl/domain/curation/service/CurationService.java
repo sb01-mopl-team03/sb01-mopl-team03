@@ -5,7 +5,7 @@ import java.util.UUID;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.curation.entity.Keyword;
 
-public interface ContentRecommendService {
+public interface CurationService {
 
   void init();
 
