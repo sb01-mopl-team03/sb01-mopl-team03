@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -27,6 +28,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "contents")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Content {
 
   @Id
@@ -34,7 +36,7 @@ public class Content {
   private UUID id;
 
   @CreatedDate
-  @Column(name = "created_at", nullable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
   @Column(name = "data_id")
@@ -55,7 +57,14 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
+  @Column(name = "avg_rating", precision = 3, scale = 2)
+  private BigDecimal avgRating;
+
   @Column(name = "url")
   private String url;
+
+  public void setAvgRating(BigDecimal avgRating) {
+    this.avgRating = avgRating;
+  }
 
 }

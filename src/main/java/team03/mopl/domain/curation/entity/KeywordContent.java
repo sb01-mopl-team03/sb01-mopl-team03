@@ -1,4 +1,4 @@
-package team03.mopl.domain.keyword;
+package team03.mopl.domain.curation.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,7 +12,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.content.Content;
 
@@ -21,6 +23,7 @@ import team03.mopl.domain.content.Content;
 @Table(name = "keyword_contents", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"keyword_id", "content_id"})
 })
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class KeywordContent {
 
   @Id
@@ -39,4 +42,8 @@ public class KeywordContent {
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
+  public KeywordContent(Keyword keyword, Content content) {
+    this.keyword = keyword;
+    this.content = content;
+  }
 }

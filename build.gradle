@@ -57,6 +57,11 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // AI
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
+    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
+
     // Spring Batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
     testImplementation 'org.springframework.batch:spring-batch-test'
@@ -80,4 +85,8 @@ tasks.named('jacocoTestReport'){
         xml.required = true
         html.required =true
     }
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs = ['-Xmx4g', '-Xms1g']
 }

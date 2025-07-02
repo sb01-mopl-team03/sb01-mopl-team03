@@ -24,7 +24,6 @@ import team03.mopl.domain.chat.dto.ChatRoomContentWithHeadcountDto;
 import team03.mopl.domain.chat.dto.ChatRoomCreateRequest;
 import team03.mopl.domain.chat.dto.ChatRoomDto;
 import team03.mopl.domain.chat.entity.ChatRoom;
-import team03.mopl.domain.chat.entity.ChatRoomParticipant;
 import team03.mopl.domain.chat.exception.ChatRoomNotFoundException;
 import team03.mopl.domain.chat.repository.ChatRoomParticipantRepository;
 import team03.mopl.domain.chat.repository.ChatRoomRepository;
