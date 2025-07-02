@@ -23,7 +23,7 @@ CREATE TABLE "contents"
     "description"  TEXT                    NULL,
     "content_type" VARCHAR(50)             NOT NULL,
     "release_date" TIMESTAMP               NOT NULL,
-    "avg_rating"   DECIMAL(3,2)            NULL CHECK (avg_rating    >= 0.0 AND avg_rating <= 5.0),
+    "avg_rating"   DECIMAL(3,2)            NULL CHECK (avg_rating >= 0.0 AND avg_rating <= 5.0),
     "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
     "url"          TEXT                    NULL
 );
