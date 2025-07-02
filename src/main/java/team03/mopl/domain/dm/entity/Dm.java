@@ -1,6 +1,8 @@
 package team03.mopl.domain.dm.entity;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +12,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "dms")
@@ -28,27 +35,33 @@ public class Dm {
   @Column(name = "content", length = 255, nullable = false)
   private String content;
 
-  @Column(name = "is_read", nullable = false)
-  private boolean isRead = false;
+  /* @Column(name = "is_read", nullable = false)
+  private List<UUID> isRead = false;*/
+  @ElementCollection
+  @CollectionTable(name = "dm_read_users", joinColumns = @JoinColumn(name = "dm_id"))
+  @Column(name = "user_id", unique = true)
+  private Set<UUID> readUserIds = new HashSet<>();
 
   @Column(name = "created_at", updatable = false, nullable = false)
   private LocalDateTime createdAt = LocalDateTime.now();
 
+  /*if (!dmRoom.getMessages().contains(this)) {
+      dmRoom.getMessages().add(this);
+    }*/
+  @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "dm_room_id", nullable = false)
   private DmRoom dmRoom;
 
-  public void setDmRoom(DmRoom dmRoom) {
-    this.dmRoom = dmRoom;
-
-    if (!dmRoom.getMessages().contains(this)) {
-      dmRoom.getMessages().add(this);
-    }
+  // 메시지를 읽은 사람은 리스트에 추가
+  public void readDm(UUID userId) {
+    readUserIds.add(userId);
   }
-
-  public void setRead(){
-    isRead = true;
+  // 2명 중 읽은 사람 수 만큼 빼기
+  public int getUnreadCount() {
+    return 2 - readUserIds.size();
   }
+  //public void setRead(){    isRead = true;  }
 
   protected Dm() {}
 

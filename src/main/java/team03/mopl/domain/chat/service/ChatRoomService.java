@@ -13,9 +13,11 @@ public interface ChatRoomService {
   //채팅방 전체 조회
   List<ChatRoomDto> getAll();
 
+  List<ChatRoomDto> getAllWithN1();
+
   //채팅방 단일 조회
   ChatRoomDto getById(UUID id);
 
   //채팅방 참여
-  ChatRoomDto join(UUID userId);
+  ChatRoomDto join(UUID chatRoomId, UUID userId);
 }

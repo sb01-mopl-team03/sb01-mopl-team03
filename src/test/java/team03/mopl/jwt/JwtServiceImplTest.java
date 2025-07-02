@@ -151,11 +151,27 @@ class JwtServiceImplTest {
     // given
     String refreshToken = "some-refresh-token";
 
+    User user = User.builder()
+        .id(UUID.randomUUID())
+        .email("test@example.com")
+        .role(Role.USER)
+        .build();
+
+    JwtSession session = JwtSession.builder()
+        .user(user)
+        .refreshToken(refreshToken)
+        .accessToken("access-token")
+        .expiresAt(LocalDateTime.now().plusMinutes(10))
+        .isActive(true)
+        .build();
+
+    when(jwtSessionRepository.findByRefreshToken(refreshToken)).thenReturn(Optional.of(session));
+
     // when
-    jwtService.invalidateSessionByRefreshToken(refreshToken);
+    jwtService.invalidateSessionByRefreshToken(refreshToken, false);
 
     // then
-    verify(jwtSessionRepository).deleteByRefreshToken(refreshToken);
+    verify(jwtSessionRepository).delete(any(JwtSession.class));
   }
 
   @DisplayName("유효한 refresh token이 있으면 새로운 토큰 쌍을 재발급")
