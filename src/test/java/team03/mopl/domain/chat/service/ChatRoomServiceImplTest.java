@@ -29,7 +29,7 @@ import team03.mopl.domain.chat.exception.ChatRoomNotFoundException;
 import team03.mopl.domain.chat.repository.ChatRoomParticipantRepository;
 import team03.mopl.domain.chat.repository.ChatRoomRepository;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
