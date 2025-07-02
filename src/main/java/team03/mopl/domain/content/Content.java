@@ -28,7 +28,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "contents")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Content {
 
   @Id
