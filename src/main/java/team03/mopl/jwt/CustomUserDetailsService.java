@@ -1,5 +1,6 @@
 package team03.mopl.jwt;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,6 +14,12 @@ import team03.mopl.domain.user.UserRepository;
 public class CustomUserDetailsService implements UserDetailsService {
 
   private final UserRepository userRepository;
+
+  public CustomUserDetails loadUserById(UUID userId){
+    User user = userRepository.findById(userId).orElseThrow(
+        () -> new UsernameNotFoundException("User " + userId + " not found"));
+    return new CustomUserDetails(user);
+  }
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

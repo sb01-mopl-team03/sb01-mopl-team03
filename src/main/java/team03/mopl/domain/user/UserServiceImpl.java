@@ -5,12 +5,15 @@ import static team03.mopl.domain.user.Role.*;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.oauth2.GoogleUserInfo;
+import team03.mopl.domain.oauth2.KakaoUserInfo;
 
 @Service
 @RequiredArgsConstructor
@@ -62,5 +65,20 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<UserResponse> findAll() {
     return userRepository.findAll().stream().map(UserResponse::from).toList();
+  }
+
+  @Override
+  public User loginOrRegisterOAuth(String email,String name){
+    return userRepository.findByEmail(email)
+        .orElseGet(()->{
+          String randomPassword  = UUID.randomUUID().toString();
+          return userRepository.save(User.builder()
+              .email(email)
+              .name(name)
+              .password(passwordEncoder.encode(randomPassword ))
+              .role(USER)
+              .isLocked(false)
+              .build());
+        });
   }
 }

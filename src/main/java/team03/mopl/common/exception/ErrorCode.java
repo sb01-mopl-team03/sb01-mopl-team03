@@ -12,7 +12,19 @@ public enum ErrorCode {
 
   CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONTENT_001", "존재하지 않는 콘텐츠입니다."),
 
-  REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다.");
+  REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다."),
+
+  CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다."),
+  ALREADY_JOINED_CHATROOM(HttpStatus.CREATED, "CHATROOM_002", "이미 참여중인 채팅방입니다."),
+  //DM
+  DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM_001", "존재하지 않는 다이렉트 메시지입니다."),
+  DM_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM_001", "존재하지 않는 채팅방입니다."),
+  //Follow
+  FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "FOLLOW_001", "존재하지 않는 팔로우입니다."),
+  ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_002", "이미 팔로우하고 있습니다."),
+  CANNOT_FOLLOW_SELF(HttpStatus.BAD_REQUEST, "FOLLOW_003", "자기 자신을 팔로우하고 있습니다."),
+  //Notification
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다.");
 
 
   private HttpStatus status;

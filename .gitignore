@@ -203,6 +203,10 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,intellij,java
 
+# Generated (QueryDsl)
+**/generated
+
+
 # .yaml
 **/application.yaml
 **/application-dev.yaml
@@ -214,6 +218,9 @@ $RECYCLE.BIN/
 
 # build
 build/
+
+# Problems Report
+**/reports/problems
 
 # frontend 프론트엔드
 

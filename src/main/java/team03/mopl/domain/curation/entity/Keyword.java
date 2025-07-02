@@ -1,8 +1,7 @@
-package team03.mopl.domain.user;
+package team03.mopl.domain.curation.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,30 +11,35 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import team03.mopl.domain.user.User;
 
+@Getter
 @Entity
-@Table(name = "temporary_passwords")
-public class TemporaryPassword {
+@Table(name = "keywords")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Keyword {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name="user_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id")
   private User user;
 
-  @Column(name="temp_password", nullable = false, length = 255)
-  private String tempPassword;
+  @Column(nullable = false, updatable = false)
+  private String keyword;
 
   @CreatedDate
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @Column(nullable = false)
   private LocalDateTime createdAt;
 
-  @Column(name = "expired_at", nullable = false)
-  private LocalDateTime expiredAt;
-
-  @Column(name = "is_used", nullable = false)
-  private boolean isUsed = false;
+  public Keyword(User user, String keyword) {
+    this.user = user;
+    this.keyword = keyword;
+  }
 }

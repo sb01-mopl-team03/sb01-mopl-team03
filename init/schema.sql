@@ -1,14 +1,16 @@
 -- 사용자 테이블
 CREATE TABLE "users"
 (
-    "id"         UUID PRIMARY KEY           NOT NULL,
-    "email"      VARCHAR(100) UNIQUE        NOT NULL,
-    "name"       VARCHAR(100) UNIQUE        NOT NULL,
-    "password"   VARCHAR(255)               NOT NULL,
-    "created_at" TIMESTAMP   DEFAULT now()  NOT NULL,
-    "updated_at" TIMESTAMP   DEFAULT now()  NOT NULL,
-    "is_locked"  BOOLEAN     DEFAULT false  NOT NULL,
-    "role"       VARCHAR(50) DEFAULT 'USER' NOT NULL
+    "id"                       UUID PRIMARY KEY           NOT NULL,
+    "email"                    VARCHAR(100) UNIQUE        NOT NULL,
+    "name"                     VARCHAR(100) UNIQUE        NOT NULL,
+    "password"                 VARCHAR(255)               NOT NULL,
+    "created_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
+    "updated_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
+    "is_locked"                BOOLEAN     DEFAULT false  NOT NULL,
+    "role"                     VARCHAR(50) DEFAULT 'USER' NOT NULL,
+    "is_temp_password"         BOOLEAN     DEFAULT false  NOT NULL,
+    "temp_password_expired_at" TIMESTAMP                  NULL
 );
 COMMENT ON COLUMN "users"."role" IS 'ENUM';
 
@@ -17,12 +19,17 @@ CREATE TABLE "contents"
 (
     "id"           UUID PRIMARY KEY        NOT NULL,
     "title"        VARCHAR(255)            NOT NULL,
+    "data_id"      varchar(255)            NULL,
     "description"  TEXT                    NULL,
     "content_type" VARCHAR(50)             NOT NULL,
     "release_date" TIMESTAMP               NOT NULL,
-    "created_at"   TIMESTAMP DEFAULT now() NOT NULL
+    "avg_rating"   DECIMAL(3,2)            NULL CHECK (avg_rating >= 0.0 AND avg_rating <= 5.0),
+    "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
+    "url"          TEXT                    NULL
 );
 COMMENT ON COLUMN "contents"."content_type" IS 'ENUM';
+CREATE INDEX idx_content_title ON contents(title);
+CREATE INDEX idx_content_description ON contents(description);
 
 -- 키워드 테이블
 CREATE TABLE "keywords"
@@ -115,7 +122,9 @@ CREATE TABLE "chat_rooms"
 (
     "id"         UUID PRIMARY KEY        NOT NULL,
     "content_id" UUID                    NOT NULL,
+    "owner_id"   UUID                    NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
+    FOREIGN KEY ("owner_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
 );
 
@@ -195,16 +204,13 @@ CREATE TABLE "jwt_sessions"
     FOREIGN KEY ("user_id") REFERENCES "users" ("id")
 );
 
--- 임시 비밀번호 테이블
-CREATE TABLE "temporary_passwords"
+
+CREATE TABLE "dm_read_users"
 (
-    "id"            UUID PRIMARY KEY        NOT NULL,
-    "user_id"       UUID                    NOT NULL,
-    "temp_password" VARCHAR(255)            NOT NULL,
-    "created_at"    TIMESTAMP DEFAULT now() NOT NULL,
-    "expired_at"    TIMESTAMP               NOT NULL,
-    "is_used"       BOOLEAN                 NOT NULL,
-    FOREIGN KEY ("user_id") REFERENCES "users" ("id")
+    "dm_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    PRIMARY KEY ("dm_id", "user_id"),
+    FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
 );
 
 -- 소셜 계정 테이블

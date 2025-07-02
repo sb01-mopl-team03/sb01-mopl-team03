@@ -2,6 +2,8 @@ package team03.mopl.domain.user;
 
 import java.util.List;
 import java.util.UUID;
+import team03.mopl.domain.oauth2.GoogleUserInfo;
+import team03.mopl.domain.oauth2.KakaoUserInfo;
 
 public interface UserService {
   UserResponse create(UserCreateRequest request);
@@ -9,4 +11,5 @@ public interface UserService {
   UserResponse update(UUID userId, UserUpdateRequest request);
   void delete(UUID userId);
   List<UserResponse> findAll();
+  User loginOrRegisterOAuth(String email,String name);
 }
