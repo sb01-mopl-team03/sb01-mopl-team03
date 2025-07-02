@@ -61,6 +61,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
+    implementation 'com.github.vinhkhuc:jfasttext:0.5'
 
     // Spring Batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
@@ -89,4 +90,9 @@ tasks.named('jacocoTestReport'){
 
 tasks.withType(JavaExec) {
     jvmArgs = ['-Xmx4g', '-Xms1g']
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }  // 이 라인 추가
 }
