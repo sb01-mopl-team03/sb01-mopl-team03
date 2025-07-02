@@ -48,7 +48,7 @@ public class AuthController {
       return ResponseEntity.badRequest().body("No refresh token");
     }
 
-    authService.invalidateSessionByRefreshToken(refreshToken);
+    authService.invalidateSessionByRefreshToken(refreshToken, true);
 
     return ResponseEntity.ok("LOGOUT");
   }

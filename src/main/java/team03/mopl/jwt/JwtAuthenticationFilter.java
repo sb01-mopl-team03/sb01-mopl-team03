@@ -18,7 +18,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtProvider jwtProvider;
   private final CustomUserDetailsService userDetailsService;
-  private final JwtSessionRepository jwtSessionRepository;
+  private final JwtBlacklist jwtBlacklist;
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String BEARER_PREFIX = "Bearer ";
@@ -31,6 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String token=extractToken(request);
 
     if (token != null && jwtProvider.validateToken(token)) {
+      if(jwtBlacklist.blacklisted(token)) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
+
       UUID userId = jwtProvider.extractUserId(token);
       UserDetails userDetails = userDetailsService.loadUserById(userId);
 
