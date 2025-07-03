@@ -36,6 +36,9 @@ public class UserServiceImpl implements UserService {
         .email(request.email())
         .password(passwordEncoder.encode(request.password()))
         .role(USER)
+        .isLocked(false)
+        .isTempPassword(false)
+        .profileImage(request.profileImage())
         .build();
     return UserResponse.from(userRepository.save(user));
   }
