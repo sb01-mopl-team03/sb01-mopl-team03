@@ -72,6 +72,9 @@ dependencies {
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     //websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    testImplementation 'org.springframework:spring-websocket'
+    testImplementation 'org.springframework:spring-messaging'
+
 }
 
 tasks.named('test') {
