@@ -29,6 +29,14 @@ public class ContentServiceImpl implements ContentService {
   }
 
   @Override
+  public ContentDto getContent(UUID id) {
+    // 컨텐츠 존재 유무 검증
+    Content content = contentRepository.findById(id)
+        .orElseThrow(ContentNotFoundException::new);
+    return ContentDto.from(content);
+  }
+
+  @Override
   public void updateContentRating(UUID contentId) {
     BigDecimal averageRating = calculateRating(contentId);
 

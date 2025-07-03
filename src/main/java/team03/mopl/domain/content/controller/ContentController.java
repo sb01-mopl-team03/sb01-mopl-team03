@@ -1,9 +1,11 @@
 package team03.mopl.domain.content.controller;
 
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.content.dto.ContentDto;
@@ -17,7 +19,12 @@ public class ContentController {
   private final ContentService contentService;
 
   @GetMapping
-  public ResponseEntity<List<ContentDto>> getAll(){
+  public ResponseEntity<List<ContentDto>> getAll() {
     return ResponseEntity.ok(contentService.getAll());
+  }
+
+  @GetMapping("/{contentId}")
+  public ResponseEntity<ContentDto> getContent(@PathVariable("contentId") UUID id) {
+    return ResponseEntity.ok(contentService.getContent(id));
   }
 }

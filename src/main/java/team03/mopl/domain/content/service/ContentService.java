@@ -7,6 +7,7 @@ import team03.mopl.domain.content.dto.ContentDto;
 public interface ContentService {
 
   List<ContentDto> getAll();
+  ContentDto getContent(UUID id);
 
   void updateContentRating(UUID contentId);
 }
