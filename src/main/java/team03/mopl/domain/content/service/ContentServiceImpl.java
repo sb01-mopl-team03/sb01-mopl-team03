@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.review.dto.ReviewResponse;
 import team03.mopl.domain.review.service.ReviewService;
@@ -19,6 +20,13 @@ public class ContentServiceImpl implements ContentService {
 
   private final ContentRepository contentRepository;
   private final ReviewService reviewService;
+
+  @Override
+  public List<ContentDto> getAll() {
+    return contentRepository.findAll()
+        .stream().map(ContentDto::from)
+        .toList();
+  }
 
   @Override
   public void updateContentRating(UUID contentId) {
