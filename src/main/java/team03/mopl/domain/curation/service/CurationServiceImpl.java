@@ -1,11 +1,6 @@
 package team03.mopl.domain.curation.service;
 
 import com.github.jfasttext.JFastText;
-import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.pipeline.CoreDocument;
-import edu.stanford.nlp.pipeline.CoreEntityMention;
-import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
