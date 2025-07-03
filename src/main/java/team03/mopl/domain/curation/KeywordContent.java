@@ -1,4 +1,4 @@
-package team03.mopl.domain.subscription;
+package team03.mopl.domain.curation;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,33 +18,32 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import team03.mopl.domain.playlist.Playlist;
-import team03.mopl.domain.user.User;
+import team03.mopl.domain.content.Content;
 
 @Getter
 @Entity
-@Table(name = "subscriptions", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"subscriber_id", "playlist_id"})
+@Table(name = "keyword_contents", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"keyword_id", "content_id"})
 })
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Subscription {
+public class KeywordContent {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "subscriber_id")
-  private User user;
+  @JoinColumn(name = "keyword_id", nullable = false)
+  private Keyword keyword;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "playlist_id")
-  private Playlist playlist;
+  @JoinColumn(name = "content_id", nullable = false)
+  private Content content;
 
   @CreatedDate
-  @Column(nullable = false)
+  @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
 }

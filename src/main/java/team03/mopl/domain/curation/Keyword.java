@@ -1,9 +1,8 @@
-package team03.mopl.domain.playlist;
+package team03.mopl.domain.curation;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,46 +20,28 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import team03.mopl.domain.subscription.Subscription;
 import team03.mopl.domain.user.User;
 
 @Getter
 @Entity
-@Table(name = "playlists")
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "keywords")
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Playlist {
+public class Keyword {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column(name = "name", length = 100)
-  private String name;
-
-  @Column(name = "is_public", nullable = false)
-  private boolean isPublic;
-
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "creator_id")
+  @JoinColumn(name = "user_id")
   private User user;
 
-  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-  private List<PlaylistContent> playlistContents;
-
-  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-  private List<Subscription> subscriptions;
+  @OneToMany(mappedBy = "keyword", cascade = CascadeType.ALL)
+  private List<KeywordContent> keywordContents;
 
   @CreatedDate
   @Column(nullable = false)
   private LocalDateTime createdAt;
-
-  @LastModifiedDate
-  @Column(nullable = false)
-  private LocalDateTime updatedAt;
-
 }
