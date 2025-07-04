@@ -97,7 +97,6 @@ class WatchRoomWebSocketControllerTest {
 
       CustomUserDetails mockUser = mock(CustomUserDetails.class);
       when(mockUser.getId()).thenReturn(mockUserId);
-      when(mockUser.getUsername()).thenReturn(mockUserName);
 
       //when
       watchRoomWebSocketController.joinRoom(mockRoomId, mockUser);
