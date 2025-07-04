@@ -63,6 +63,9 @@ public class User {
   @Column
   private LocalDateTime tempPasswordExpiredAt;
 
+  @Column(length = 255)
+  private String profileImage;
+
   public void update(String name, String password) {
     if (name != null && !name.equals(this.name)) {
       this.name = name;

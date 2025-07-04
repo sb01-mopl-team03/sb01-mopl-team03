@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +18,7 @@ import team03.mopl.jwt.CustomUserDetailsService;
 import team03.mopl.jwt.JwtAuthenticationFilter;
 import team03.mopl.jwt.JwtBlacklist;
 import team03.mopl.jwt.JwtProvider;
-import team03.mopl.jwt.JwtSessionRepository;
+
 
 @Configuration
 @RequiredArgsConstructor
@@ -39,12 +40,19 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST,"/api/auth/change-password").permitAll()
             .requestMatchers(HttpMethod.POST,"/api/auth/temp-password").permitAll()
+            .requestMatchers("/profile/**").permitAll()
             .anyRequest().hasRole("USER")
         )
         .addFilterBefore(new JwtAuthenticationFilter(jwtProvider,customUserDetailsService,jwtBlacklist),
             UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public WebSecurityCustomizer webSecurityCustomizer() {
+    return web -> web.ignoring()
+        .requestMatchers("/profile/**");
   }
 
   @Bean
