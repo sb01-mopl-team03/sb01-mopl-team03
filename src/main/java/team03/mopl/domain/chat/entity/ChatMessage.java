@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Entity
 @Getter
-@Table(name="chat_messages")
+@Table(name="watch_room_messages")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
