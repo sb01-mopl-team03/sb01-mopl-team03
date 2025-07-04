@@ -9,6 +9,7 @@ CREATE TABLE "users"
     "updated_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
     "is_locked"                BOOLEAN     DEFAULT false  NOT NULL,
     "role"                     VARCHAR(50) DEFAULT 'USER' NOT NULL,
+    "profile_image"            VARCHAR(255)               NULL,
     "is_temp_password"         BOOLEAN     DEFAULT false  NOT NULL,
     "temp_password_expired_at" TIMESTAMP                  NULL
 );
