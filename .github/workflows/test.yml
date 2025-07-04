@@ -33,6 +33,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Show latest commit
+        run: git log -1 --name-status
+
       - name: JDK setup
         uses: actions/setup-java@v4
         with:
