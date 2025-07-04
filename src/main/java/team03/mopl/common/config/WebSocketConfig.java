@@ -1,4 +1,4 @@
-package team03.mopl.domain.dm.config;
+package team03.mopl.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
