@@ -108,7 +108,7 @@ class WatchRoomServiceImplTest {
           .ownerId(userId)
           .build();
 
-      WatchRoomDto expected = WatchRoomDto.fromChatRoomWithHeadcount(watchRoom, 1L);
+      WatchRoomDto expected = WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1L);
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
@@ -174,11 +174,10 @@ class WatchRoomServiceImplTest {
           .toList();
 
       List<WatchRoomDto> expected = watchRooms.stream()
-          .map(chatRoom -> WatchRoomDto.fromChatRoomWithHeadcount(chatRoom, 1L))
+          .map(chatRoom -> WatchRoomDto.fromWatchRoomWithHeadcount(chatRoom, 1L))
           .toList();
 
-      when(watchRoomParticipantRepository.getAllChatRoomContentWithHeadcountDto()).thenReturn(
-          queryResult);
+      when(watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDto()).thenReturn(queryResult);
       //when
       List<WatchRoomDto> watchRoomDtos = chatRoomService.getAll();
 
@@ -208,10 +207,10 @@ class WatchRoomServiceImplTest {
           .content(content)
           .build();
 
-      WatchRoomDto expected = WatchRoomDto.fromChatRoomWithHeadcount(watchRoom, 1L);
+      WatchRoomDto expected = WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1L);
 
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
-      when(watchRoomParticipantRepository.countByChatRoomId(chatRoomId)).thenReturn(1L);
+      when(watchRoomParticipantRepository.countByWatchRoomId(chatRoomId)).thenReturn(1L);
 
       //when
       WatchRoomDto watchRoomDto = chatRoomService.getById(chatRoomId);
@@ -226,7 +225,7 @@ class WatchRoomServiceImplTest {
 
     @Test
     @DisplayName("실패")
-    void failsWhenChatRoomNotFound() {
+    void failsWhenWatchRoomNotFound() {
       UUID randomId = UUID.randomUUID();
 
       when(watchRoomRepository.findById(randomId)).thenReturn(Optional.empty());
@@ -234,7 +233,7 @@ class WatchRoomServiceImplTest {
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class, () -> chatRoomService.getById(randomId));
 
-      verify(watchRoomParticipantRepository, never()).countByChatRoomId(randomId);
+      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(randomId);
     }
   }
 
@@ -290,13 +289,13 @@ class WatchRoomServiceImplTest {
 
       when(userRepository.findById(participantId)).thenReturn(Optional.of(participant));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
-      when(watchRoomParticipantRepository.existsChatRoomParticipantByChatRoomAndUser(watchRoom,
+      when(watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom,
           participant))
           .thenReturn(false);
-      when(watchRoomParticipantRepository.findByChatRoom(watchRoom)).thenReturn(watchRoomParticipant);
+      when(watchRoomParticipantRepository.findByWatchRoom(watchRoom)).thenReturn(watchRoomParticipant);
 
       //when
-      WatchRoomInfoDto watchRoomInfoDto = chatRoomService.joinChatRoomAndGetInfo(chatRoomId,
+      WatchRoomInfoDto watchRoomInfoDto = chatRoomService.joinWatchRoomAndGetInfo(chatRoomId,
           participantId);
 
       //todo - verify로 확인하기
@@ -323,15 +322,15 @@ class WatchRoomServiceImplTest {
 
       //when & then
       assertThrows(UserNotFoundException.class,
-          () -> chatRoomService.joinChatRoomAndGetInfo(chatRoomId, randomId));
+          () -> chatRoomService.joinWatchRoomAndGetInfo(chatRoomId, randomId));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
-      verify(watchRoomParticipantRepository, never()).countByChatRoomId(chatRoomId);
+      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(chatRoomId);
     }
 
     @Test
     @DisplayName("존재하지 않는 채팅방")
-    void failsWhenChatRoomNotFound() {
+    void failsWhenWatchRoomNotFound() {
       //given
       UUID participantId = UUID.randomUUID();
 
@@ -344,10 +343,10 @@ class WatchRoomServiceImplTest {
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class,
-          () -> chatRoomService.joinChatRoomAndGetInfo(randomId, participantId));
+          () -> chatRoomService.joinWatchRoomAndGetInfo(randomId, participantId));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
-      verify(watchRoomParticipantRepository, never()).countByChatRoomId(randomId);
+      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(randomId);
     }
   }
 

@@ -8,5 +8,5 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 
 public interface WatchRoomMessageRepository extends JpaRepository<WatchRoomMessage, UUID> {
 
-  List<WatchRoomMessage> findAllByChatRoom(WatchRoom watchRoom);
+  List<WatchRoomMessage> findAllByWatchRoom(WatchRoom watchRoom);
 }

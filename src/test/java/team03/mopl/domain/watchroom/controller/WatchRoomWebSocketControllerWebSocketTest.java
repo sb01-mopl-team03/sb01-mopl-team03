@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -29,17 +28,20 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import team03.mopl.common.config.TestSecurityConfig;
+import team03.mopl.common.config.WebSocketConfig;
 import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
 import team03.mopl.domain.watchroom.handler.ChatMessageFrameHandler;
 import team03.mopl.domain.watchroom.handler.TestStompSessionHandler;
 import team03.mopl.domain.watchroom.service.WatchRoomMessageService;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
-import team03.mopl.domain.curation.service.CurationService;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    classes = {WebSocketConfig.class, TestSecurityConfig.class}
+)
 @EnableAutoConfiguration
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
 class WatchRoomWebSocketControllerWebSocketTest {
 
   @LocalServerPort
@@ -50,12 +52,6 @@ class WatchRoomWebSocketControllerWebSocketTest {
 
   @MockitoBean
   private WatchRoomMessageService watchRoomMessageService;
-
-  //StanfordCoreNLP 엔진을 초기화할 때 대규모 리소스를 적재함 -> OOM 발생
-  //curationService Mock 처리하여 init실행하지 않도록 설정
-  @MockitoBean
-  private CurationService curationService;
-
 
   private StompSession stompSession;
   private WebSocketStompClient stompClient;

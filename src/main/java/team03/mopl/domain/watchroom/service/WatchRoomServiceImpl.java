@@ -59,14 +59,14 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     watchRoomParticipantRepository.save(watchRoomParticipant);
 
-    return WatchRoomDto.fromChatRoomWithHeadcount(watchRoom, 1);
+    return WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1);
   }
 
 
   @Override
   @Transactional(readOnly = true)
   public List<WatchRoomDto> getAll() {
-    return watchRoomParticipantRepository.getAllChatRoomContentWithHeadcountDto()
+    return watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDto()
         .stream()
         .map(WatchRoomDto::from).toList();
   }
@@ -77,18 +77,18 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     //todo - 개선
     WatchRoom watchRoom = watchRoomRepository.findById(id).orElseThrow(
         WatchRoomRoomNotFoundException::new);
-    watchRoomParticipantRepository.countByChatRoomId(watchRoom.getId());
-    return WatchRoomDto.fromChatRoomWithHeadcount(watchRoom, 1);
+    watchRoomParticipantRepository.countByWatchRoomId(watchRoom.getId());
+    return WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1);
   }
 
   @Override
   @Transactional
-  public WatchRoomInfoDto joinChatRoomAndGetInfo(UUID chatRoomId, UUID userId) {
+  public WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, UUID userId) {
     User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
     WatchRoom watchRoom = watchRoomRepository.findById(chatRoomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
-    if (watchRoomParticipantRepository.existsChatRoomParticipantByChatRoomAndUser(watchRoom, user)) {
+    if (watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, user)) {
       throw new AlreadyJoinedWatchRoomRoomException();
     }
 
@@ -156,7 +156,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     WatchRoom watchRoom = watchRoomRepository.findById(roomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
-    watchRoomParticipantRepository.findByUserAndChatRoom(user, watchRoom)
+    watchRoomParticipantRepository.findByUserAndWatchRoom(user, watchRoom)
         .ifPresent(watchRoomParticipantRepository::delete);
   }
 
@@ -172,7 +172,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   // 참여자 목록 조회
   private ParticipantsInfoDto getParticipantsInfoDto(WatchRoom watchRoom) {
-    List<WatchRoomParticipant> participants = watchRoomParticipantRepository.findByChatRoom(watchRoom);
+    List<WatchRoomParticipant> participants = watchRoomParticipantRepository.findByWatchRoom(watchRoom);
 
     List<ParticipantDto> participantList = participants.stream()
         .map(participant -> new ParticipantDto(

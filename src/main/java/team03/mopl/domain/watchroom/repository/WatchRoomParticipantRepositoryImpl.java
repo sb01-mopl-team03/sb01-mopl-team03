@@ -20,7 +20,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   private final QWatchRoomParticipant qWatchRoomParticipant = QWatchRoomParticipant.watchRoomParticipant;
 
   @Override
-  public List<WatchRoomContentWithHeadcountDto> getAllChatRoomContentWithHeadcountDto() {
+  public List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDto() {
     return queryFactory
         .select(Projections.constructor(WatchRoomContentWithHeadcountDto.class,
             qWatchRoom,

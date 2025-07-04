@@ -125,7 +125,7 @@ class WatchRoomMessageServiceImplTest {
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
-          .existsChatRoomParticipantByChatRoomAndUser(watchRoom, sender)).thenReturn(true);
+          .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(true);
       when(watchRoomMessageRepository.save(any(WatchRoomMessage.class))).thenReturn(watchRoomMessage);
 
       //when
@@ -201,7 +201,7 @@ class WatchRoomMessageServiceImplTest {
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
-          .existsChatRoomParticipantByChatRoomAndUser(watchRoom, sender)).thenReturn(false);
+          .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(false);
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class, () -> chatMessageService.create(request));
@@ -255,9 +255,9 @@ class WatchRoomMessageServiceImplTest {
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
-          .existsChatRoomParticipantByChatRoomAndUser(watchRoom, sender))
+          .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender))
           .thenReturn(true);
-      when(watchRoomMessageRepository.findAllByChatRoom(watchRoom)).thenReturn(searchResult);
+      when(watchRoomMessageRepository.findAllByWatchRoom(watchRoom)).thenReturn(searchResult);
 
       //when
       List<WatchRoomMessageDto> result = chatMessageService.getAllByRoomId(chatRoomId,senderId);
@@ -307,7 +307,7 @@ class WatchRoomMessageServiceImplTest {
       when(userRepository.findById(randomId)).thenReturn(Optional.of(mockUser));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
-          .existsChatRoomParticipantByChatRoomAndUser(watchRoom, mockUser))
+          .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, mockUser))
           .thenReturn(false);
 
       //when & then

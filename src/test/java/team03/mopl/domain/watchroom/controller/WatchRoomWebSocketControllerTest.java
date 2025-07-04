@@ -102,7 +102,7 @@ class WatchRoomWebSocketControllerTest {
       watchRoomWebSocketController.joinRoom(mockRoomId, mockUser);
 
       //then
-      verify(watchRoomService).joinChatRoomAndGetInfo(mockRoomId, mockUserId);
+      verify(watchRoomService).joinWatchRoomAndGetInfo(mockRoomId, mockUserId);
       verify(watchRoomService).getParticipants(mockRoomId);
 
     }

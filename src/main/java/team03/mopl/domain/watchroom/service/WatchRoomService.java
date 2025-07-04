@@ -21,7 +21,7 @@ public interface WatchRoomService {
   WatchRoomDto getById(UUID id);
 
   //채팅방 참여 후 상세정보 반환
-  WatchRoomInfoDto joinChatRoomAndGetInfo(UUID chatRoomId, UUID userId);
+  WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, UUID userId);
 
   //시청방 비디오 제어
   VideoSyncDto updateVideoStatus(UUID roomId, VideoControlRequest request, UUID requesterId);

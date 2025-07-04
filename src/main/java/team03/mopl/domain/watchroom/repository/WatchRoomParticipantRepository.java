@@ -11,14 +11,14 @@ import team03.mopl.domain.user.User;
 public interface WatchRoomParticipantRepository extends JpaRepository<WatchRoomParticipant, UUID>,
     WatchRoomParticipantRepositoryCustom {
 
-  Optional<WatchRoomParticipant> findByUserAndChatRoom(User user, WatchRoom watchRoom);
+  Optional<WatchRoomParticipant> findByUserAndWatchRoom(User user, WatchRoom watchRoom);
 
-  boolean existsChatRoomParticipantByChatRoomAndUser(WatchRoom watchRoom, User user);
+  boolean existsWatchRoomParticipantByWatchRoomAndUser(WatchRoom watchRoom, User user);
 
   //todo - 개선: N+1 문제 발생 가능
   /** deprecated **/
-  long countByChatRoomId(UUID chatRoomId);
+  long countByWatchRoomId(UUID chatRoomId);
 
-  List<WatchRoomParticipant> findByChatRoom(WatchRoom watchRoom);
+  List<WatchRoomParticipant> findByWatchRoom(WatchRoom watchRoom);
 
 }

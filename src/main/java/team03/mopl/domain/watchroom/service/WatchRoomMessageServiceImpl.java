@@ -33,7 +33,7 @@ public class WatchRoomMessageServiceImpl implements WatchRoomMessageService {
     WatchRoom watchRoom = watchRoomRepository.findById(request.chatRoomId())
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
-    if (!watchRoomParticipantRepository.existsChatRoomParticipantByChatRoomAndUser(watchRoom, sender))
+    if (!watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender))
     {
       throw new WatchRoomRoomNotFoundException();
     }
@@ -57,12 +57,12 @@ public class WatchRoomMessageServiceImpl implements WatchRoomMessageService {
     WatchRoom watchRoom = watchRoomRepository.findById(chatRoomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
-    if (!watchRoomParticipantRepository.existsChatRoomParticipantByChatRoomAndUser(watchRoom, sender))
+    if (!watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender))
     {
       throw new WatchRoomRoomNotFoundException();
     }
 
-    List<WatchRoomMessage> watchRoomMessages = watchRoomMessageRepository.findAllByChatRoom(watchRoom);
+    List<WatchRoomMessage> watchRoomMessages = watchRoomMessageRepository.findAllByWatchRoom(watchRoom);
 
     return watchRoomMessages.stream().map(WatchRoomMessageDto::from).toList();
   }

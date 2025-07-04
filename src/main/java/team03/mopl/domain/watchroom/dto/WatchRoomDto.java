@@ -13,7 +13,7 @@ public record WatchRoomDto(
 
 ) {
 
-  public static WatchRoomDto fromChatRoomWithHeadcount(WatchRoom watchRoom, long headcount ) {
+  public static WatchRoomDto fromWatchRoomWithHeadcount(WatchRoom watchRoom, long headcount ) {
     return new WatchRoomDto(
         watchRoom.getId(),
         watchRoom.getContent().getTitle(),

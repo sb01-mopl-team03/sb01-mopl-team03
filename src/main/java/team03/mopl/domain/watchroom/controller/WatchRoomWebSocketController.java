@@ -32,7 +32,7 @@ public class WatchRoomWebSocketController {
   public WatchRoomMessageDto sendMessage(@DestinationVariable UUID roomId,
       WatchRoomMessageCreateRequest request) {
     if (!request.chatRoomId().equals(roomId)) {
-      //본문의 ChatRoom id와 url의 id가 같은지 한번 더 검증함
+      //본문의 WatchRoom id와 url의 id가 같은지 한번 더 검증함
       throw new IllegalArgumentException("Room ID가 일치하지 않습니다.");
     }
     return watchRoomMessageService.create(request);
@@ -43,7 +43,7 @@ public class WatchRoomWebSocketController {
   public void joinRoom(@DestinationVariable UUID roomId, @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     //신규 유저에게는 채팅방 정보 전체 전송
-    WatchRoomInfoDto watchRoomInfoDto = watchRoomService.joinChatRoomAndGetInfo(roomId, userDetails.getId());
+    WatchRoomInfoDto watchRoomInfoDto = watchRoomService.joinWatchRoomAndGetInfo(roomId, userDetails.getId());
     messageTemplate.convertAndSendToUser(userDetails.getId().toString(), "/queue/sync", watchRoomInfoDto);
 
     //기존 유저에게는 참여자 목록만 브로드캐스트
@@ -67,7 +67,7 @@ public class WatchRoomWebSocketController {
   //나가기 요청
   @MessageMapping("/rooms/{roomId}/leave")
   @SendTo("/topic/rooms/{roomId}/participants")
-  public ParticipantsInfoDto leaveChatRoom(@DestinationVariable UUID roomId, @AuthenticationPrincipal CustomUserDetails userDetails){
+  public ParticipantsInfoDto leaveWatchRoom(@DestinationVariable UUID roomId, @AuthenticationPrincipal CustomUserDetails userDetails){
 
     watchRoomService.leave(roomId, userDetails.getId());
 

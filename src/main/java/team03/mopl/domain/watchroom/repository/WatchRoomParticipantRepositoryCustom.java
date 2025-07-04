@@ -5,6 +5,6 @@ import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
 
 public interface WatchRoomParticipantRepositoryCustom {
 
-  List<WatchRoomContentWithHeadcountDto> getAllChatRoomContentWithHeadcountDto();
+  List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDto();
 
 }
