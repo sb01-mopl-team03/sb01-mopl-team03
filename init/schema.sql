@@ -125,7 +125,7 @@ CREATE TABLE "watch_rooms"
     "content_id"             UUID                           NOT NULL,
     "owner_id"               UUID                           NOT NULL,
     "created_at"             TIMESTAMP        DEFAULT now() NOT NULL,
-    "current_time"           DOUBLE PRECISION DEFAULT 0.0   NOT NULL,
+    "play_time"           DOUBLE PRECISION DEFAULT 0.0   NOT NULL,
     "is_playing"             BOOLEAN          DEFAULT FALSE NOT NULL,
     "video_state_updated_at" TIMESTAMP        DEFAULT now() NOT NULL,
     FOREIGN KEY ("owner_id") REFERENCES "users" ("id"),
