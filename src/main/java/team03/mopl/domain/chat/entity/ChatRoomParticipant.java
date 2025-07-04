@@ -14,15 +14,17 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.user.User;
 
 @Entity
-@Table(name = "chat_room_participants", uniqueConstraints = {
+@Table(name = "watch_room_participants", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "room_id"})
 })
 @Builder
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChatRoomParticipant {
