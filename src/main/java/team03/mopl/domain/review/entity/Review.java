@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -32,7 +34,9 @@ import team03.mopl.domain.user.User;
 @Table(name = "reviews", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "content_id"})
 })
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class Review {
 
@@ -67,14 +71,6 @@ public class Review {
   @LastModifiedDate
   @Column(nullable = false)
   private LocalDateTime updatedAt;
-
-  public Review(User user, Content content, String title, String comment, BigDecimal rating) {
-    this.user = user;
-    this.content = content;
-    this.title = title;
-    this.comment = comment;
-    this. rating = rating;
-  }
 
   public void update(String newTitle, String newComment, BigDecimal newRating) {
 
