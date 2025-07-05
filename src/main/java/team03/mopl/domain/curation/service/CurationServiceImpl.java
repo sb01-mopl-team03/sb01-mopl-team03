@@ -121,7 +121,10 @@ public class CurationServiceImpl implements CurationService {
     String normalizedKeyword = normalizeMultilingualText(keywordText);
     String language = detectLanguage(keywordText);
 
-    Keyword keyword = new Keyword(user, normalizedKeyword);
+    Keyword keyword = Keyword.builder()
+        .keyword(keywordText)
+        .user(user)
+        .build();
     keyword = keywordRepository.save(keyword);
 
     List<Content> recommendations = curateContentForKeyword(keyword);

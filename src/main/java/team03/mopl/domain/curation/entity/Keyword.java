@@ -12,15 +12,19 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import team03.mopl.domain.user.User;
 
+@Builder
 @Getter
 @Entity
 @Table(name = "keywords")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Keyword {
 
   @Id
@@ -37,9 +41,4 @@ public class Keyword {
   @CreatedDate
   @Column(nullable = false)
   private LocalDateTime createdAt;
-
-  public Keyword(User user, String keyword) {
-    this.user = user;
-    this.keyword = keyword;
-  }
 }
