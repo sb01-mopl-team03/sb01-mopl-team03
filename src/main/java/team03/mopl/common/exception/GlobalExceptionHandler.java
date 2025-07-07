@@ -3,6 +3,7 @@ package team03.mopl.common.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -31,5 +32,13 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse = new ErrorResponse(e, HttpStatus.BAD_REQUEST.value());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
-
+  
+  /**
+   * @Valid 검증 실패시 MethodArgumentNotValidException 예외 발생
+   * */
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidException(MethodArgumentNotValidException e){
+    ErrorResponse errorResponse = new ErrorResponse(e, HttpStatus.BAD_REQUEST.value());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
 }
