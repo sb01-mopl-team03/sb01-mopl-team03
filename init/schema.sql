@@ -51,8 +51,8 @@ CREATE TABLE "keyword_contents"
     "content_id" UUID                    NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("keyword_id", "content_id"),
-    FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id"),
-    FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
+    FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
 -- 리뷰 테이블
