@@ -48,7 +48,7 @@ public class WatchRoom {
 
   @Column(name = "play_time")
   @Builder.Default
-  private Double currentTime = 0.0;
+  private Double playTime = 0.0;
 
   @Column(name = "is_playing")
   @Builder.Default
@@ -66,28 +66,28 @@ public class WatchRoom {
 
   //일시정지
   public void pause() {
-    this.currentTime = calculateRealCurrentTime();
+    this.playTime = calculateRealPlayTime();
     this.isPlaying = false;
     this.videoStateUpdatedAt = LocalDateTime.now();
   }
 
   // 특정 시간대로 이동
   public void seekTo(double newTime) {
-    this.currentTime = newTime;
+    this.playTime = newTime;
     this.videoStateUpdatedAt = LocalDateTime.now();
   }
 
   //경과 시간 계산
-  public double calculateRealCurrentTime() {
+  public double calculateRealPlayTime() {
     if (!this.isPlaying || this.videoStateUpdatedAt == null) {
-      return this.currentTime;
+      return this.playTime;
     }
 
     LocalDateTime now = LocalDateTime.now();
     Duration elapsed = Duration.between(this.videoStateUpdatedAt, now);
     double elapsedSeconds = elapsed.toMillis() / 1000.0;
 
-    return this.currentTime + elapsedSeconds;
+    return this.playTime + elapsedSeconds;
   }
 
   //방장 변경
