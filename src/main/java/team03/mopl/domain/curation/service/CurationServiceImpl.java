@@ -648,7 +648,6 @@ public class CurationServiceImpl implements CurationService {
     Keyword keyword = keywordRepository.findById(keywordId)
             .orElseThrow(KeywordNotFoundException::new);
 
-    keywordContentRepository.deleteByKeywordId(keywordId);
     keywordRepository.delete(keyword);
   }
 }

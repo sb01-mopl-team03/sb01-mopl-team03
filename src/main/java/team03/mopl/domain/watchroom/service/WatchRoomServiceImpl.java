@@ -126,7 +126,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     return VideoSyncDto.builder()
         .videoControlAction(request.videoControlAction())
-        .currentTime(savedWatchRoom.getCurrentTime())
+        .currentTime(savedWatchRoom.getPlayTime())
         .isPlaying(savedWatchRoom.getIsPlaying())
         .build();
   }

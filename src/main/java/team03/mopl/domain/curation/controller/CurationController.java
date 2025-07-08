@@ -47,7 +47,7 @@ public class CurationController {
 
   @DeleteMapping("/{keywordId}")
   public ResponseEntity<Void> delete(@PathVariable UUID keywordId) {
-    keywordService.delete(keywordId);
+    curationService.delete(keywordId);
+    return ResponseEntity.noContent().build();
   }
-
 }
