@@ -56,7 +56,7 @@ public class AdminService {
         true
     );
 
-    return UserResponse.from(user);
+    return UserResponse.from(updated);
   }
 
   @Transactional
@@ -69,7 +69,7 @@ public class AdminService {
 
     userRepository.save(updated);
 
-    return UserResponse.from(user);
+    return UserResponse.from(updated);
   }
 
 }
