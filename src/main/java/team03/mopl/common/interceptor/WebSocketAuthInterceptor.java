@@ -35,11 +35,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
     // CONNECT 명령이 아니면 통과
     if (!StompCommand.CONNECT.equals(accessor.getCommand())) {
-      log.info("Non-CONNECT message 처리 건너뜀");
+      log.info("preSend - Non-CONNECT message 처리 건너뜀");
       return message;
     }
 
-    log.info("CONNECT message 처리 시작");
+    log.info("preSend - CONNECT message 처리 시작");
 
     try {
       String authToken = accessor.getFirstNativeHeader("Authorization");
@@ -62,7 +62,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
               userDetails, null, userDetails.getAuthorities());
           accessor.setUser(auth);
 
-          log.info("WebSocket authentication 성공 : userId = {}", userId);
+          log.info("preSend - WebSocket authentication 성공 : userId = {}", userId);
         } else {
           log.warn("JWT token 유효성 검증 실패");
           // 토큰이 유효하지 않아도 일단 통과시켜보기
