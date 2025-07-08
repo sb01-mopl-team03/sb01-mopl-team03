@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.service.ReviewService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +22,7 @@ public class UserController {
 
   private final UserService userService;
   private final ProfileImageService profileImageService;
+  private final ReviewService reviewService;
 
   @PostMapping
   public ResponseEntity<UserResponse> create(@RequestBody UserCreateRequest request) {
@@ -50,6 +53,17 @@ public class UserController {
   @GetMapping("/profiles")
   public ResponseEntity<List<String>> getProfileImages() {
     return ResponseEntity.ok(profileImageService.getProfileImages());
+  }
+
+  @GetMapping("/{userId}/reviews")
+  public ResponseEntity<List<ReviewResponse>> getAllByUser(@PathVariable UUID userId) {
+    return ResponseEntity.ok(reviewService.getAllByUser(userId));
+  }
+
+  @DeleteMapping("/{userId}/reviews")
+  public ResponseEntity<Void> deleteAllByUser(@PathVariable UUID userId) {
+    reviewService.deleteAllByUser(userId);
+    return ResponseEntity.noContent().build();
   }
 
 }

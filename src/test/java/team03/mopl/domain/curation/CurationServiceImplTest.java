@@ -343,7 +343,7 @@ class CurationServiceImplTest {
       );
 
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-      when(reviewService.findAllByContent(contentId)).thenReturn(List.of(review1, review2));
+      when(reviewService.getAllByContent(contentId)).thenReturn(List.of(review1, review2));
       when(contentRepository.save(any(Content.class))).thenReturn(content);
 
       // when
@@ -351,7 +351,7 @@ class CurationServiceImplTest {
 
       // then
       verify(contentRepository, times(1)).save(any(Content.class));
-      verify(reviewService, times(1)).findAllByContent(contentId);
+      verify(reviewService, times(1)).getAllByContent(contentId);
     }
 
     @Test
@@ -374,7 +374,7 @@ class CurationServiceImplTest {
     void noReviews() {
       // given
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-      when(reviewService.findAllByContent(contentId)).thenReturn(List.of());
+      when(reviewService.getAllByContent(contentId)).thenReturn(List.of());
       when(contentRepository.save(any(Content.class))).thenReturn(content);
 
       // when
@@ -401,7 +401,7 @@ class CurationServiceImplTest {
       );
 
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-      when(reviewService.findAllByContent(contentId)).thenReturn(List.of(reviewWithNullRating, normalReview));
+      when(reviewService.getAllByContent(contentId)).thenReturn(List.of(reviewWithNullRating, normalReview));
       when(contentRepository.save(any(Content.class))).thenReturn(content);
 
       // when
