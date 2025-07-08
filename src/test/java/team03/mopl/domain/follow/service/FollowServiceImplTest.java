@@ -140,8 +140,8 @@ class FollowServiceImplTest {
     String email2 = "user2@test.com";
 
     given(followRepository.findAllByFollowerId(followerId)).willReturn(List.of(new Follow(followerId, target1), new Follow(followerId, target2)));
-    given(userService.find(target1)).willReturn(new UserResponse(email1, "user1", "USER", false));
-    given(userService.find(target2)).willReturn(new UserResponse(email2, "user2", "USER", false));
+    given(userService.find(target1)).willReturn(new UserResponse(email1, "user1", "USER", false,null));
+    given(userService.find(target2)).willReturn(new UserResponse(email2, "user2", "USER", false, null));
 
     // when
     var result = followService.getFollowing(followerId);
@@ -167,8 +167,8 @@ class FollowServiceImplTest {
         new Follow(target2, followingId)
     ));
 
-    given(userService.find(target1)).willReturn(new UserResponse(email1, "user1", "USER", false));
-    given(userService.find(target2)).willReturn(new UserResponse(email2, "user2", "USER", false));
+    given(userService.find(target1)).willReturn(new UserResponse(email1, "user1", "USER", false, null));
+    given(userService.find(target2)).willReturn(new UserResponse(email2, "user2", "USER", false, null));
 
     // when
     var result = followService.getFollowers(followingId);

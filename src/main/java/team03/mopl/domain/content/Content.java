@@ -8,7 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,9 +43,11 @@ public class Content {
   @Column(name = "title", nullable = false)
   private String title;
 
-  // docker 이용시 create-drop 을 사용하여 Lob 선언
-  @Lob
-  @Column(name = "description")
+  // 컨텐츠 목록 조회: title 기준으로 정렬, 반환할 때 → 아스키코드로 인한 원치않은 정렬을 회피할 목적으로 컬럼 생성
+  @Column(name = "title_normalized", nullable = false)
+  private String titleNormalized;
+
+  @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
   @Enumerated(EnumType.STRING)

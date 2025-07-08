@@ -17,9 +17,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.service.FollowService;
@@ -31,7 +31,7 @@ class FollowControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  @MockBean
+  @MockitoBean
   private FollowService followService;
 
   @Test
@@ -74,7 +74,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowing() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("user1@example.com", "user1", "USER", false);
+    UserResponse user = new UserResponse("user1@example.com", "user1", "USER", false, null);
     when(followService.getFollowing(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/following", userId))
@@ -89,7 +89,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowers() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("follower@example.com", "follower", "USER", false);
+    UserResponse user = new UserResponse("follower@example.com", "follower", "USER", false, null);
     when(followService.getFollowers(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/followers", userId))

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
+  private final ProfileImageService profileImageService;
 
   @PostMapping
   public ResponseEntity<UserResponse> create(@RequestBody UserCreateRequest request) {
@@ -45,4 +46,10 @@ public class UserController {
   public ResponseEntity<List<UserResponse>> findAll() {
     return ResponseEntity.ok(userService.findAll());
   }
+
+  @GetMapping("/profiles")
+  public ResponseEntity<List<String>> getProfileImages() {
+    return ResponseEntity.ok(profileImageService.getProfileImages());
+  }
+
 }

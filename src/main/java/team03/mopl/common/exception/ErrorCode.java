@@ -10,6 +10,7 @@ public enum ErrorCode {
   DUPLICATED_EMAIL(HttpStatus.CONFLICT, "USER_002", "이미 사용중인 이메일입니다"),
   DUPLICATED_NAME(HttpStatus.CONFLICT, "USER_003", "이미 사용 중인 사용자명입니다."),
 
+  //Content
   CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONTENT_001", "존재하지 않는 콘텐츠입니다."),
 
   REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다."),

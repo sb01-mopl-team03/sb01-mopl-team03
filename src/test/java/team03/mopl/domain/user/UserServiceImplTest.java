@@ -35,7 +35,7 @@ class UserServiceImplTest {
 
   @BeforeEach
   void setUp() {
-    userCreateRequest = new UserCreateRequest("test@email.com", "test", "test");
+    userCreateRequest = new UserCreateRequest("test@email.com", "test", "test", null);
   }
 
 

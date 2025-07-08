@@ -6,9 +6,7 @@ import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -112,6 +110,7 @@ public class CurationServiceImpl implements CurationService {
       englishFastText = null;
     }
   }
+
 
   // 사용자 키워드 등록
   @Override
