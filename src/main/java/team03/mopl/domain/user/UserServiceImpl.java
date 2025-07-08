@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.oauth2.GoogleUserInfo;
 import team03.mopl.domain.oauth2.KakaoUserInfo;
 
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final FollowService followService;
 
   @Override
   public UserResponse create(UserCreateRequest request) {
@@ -63,6 +65,9 @@ public class UserServiceImpl implements UserService {
   @Override
   public void delete(UUID userId) {
     userRepository.deleteById(userId);
+
+    // User 삭제 시 Follow 관계도 같이 삭제
+    followService.deletedUserUnfollow(userId);
   }
 
   @Override
