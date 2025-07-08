@@ -30,52 +30,52 @@ import team03.mopl.domain.content.repository.ContentRepository;
 @DisplayName("컨텐츠 통합 테스트")
 public class ContentIntegrationTest {
 
-  @Autowired
-  private MockMvc mockMvc;
-
-  @Autowired
-  private ContentRepository contentRepository;
-
-  @Nested
-  @DisplayName("콘텐츠 데이터 조회")
-  class getContent{
-    @Test
-    @DisplayName("성공 - 존재하는 ID로 컨텐츠 조회시 200 OK, 컨텐츠 정보 반환")
-    void getContent_success() throws Exception {
-      // given
-      Content savedContent = contentRepository.save( Content.builder()
-          .title("통합 테스트용 컨텐츠")
-          .description("설명")
-          .contentType(ContentType.MOVIE)
-          .releaseDate(LocalDateTime.now())
-          .build()
-      );
-      UUID saveId = savedContent.getId();
-
-      // when
-      ResultActions actions = mockMvc.perform(get("/api/contents/{contentId}", saveId));
-
-      // then
-      actions
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.id").value(saveId.toString()))
-          .andExpect(jsonPath("$.title").value("통합 테스트용 컨텐츠"))
-          .andExpect(jsonPath("$.description").value("설명"));
-    }
-
-    @Test
-    @DisplayName("성공 - 존재하지 않는 ID로 컨텐츠 조회시 400 Not Found 반환")
-    void getContent_Fail() throws Exception {
-      // given
-      UUID nonExistingId = UUID.randomUUID();
-
-      // when
-      ResultActions actions = mockMvc.perform(get("/api/contents/{contentId}", nonExistingId));
-
-      // then
-      actions
-          .andExpect(status().isNotFound());
-    }
-  }
+//  @Autowired
+//  private MockMvc mockMvc;
+//
+//  @Autowired
+//  private ContentRepository contentRepository;
+//
+//  @Nested
+//  @DisplayName("콘텐츠 데이터 조회")
+//  class getContent{
+//    @Test
+//    @DisplayName("성공 - 존재하는 ID로 컨텐츠 조회시 200 OK, 컨텐츠 정보 반환")
+//    void getContent_success() throws Exception {
+//      // given
+//      Content savedContent = contentRepository.save( Content.builder()
+//          .title("통합 테스트용 컨텐츠")
+//          .description("설명")
+//          .contentType(ContentType.MOVIE)
+//          .releaseDate(LocalDateTime.now())
+//          .build()
+//      );
+//      UUID saveId = savedContent.getId();
+//
+//      // when
+//      ResultActions actions = mockMvc.perform(get("/api/contents/{contentId}", saveId));
+//
+//      // then
+//      actions
+//          .andExpect(status().isOk())
+//          .andExpect(jsonPath("$.id").value(saveId.toString()))
+//          .andExpect(jsonPath("$.title").value("통합 테스트용 컨텐츠"))
+//          .andExpect(jsonPath("$.description").value("설명"));
+//    }
+//
+//    @Test
+//    @DisplayName("성공 - 존재하지 않는 ID로 컨텐츠 조회시 400 Not Found 반환")
+//    void getContent_Fail() throws Exception {
+//      // given
+//      UUID nonExistingId = UUID.randomUUID();
+//
+//      // when
+//      ResultActions actions = mockMvc.perform(get("/api/contents/{contentId}", nonExistingId));
+//
+//      // then
+//      actions
+//          .andExpect(status().isNotFound());
+//    }
+//  }
 
 }

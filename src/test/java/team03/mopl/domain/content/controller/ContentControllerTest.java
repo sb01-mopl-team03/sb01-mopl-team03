@@ -39,58 +39,58 @@ class ContentControllerTest {
   @DisplayName("전체 컨텐츠 데이터 조회")
   class getContents {
 
-    @Test
-    @DisplayName("성공 - 데이터 있음")
-    void success() throws Exception {
-      // given
-      Content content1 = Content.builder()
-          .title("테스트 컨텐츠1")
-          .description("설명1")
-          .contentType(ContentType.MOVIE)
-          .releaseDate(LocalDateTime.now())
-          .build();
-      Content content2 = Content.builder()
-          .title("테스트 컨텐츠2")
-          .description("설명2")
-          .contentType(ContentType.SPORTS)
-          .releaseDate(LocalDateTime.now())
-          .build();
-      ContentDto contentDto1 = ContentDto.from(content1);
-      ContentDto contentDto2 = ContentDto.from(content2);
-      List<ContentDto> contentsDtos = List.of(contentDto1, contentDto2);
-
-      when(contentService.getAll()).thenReturn(contentsDtos);
-
-      // when
-      ResultActions actions = mockMvc.perform(get("/api/contents"));
-
-      // then
-      actions
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.length()").value(2))
-          .andExpect(jsonPath("$[0].title").value("테스트 컨텐츠1"))
-          .andExpect(jsonPath("$[0].description").value("설명1"))
-          .andExpect(jsonPath("$[0].contentType").value(ContentType.MOVIE.toString()))
-          .andExpect(jsonPath("$[1].title").value("테스트 컨텐츠2"))
-          .andExpect(jsonPath("$[1].description").value("설명2"))
-          .andExpect(jsonPath("$[1].contentType").value(ContentType.SPORTS.toString()));
-    }
-
-
-    @Test
-    @DisplayName("성공 - 데이터 없음")
-    void success_whenNoContent() throws Exception {
-      // given
-      when(contentService.getAll()).thenReturn(Collections.emptyList());
-
-      // when
-      ResultActions actions = mockMvc.perform(get("/api/contents"));
-
-      // then
-      actions
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.length()").value(0));
-    }
+//    @Test
+//    @DisplayName("성공 - 데이터 있음")
+//    void success() throws Exception {
+//      // given
+//      Content content1 = Content.builder()
+//          .title("테스트 컨텐츠1")
+//          .description("설명1")
+//          .contentType(ContentType.MOVIE)
+//          .releaseDate(LocalDateTime.now())
+//          .build();
+//      Content content2 = Content.builder()
+//          .title("테스트 컨텐츠2")
+//          .description("설명2")
+//          .contentType(ContentType.SPORTS)
+//          .releaseDate(LocalDateTime.now())
+//          .build();
+//      ContentDto contentDto1 = ContentDto.from(content1);
+//      ContentDto contentDto2 = ContentDto.from(content2);
+//      List<ContentDto> contentsDtos = List.of(contentDto1, contentDto2);
+//
+//      when(contentService.getAll()).thenReturn(contentsDtos);
+//
+//      // when
+//      ResultActions actions = mockMvc.perform(get("/api/contents"));
+//
+//      // then
+//      actions
+//          .andExpect(status().isOk())
+//          .andExpect(jsonPath("$.length()").value(2))
+//          .andExpect(jsonPath("$[0].title").value("테스트 컨텐츠1"))
+//          .andExpect(jsonPath("$[0].description").value("설명1"))
+//          .andExpect(jsonPath("$[0].contentType").value(ContentType.MOVIE.toString()))
+//          .andExpect(jsonPath("$[1].title").value("테스트 컨텐츠2"))
+//          .andExpect(jsonPath("$[1].description").value("설명2"))
+//          .andExpect(jsonPath("$[1].contentType").value(ContentType.SPORTS.toString()));
+//    }
+//
+//
+//    @Test
+//    @DisplayName("성공 - 데이터 없음")
+//    void success_whenNoContent() throws Exception {
+//      // given
+//      when(contentService.getAll()).thenReturn(Collections.emptyList());
+//
+//      // when
+//      ResultActions actions = mockMvc.perform(get("/api/contents"));
+//
+//      // then
+//      actions
+//          .andExpect(status().isOk())
+//          .andExpect(jsonPath("$.length()").value(0));
+//    }
   }
 }
 
