@@ -22,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
+import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
 
@@ -74,7 +75,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowing() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("user1@example.com", "user1", "USER", false, null);
+    FollowResponse user = new FollowResponse( userId, "user1@example.com", "user1", "USER", null);
     when(followService.getFollowing(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/following", userId))
@@ -89,7 +90,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowers() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("follower@example.com", "follower", "USER", false, null);
+    FollowResponse user = new FollowResponse( userId,"follower@example.com", "follower", "USER", null);
     when(followService.getFollowers(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/followers", userId))
