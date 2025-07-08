@@ -26,9 +26,9 @@ public class WatchRoomMessageServiceImpl implements WatchRoomMessageService {
   private final UserRepository userRepository;
 
   @Override
-  public WatchRoomMessageDto create(WatchRoomMessageCreateRequest request) {
+  public WatchRoomMessageDto create(WatchRoomMessageCreateRequest request, String userEmail) {
 
-    User sender = userRepository.findById(request.userId())
+    User sender = userRepository.findByEmail(userEmail)
         .orElseThrow(UserNotFoundException::new);
     WatchRoom watchRoom = watchRoomRepository.findById(request.chatRoomId())
         .orElseThrow(WatchRoomRoomNotFoundException::new);

@@ -105,14 +105,13 @@ class WatchRoomMessageServiceImplTest {
 
       WatchRoomMessageCreateRequest request = new WatchRoomMessageCreateRequest(
           chatRoomId,
-          senderId,
           "테스트용 채팅 메세지입니다.",
           now
       );
 
       UUID chatMessageId = UUID.randomUUID();
-      WatchRoomMessageDto expected = new WatchRoomMessageDto(chatMessageId, senderId, chatRoomId,
-          "테스트용 채팅 메세지입니다.", now);
+      WatchRoomMessageDto expected = new WatchRoomMessageDto(chatMessageId, senderId,
+          sender.getName(), chatRoomId, "테스트용 채팅 메세지입니다.", now);
 
       WatchRoomMessage watchRoomMessage = WatchRoomMessage.builder()
           .id(chatMessageId)
@@ -121,15 +120,15 @@ class WatchRoomMessageServiceImplTest {
           .sender(sender)
           .build();
 
-
       when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
           .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(true);
-      when(watchRoomMessageRepository.save(any(WatchRoomMessage.class))).thenReturn(watchRoomMessage);
+      when(watchRoomMessageRepository.save(any(WatchRoomMessage.class))).thenReturn(
+          watchRoomMessage);
 
       //when
-      WatchRoomMessageDto result = chatMessageService.create(request);
+      WatchRoomMessageDto result = chatMessageService.create(request, sender.getName());
 
       //then
       assertNotNull(result);
@@ -148,7 +147,6 @@ class WatchRoomMessageServiceImplTest {
 
       WatchRoomMessageCreateRequest request = new WatchRoomMessageCreateRequest(
           chatRoomId,
-          randomUserId,
           "테스트용 채팅 메세지입니다.",
           LocalDateTime.now()
       );
@@ -156,7 +154,8 @@ class WatchRoomMessageServiceImplTest {
       when(userRepository.findById(randomUserId)).thenReturn(Optional.empty());
 
       //when & then
-      assertThrows(UserNotFoundException.class, () -> chatMessageService.create(request));
+      assertThrows(UserNotFoundException.class,
+          () -> chatMessageService.create(request, sender.getName()));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }
@@ -171,7 +170,6 @@ class WatchRoomMessageServiceImplTest {
 
       WatchRoomMessageCreateRequest request = new WatchRoomMessageCreateRequest(
           randomChatRoomId,
-          senderId,
           "테스트용 채팅 메세지입니다.",
           now
       );
@@ -180,7 +178,8 @@ class WatchRoomMessageServiceImplTest {
       when(watchRoomRepository.findById(randomChatRoomId)).thenReturn(Optional.empty());
 
       //when & then
-      assertThrows(WatchRoomRoomNotFoundException.class, () -> chatMessageService.create(request));
+      assertThrows(WatchRoomRoomNotFoundException.class,
+          () -> chatMessageService.create(request, sender.getName()));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }
@@ -193,7 +192,6 @@ class WatchRoomMessageServiceImplTest {
 
       WatchRoomMessageCreateRequest request = new WatchRoomMessageCreateRequest(
           chatRoomId,
-          senderId,
           "테스트용 채팅 메세지입니다.",
           now
       );
@@ -204,7 +202,8 @@ class WatchRoomMessageServiceImplTest {
           .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(false);
 
       //when & then
-      assertThrows(WatchRoomRoomNotFoundException.class, () -> chatMessageService.create(request));
+      assertThrows(WatchRoomRoomNotFoundException.class,
+          () -> chatMessageService.create(request, sender.getName()));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }
@@ -240,10 +239,10 @@ class WatchRoomMessageServiceImplTest {
 
       UUID mockChatMessage1Id = UUID.randomUUID();
       UUID mockChatMessage2Id = UUID.randomUUID();
-      WatchRoomMessageDto expected1 = new WatchRoomMessageDto(mockChatMessage1Id, senderId, chatRoomId,
-          "테스트용 첫번째 채팅 메세지입니다.", now);
-      WatchRoomMessageDto expected2 = new WatchRoomMessageDto(mockChatMessage2Id, senderId, chatRoomId,
-          "테스트용 두번째 채팅 메세지입니다.", now);
+      WatchRoomMessageDto expected1 = new WatchRoomMessageDto(mockChatMessage1Id, senderId,
+          sender.getName(), chatRoomId, "테스트용 첫번째 채팅 메세지입니다.", now);
+      WatchRoomMessageDto expected2 = new WatchRoomMessageDto(mockChatMessage2Id, senderId,
+          sender.getName(), chatRoomId, "테스트용 두번째 채팅 메세지입니다.", now);
 
       List<WatchRoomMessageDto> expected = new ArrayList<>();
       expected.add(expected1);
@@ -260,7 +259,7 @@ class WatchRoomMessageServiceImplTest {
       when(watchRoomMessageRepository.findAllByWatchRoom(watchRoom)).thenReturn(searchResult);
 
       //when
-      List<WatchRoomMessageDto> result = chatMessageService.getAllByRoomId(chatRoomId,senderId);
+      List<WatchRoomMessageDto> result = chatMessageService.getAllByRoomId(chatRoomId, senderId);
 
       //then
       assertNotNull(result);

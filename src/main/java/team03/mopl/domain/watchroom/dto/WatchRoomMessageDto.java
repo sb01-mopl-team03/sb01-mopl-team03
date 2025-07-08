@@ -8,6 +8,7 @@ public record WatchRoomMessageDto(
 
     UUID id,
     UUID senderId,
+    String senderName,
     UUID chatRoomId,
     String content,
     LocalDateTime createdAt
@@ -17,6 +18,7 @@ public record WatchRoomMessageDto(
     return new WatchRoomMessageDto(
         watchRoomMessage.getId(),
         watchRoomMessage.getSender().getId(),
+        watchRoomMessage.getSender().getName(),
         watchRoomMessage.getWatchRoom().getId(),
         watchRoomMessage.getContent(),
         watchRoomMessage.getCreatedAt()

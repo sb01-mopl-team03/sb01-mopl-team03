@@ -58,7 +58,8 @@ public class SecurityConfig {
   @Bean
   public WebSecurityCustomizer webSecurityCustomizer() {
     return web -> web.ignoring()
-        .requestMatchers("/profile/**");
+        .requestMatchers("/profile/**")
+        .requestMatchers("/ws/**");
   }
 
   @Bean

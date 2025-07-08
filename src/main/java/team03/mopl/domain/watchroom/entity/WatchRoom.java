@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import team03.mopl.domain.content.Content;
 
 
@@ -27,7 +28,7 @@ import team03.mopl.domain.content.Content;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(value = {EntityListeners.class})
+@EntityListeners(AuditingEntityListener.class)
 public class WatchRoom {
 
   @Id
@@ -45,7 +46,7 @@ public class WatchRoom {
   @JoinColumn(name = "content_id", nullable = false)
   private Content content;
 
-  @Column(name = "current_time")
+  @Column(name = "play_time")
   @Builder.Default
   private Double currentTime = 0.0;
 
@@ -54,7 +55,8 @@ public class WatchRoom {
   private Boolean isPlaying = false;
 
   @Column(name = "video_state_updated_at")
-  private LocalDateTime videoStateUpdatedAt;
+  @Builder.Default
+  private LocalDateTime videoStateUpdatedAt = LocalDateTime.now();
 
   //재생
   public void play() {

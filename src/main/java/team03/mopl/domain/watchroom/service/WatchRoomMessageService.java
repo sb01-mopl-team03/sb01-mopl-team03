@@ -9,7 +9,7 @@ import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
 public interface WatchRoomMessageService {
 
   //메세지 생성
-  WatchRoomMessageDto create(WatchRoomMessageCreateRequest request);
+  WatchRoomMessageDto create(WatchRoomMessageCreateRequest request, String userEmail);
 
   //메세지 조회
   List<WatchRoomMessageDto> getAllByRoomId(UUID chatRoomId, UUID userId);

@@ -287,7 +287,7 @@ class WatchRoomServiceImplTest {
           .participantsInfoDto(participantsInfoDto)
           .build();
 
-      when(userRepository.findById(participantId)).thenReturn(Optional.of(participant));
+      when(userRepository.findByEmail(participant.getEmail())).thenReturn(Optional.of(participant));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom,
           participant))
@@ -296,7 +296,7 @@ class WatchRoomServiceImplTest {
 
       //when
       WatchRoomInfoDto watchRoomInfoDto = chatRoomService.joinWatchRoomAndGetInfo(chatRoomId,
-          participantId);
+          participant.getEmail());
 
       //todo - verify로 확인하기
       assertEquals(expected.id(), watchRoomInfoDto.id());
@@ -311,7 +311,7 @@ class WatchRoomServiceImplTest {
     @DisplayName("존재하지 않는 유저")
     void failsWhenUserNotFound() {
       //given
-      UUID randomId = UUID.randomUUID();
+      String randomEmail = "random@test.com";
 
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
@@ -322,7 +322,7 @@ class WatchRoomServiceImplTest {
 
       //when & then
       assertThrows(UserNotFoundException.class,
-          () -> chatRoomService.joinWatchRoomAndGetInfo(chatRoomId, randomId));
+          () -> chatRoomService.joinWatchRoomAndGetInfo(chatRoomId, randomEmail));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
       verify(watchRoomParticipantRepository, never()).countByWatchRoomId(chatRoomId);
@@ -332,18 +332,19 @@ class WatchRoomServiceImplTest {
     @DisplayName("존재하지 않는 채팅방")
     void failsWhenWatchRoomNotFound() {
       //given
-      UUID participantId = UUID.randomUUID();
+      String participantEmail = "participant@test.com";
 
       UUID randomId = UUID.randomUUID();
 
-      when(userRepository.findById(participantId)).thenReturn(Optional.of(user));
+      when(userRepository.findByEmail(participantEmail)).thenReturn(Optional.of(user));
+      when(watchRoomRepository.findById(randomId)).thenReturn(Optional.empty());
       //todo - 로직 고민
       //chatRoomRepository 에서 채널 있는지 검사 -> chatRoomParticipantRepository 로 이미 참여한 유저인지 검사
       // vs chatRoomParticipantRepository 로 채널 있는지 검사 -> 같은 걸로 이미 참여한 유저인지 검사
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class,
-          () -> chatRoomService.joinWatchRoomAndGetInfo(randomId, participantId));
+          () -> chatRoomService.joinWatchRoomAndGetInfo(randomId,participantEmail));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
       verify(watchRoomParticipantRepository, never()).countByWatchRoomId(randomId);
@@ -397,10 +398,11 @@ class WatchRoomServiceImplTest {
           .build();
 
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, userId);
+      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());
@@ -433,10 +435,11 @@ class WatchRoomServiceImplTest {
           .build();
 
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, userId);
+      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());
@@ -469,10 +472,11 @@ class WatchRoomServiceImplTest {
           .build();
 
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, userId);
+      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());

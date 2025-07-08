@@ -21,10 +21,10 @@ public interface WatchRoomService {
   WatchRoomDto getById(UUID id);
 
   //채팅방 참여 후 상세정보 반환
-  WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, UUID userId);
+  WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, String username);
 
   //시청방 비디오 제어
-  VideoSyncDto updateVideoStatus(UUID roomId, VideoControlRequest request, UUID requesterId);
+  VideoSyncDto updateVideoStatus(UUID roomId, VideoControlRequest request, String username);
 
   //시청방 유저 목록 조회
   ParticipantsInfoDto getParticipants(UUID roomId);
@@ -33,5 +33,5 @@ public interface WatchRoomService {
   WatchRoomInfoDto getWatchRoomInfo(UUID roomId);
 
   //시청방 나가기
-  void leave(UUID roomId, UUID userId);
+  void leave(UUID roomId, String username);
 }

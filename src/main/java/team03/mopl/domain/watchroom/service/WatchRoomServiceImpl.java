@@ -83,13 +83,13 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   @Override
   @Transactional
-  public WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, UUID userId) {
-    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+  public WatchRoomInfoDto joinWatchRoomAndGetInfo(UUID chatRoomId, String username) {
+    User user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);
     WatchRoom watchRoom = watchRoomRepository.findById(chatRoomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
     if (watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, user)) {
-      throw new AlreadyJoinedWatchRoomRoomException();
+      return getWatchRoomInfoDtoWithNewUser(watchRoom, user);
     }
 
     WatchRoomParticipant watchRoomParticipant = WatchRoomParticipant.builder()
@@ -99,18 +99,19 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     watchRoomParticipantRepository.save(watchRoomParticipant);
 
-    return getWatchRoomInfoDto(watchRoom);
-
+    return getWatchRoomInfoDtoWithNewUser(watchRoom, user);
   }
 
   @Override
   @Transactional
-  public VideoSyncDto updateVideoStatus(UUID roomId, VideoControlRequest request, UUID requesterId) {
+  public VideoSyncDto updateVideoStatus(UUID roomId, VideoControlRequest request, String username) {
     WatchRoom watchRoom = watchRoomRepository.findById(roomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
+    User user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);
+
     //방장이 아니라면 제어 권한 없음
-    if(!watchRoom.getOwnerId().equals(requesterId)) {
+    if(!watchRoom.getOwnerId().equals(user.getId())) {
       throw new IllegalArgumentException("방장이 아님");
     }
 
@@ -151,8 +152,8 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   @Override
   @Transactional
-  public void leave(UUID roomId, UUID userId) {
-    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+  public void leave(UUID roomId, String username) {
+    User user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);
     WatchRoom watchRoom = watchRoomRepository.findById(roomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
 
@@ -160,6 +161,14 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         .ifPresent(watchRoomParticipantRepository::delete);
   }
 
+  private WatchRoomInfoDto getWatchRoomInfoDtoWithNewUser(WatchRoom watchRoom, User user) {
+    return WatchRoomInfoDto.builder()
+        .id(watchRoom.getId())
+        .newUserId(user.getId())
+        .contentTitle(watchRoom.getContent().getTitle())
+        .participantsInfoDto(getParticipantsInfoDto(watchRoom))
+        .build();
+  }
   //시청방 정보 + 참여자 정보 조회
   private WatchRoomInfoDto getWatchRoomInfoDto(WatchRoom watchRoom) {
 

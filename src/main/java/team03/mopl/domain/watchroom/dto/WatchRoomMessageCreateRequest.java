@@ -6,7 +6,6 @@ import java.util.UUID;
 public record WatchRoomMessageCreateRequest(
 
     UUID chatRoomId,
-    UUID userId,
     String content,
     LocalDateTime createdAt
 
