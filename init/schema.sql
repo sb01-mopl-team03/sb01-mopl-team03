@@ -80,7 +80,7 @@ CREATE TABLE "playlists"
     "is_public"  BOOLEAN                 NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
-    FOREIGN KEY ("creator_id") REFERENCES "users" ("id")
+    FOREIGN KEY ("creator_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 
 -- 플레이리스트-콘텐츠 관계 테이블
@@ -91,8 +91,8 @@ CREATE TABLE "playlist_contents"
     "content_id"  UUID                    NOT NULL,
     "created_at"  TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("playlist_id", "content_id"),
-    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id"),
-    FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
+    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE ,
+    FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
 -- 구독 테이블

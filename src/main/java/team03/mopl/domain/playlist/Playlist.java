@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -49,11 +50,13 @@ public class Playlist {
   @JoinColumn(name = "creator_id")
   private User user;
 
-  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-  private List<PlaylistContent> playlistContents;
+  @Builder.Default
+  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<PlaylistContent> playlistContents = new ArrayList<>();
 
-  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL)
-  private List<Subscription> subscriptions;
+  @Builder.Default
+  @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Subscription> subscriptions = new ArrayList<>();
 
   @CreatedDate
   @Column(nullable = false)
