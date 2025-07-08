@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
@@ -76,9 +78,9 @@ public class CurationServiceImpl implements CurationService {
       props.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner");
       props.setProperty("ner.useSUTime", "false");
       this.nlpPipeline = new StanfordCoreNLP(props);
-      log.info("Stanford CoreNLP 초기화 완료");
+      log.info("initializeAI - Stanford CoreNLP 초기화 완료");
     } catch (Exception e) {
-      log.error("Stanford NLP 초기화 실패: " + e.getMessage());
+      log.warn("Stanford NLP 초기화 실패: " + e.getMessage());
       this.nlpPipeline = null;
     }
   }
@@ -90,7 +92,7 @@ public class CurationServiceImpl implements CurationService {
 
       try {
         koreanFastText.loadModel("models/cc.ko.300.bin");
-        log.info("한국어 FastText 모델 로드 완료");
+        log.info("initializeFastText - 한국어 FastText 모델 로드 완료");
       } catch (Exception e) {
         log.warn("한국어 FastText 모델 로드 실패, 기본 모드로 실행: {}", e.getMessage());
         koreanFastText = null;
@@ -98,19 +100,18 @@ public class CurationServiceImpl implements CurationService {
 
       try {
         englishFastText.loadModel("models/cc.en.300.bin");
-        log.info("영어 FastText 모델 로드 완료");
+        log.info("initializeFastText - 영어 FastText 모델 로드 완료");
       } catch (Exception e) {
         log.warn("영어 FastText 모델 로드 실패, 기본 모드로 실행: {}", e.getMessage());
         englishFastText = null;
       }
 
     } catch (Exception e) {
-      log.error("FastText 초기화 실패: " + e.getMessage());
+      log.warn("FastText 초기화 실패: " + e.getMessage());
       koreanFastText = null;
       englishFastText = null;
     }
   }
-
 
   // 사용자 키워드 등록
   @Override
@@ -121,12 +122,15 @@ public class CurationServiceImpl implements CurationService {
     String normalizedKeyword = normalizeMultilingualText(keywordText);
     String language = detectLanguage(keywordText);
 
-    Keyword keyword = new Keyword(user, normalizedKeyword);
+    Keyword keyword = Keyword.builder()
+        .user(user)
+        .keyword(normalizedKeyword)
+        .build();
     keyword = keywordRepository.save(keyword);
 
     List<Content> recommendations = curateContentForKeyword(keyword);
 
-    log.info("다국어 키워드 등록: '{}' -> '{}' [{}] (매칭된 콘텐츠: {}개)",
+    log.info("registerKeyword - 다국어 키워드 등록: '{}' -> '{}' [{}] (매칭된 콘텐츠: {}개)",
         keywordText, normalizedKeyword, language, recommendations.size());
     return keyword;
   }
@@ -546,48 +550,22 @@ public class CurationServiceImpl implements CurationService {
     return 0.0;
   }
 
+  // TODO: 커서 페이지네이션
   @Override
-  public List<Content> getRecommendationsForUser(UUID userId, int limit) {
-    List<Keyword> userKeywords = keywordRepository.findAllByUserId(userId);
+  public List<Content> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
+    Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
+        .orElseThrow(KeywordNotFoundException::new);
 
-    if (userKeywords.isEmpty()) {
-      log.info("사용자 {}의 등록된 키워드가 없습니다.", userId);
-      return Collections.emptyList();
-    }
+    List<KeywordContent> keywordContents = keywordContentRepository.findByKeywordId(keywordId);
 
-    Set<Content> recommendedContents = new HashSet<>();
-
-    for (Keyword keyword : userKeywords) {
-      List<KeywordContent> keywordContents = keywordContentRepository.findByKeywordId(keyword.getId());
-
-      for (KeywordContent kc : keywordContents) {
-        recommendedContents.add(kc.getContent());
-      }
-    }
-
-    return recommendedContents.stream()
+    return keywordContents.stream()
+        .map(KeywordContent::getContent)
         .sorted((c1, c2) -> {
-          double score1 = calculateOverallFastTextScore(c1, userKeywords);
-          double score2 = calculateOverallFastTextScore(c2, userKeywords);
-          return Double.compare(score2, score1);
+          double score1 = calculateAIMatchingScore(keyword.getKeyword(), c1);
+          double score2 = calculateAIMatchingScore(keyword.getKeyword(), c2);
+          return Double.compare(score2, score1); // 높은 점수부터
         })
-        .limit(limit)
         .collect(Collectors.toList());
-  }
-
-  // 전체 FastText 점수 계산
-  private double calculateOverallFastTextScore(Content content, List<Keyword> keywords) {
-    double totalScore = 0.0;
-
-    for (Keyword keyword : keywords) {
-      totalScore += calculateAIMatchingScore(keyword.getKeyword(), content);
-    }
-
-    if (content.getAvgRating() != null) {
-      totalScore += content.getAvgRating().doubleValue() / 10.0;
-    }
-
-    return totalScore;
   }
 
   // TODO: 배치작업
@@ -613,25 +591,26 @@ public class CurationServiceImpl implements CurationService {
       }
     }
 
-    log.info("신규 콘텐츠 {}개에 대한 배치 큐레이션 완료", newContents.size());
+    log.info("batchCurationForNewContents - 신규 콘텐츠 {}개에 대한 배치 큐레이션 완료", newContents.size());
   }
 
+  // TODO: review 새로 작성되면 자동으로 평점 업데이트 하는 이벤트 생성
   @Override
   @Transactional
   public void updateContentRating(UUID contentId) {
     try {
       Content content = contentRepository.findById(contentId)
-          .orElseThrow(() -> new IllegalArgumentException("콘텐츠를 찾을 수 없습니다: " + contentId));
+          .orElseThrow(ContentNotFoundException::new);
 
       BigDecimal avgRating = getAvgRating(content);
 
       content.setAvgRating(avgRating);
       contentRepository.save(content);
 
-      log.info("콘텐츠 평점 업데이트: {} -> {}", content.getTitle(), content.getAvgRating());
+      log.info("updateContentRating - 콘텐츠 평점 업데이트: {} -> {}", content.getTitle(), content.getAvgRating());
 
     } catch (Exception e) {
-      log.error("평점 업데이트 실패: contentId={}, error={}", contentId, e.getMessage());
+      log.warn("평점 업데이트 실패: contentId={}, error={}", contentId, e.getMessage());
     }
   }
 
@@ -641,7 +620,7 @@ public class CurationServiceImpl implements CurationService {
       List<ReviewResponse> reviews = reviewService.findAllByContent(content.getId());
 
       if (reviews.isEmpty()) {
-        log.info("콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());
+        log.info("getAvgRating - 콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());
         return null;
       }
 
@@ -651,7 +630,7 @@ public class CurationServiceImpl implements CurationService {
           .average()
           .orElse(0.0);
 
-      log.info("콘텐츠 {} 평점 계산: 총 {}개 리뷰, 평균 {}",
+      log.info("getAvgRating - 콘텐츠 {} 평점 계산: 총 {}개 리뷰, 평균 {}",
           content.getId(), reviews.size(), averageRating);
 
       // 소수점 둘째 자리까지 반올림
@@ -659,8 +638,18 @@ public class CurationServiceImpl implements CurationService {
           .setScale(2, RoundingMode.HALF_UP);
 
     } catch (Exception e) {
-      log.error("평균 평점 계산 실패: contentId={}, error={}", content.getId(), e.getMessage());
+      log.warn("평균 평점 계산 실패: contentId={}, error={}", content.getId(), e.getMessage());
       return null;
     }
+  }
+
+  @Override
+  @Transactional
+  public void delete(UUID keywordId) {
+    Keyword keyword = keywordRepository.findById(keywordId)
+            .orElseThrow(KeywordNotFoundException::new);
+
+    keywordContentRepository.deleteByKeywordId(keywordId);
+    keywordRepository.delete(keyword);
   }
 }
