@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,9 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.repository.NotificationRepository;
+import team03.mopl.domain.user.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
@@ -25,7 +28,9 @@ class NotificationServiceImplTest {
   @Mock
   private NotificationRepository notificationRepository;
   @Mock
-  private SseEmitterManager sseEmitterManager;
+  private EmitterService emitterService;
+  @Mock
+  UserService userService;
 
   @InjectMocks
   private NotificationServiceImpl notificationService;
@@ -48,21 +53,24 @@ class NotificationServiceImplTest {
     given(notificationRepository.save(any(Notification.class))).willReturn(saved);
 
     // when
-    notificationService.sendNotification(receiverId, type, content);
+    NotificationDto notificationDto = new NotificationDto(receiverId, type, content);
+    notificationService.sendNotification(notificationDto);
 
     // then
     then(notificationRepository).should().save(any(Notification.class));
-    then(sseEmitterManager).should().sendNotification(receiverId, saved);
+    then(emitterService).should().sendNotificationToMember(receiverId, saved);
   }
 
   @Test
   @DisplayName("getNotifications - 알림 목록 조회")
   void getNotifications() {
     // given
+    UUID receiverId = UUID.randomUUID();
     Notification n1 = new Notification(receiverId, NotificationType.FOLLOWED, "팔로우 알림");
     Notification n2 = new Notification(receiverId, NotificationType.DM_RECEIVED, "DM 알림");
 
-    given(notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId)).willReturn(List.of(n1, n2));
+    when(notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId))
+        .thenReturn(List.of(n1, n2));
 
     // when
     var result = notificationService.getNotifications(receiverId);

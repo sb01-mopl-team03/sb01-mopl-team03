@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DmMessage {
-  private UUID roomId;
   private UUID senderId;
+  private UUID roomId;
   private String content;
   private boolean isRead;
   private LocalDateTime createdAt;

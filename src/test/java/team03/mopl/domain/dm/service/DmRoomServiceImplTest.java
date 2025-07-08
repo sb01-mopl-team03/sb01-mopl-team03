@@ -1,10 +1,12 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,9 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import team03.mopl.common.exception.dm.DmRoomNotFoundException;
+import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRoomRepository;
+import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.service.NotificationService;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
@@ -89,10 +94,33 @@ class DmRoomServiceImplTest {
 
     //notificationService.sendNotification() 메서드가 적절한 인자를 가지고 호출되었는 지 확인
     then(notificationService).should().sendNotification(
-        eq(receiverId),
-        eq(team03.mopl.domain.notification.entity.NotificationType.NEW_DM_ROOM),
-        any(String.class)
+        argThat(dto ->
+            dto.getReceiverId().equals(receiverId)
+                && dto.getNotificationType() == NotificationType.NEW_DM_ROOM
+                && dto.getContent() != null
+        )
     );
+  }
+
+  @Test
+  @DisplayName("DM Room 생성 - 에러 체크")
+  void createRoom_shouldThrowException_whenSenderNotFound() {
+    //sender 로직
+    UUID senderId = UUID.randomUUID();
+    UUID receiverId = UUID.randomUUID();
+
+    when(userRepository.findById(senderId)).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () -> {
+      dmRoomService.createRoom(senderId, receiverId);
+    });
+    //receiver 로직
+    when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+    when(userRepository.findById(receiverId)).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () -> {
+      dmRoomService.createRoom(senderId, receiverId);
+    });
   }
 
 
@@ -113,6 +141,18 @@ class DmRoomServiceImplTest {
     assertThat(result.getSenderId()).isEqualTo(senderId);
     assertThat(result.getReceiverId()).isEqualTo(receiverId);
     assertThat(result.getId()).isEqualTo(roomId);
+  }
+
+  @Test
+  @DisplayName("Dm Room 조회 - 예외 체크")
+  void getRoom_shouldThrowDmRoomNotFoundException_whenRoomNotFound() {
+    UUID roomId = UUID.randomUUID();
+
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+    assertThrows(DmRoomNotFoundException.class, () -> {
+      dmRoomService.getRoom(roomId);
+    });
   }
 
   @Test
@@ -163,14 +203,38 @@ class DmRoomServiceImplTest {
     assertThat(result.getReceiverId()).isEqualTo(receiverId);
 
     then(notificationService).should().sendNotification(
-        eq(receiverId),
-        eq(team03.mopl.domain.notification.entity.NotificationType.NEW_DM_ROOM),
-        any(String.class)
+        argThat(dto ->
+            dto.getReceiverId().equals(receiverId)
+                && dto.getNotificationType() == NotificationType.NEW_DM_ROOM
+                && dto.getContent() != null // 메시지가 null 이 아님만 확인
+        )
     );
+
   }
 
+  @Test
+  @DisplayName("findOrCreateRoom - 유저가 존재하지 않는 경우 예외 체크")
+  void findOrCreateRoom_shouldThrowUserNotFoundException_whenNoUsersExist() {
+    UUID userA = UUID.randomUUID();
+    UUID userB = UUID.randomUUID();
+    //userA가 존재하지 않을 때
+    when(dmRoomRepository.findByRoomBetweenUsers(userA, userB))
+        .thenReturn(Optional.empty());
 
+    when(userRepository.findById(userA)).thenReturn(Optional.empty());
 
+    assertThrows(UserNotFoundException.class, () -> {
+      dmRoomService.findOrCreateRoom(userA, userB);
+    });
+
+    //UserB가 존재하지 않을 때
+    when(userRepository.findById(userA)).thenReturn(Optional.of(sender));
+    when(userRepository.findById(userB)).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () -> {
+      dmRoomService.findOrCreateRoom(userA, userB);
+    });
+  }
 
 
   @Test
