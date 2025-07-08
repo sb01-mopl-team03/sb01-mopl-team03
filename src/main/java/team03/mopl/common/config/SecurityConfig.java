@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import team03.mopl.jwt.CustomUserDetailsService;
 import team03.mopl.jwt.JwtAuthenticationFilter;
 import team03.mopl.jwt.JwtBlacklist;
@@ -27,24 +28,28 @@ public class SecurityConfig {
   private final CustomUserDetailsService customUserDetailsService;
   private final JwtProvider jwtProvider;
   private final JwtBlacklist jwtBlacklist;
+  private final CorsConfigurationSource corsConfigurationSource;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
     http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource))
         .csrf(AbstractHttpConfigurer::disable)
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth->auth
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/oauth2/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-            .requestMatchers(HttpMethod.POST,"/api/auth/refresh").permitAll()
-            .requestMatchers(HttpMethod.POST,"/api/auth/change-password").permitAll()
-            .requestMatchers(HttpMethod.POST,"/api/auth/temp-password").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/auth/change-password").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/auth/temp-password").permitAll()
             .requestMatchers("/profile/**").permitAll()
+            .requestMatchers("/ws/**").permitAll() // WebSocket 핸드쉐이크 허용
             .anyRequest().hasRole("USER")
         )
-        .addFilterBefore(new JwtAuthenticationFilter(jwtProvider,customUserDetailsService,jwtBlacklist),
+        .addFilterBefore(
+            new JwtAuthenticationFilter(jwtProvider, customUserDetailsService, jwtBlacklist),
             UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
@@ -53,7 +58,8 @@ public class SecurityConfig {
   @Bean
   public WebSecurityCustomizer webSecurityCustomizer() {
     return web -> web.ignoring()
-        .requestMatchers("/profile/**");
+        .requestMatchers("/profile/**")
+        .requestMatchers("/ws/**");
   }
 
   @Bean
