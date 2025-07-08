@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import team03.mopl.domain.content.Content;
+import team03.mopl.common.util.NormalizerUtil;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.content.ContentType;
 
@@ -91,9 +92,13 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
        // log.info("videoUrl={}", videoUrl);
     }
 
-    // 9. Content 객체 생성및 반환
+    // 9. title 문자열 정규화
+    String titleNormalized = NormalizerUtil.normalize(title);
+
+    // 10. Content 객체 생성및 반환
     Content content = Content.builder()
         .title(title)
+        .titleNormalized(titleNormalized)
         .dataId(item.getId())
         .description(item.getOverview())
         .contentType(contentType)

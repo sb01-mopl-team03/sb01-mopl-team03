@@ -56,6 +56,9 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     runtimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // 레포지토리 단위 테스트 코드용 H2
+    runtimeOnly 'com.h2database:h2'
+
 
     // AI
     implementation 'com.google.code.gson:gson:2.10.1'

@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import org.springframework.batch.item.ItemProcessor;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.common.util.NormalizerUtil;
 
 public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content> {
 
@@ -43,9 +44,13 @@ public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content>
       dateTime = kstDateTime.toLocalDateTime();
     }
 
+    // 3. title 문자열 정규화
+    String titleNormalized = NormalizerUtil.normalize(item.getStrFilename());
+
     // 2. content 객체 생성및 반환
     Content content = Content.builder()
         .title(item.getStrFilename())
+        .titleNormalized(titleNormalized)
         .description(description.toString())
         .contentType(ContentType.SPORTS)
         .releaseDate(dateTime)
