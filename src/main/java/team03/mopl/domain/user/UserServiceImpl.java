@@ -2,18 +2,18 @@ package team03.mopl.domain.user;
 
 import static team03.mopl.domain.user.Role.*;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
-import team03.mopl.domain.oauth2.GoogleUserInfo;
-import team03.mopl.domain.oauth2.KakaoUserInfo;
+import team03.mopl.storage.ProfileImageStorage;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +22,12 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final ProfileImageStorage profileImageStorage;
+
+  @PostConstruct
+  public void logStorageType() {
+    log.info("ProfileImageStorage : {}", profileImageStorage.getClass().getSimpleName());
+  }
 
   @Override
   public UserResponse create(UserCreateRequest request) {
@@ -31,6 +37,14 @@ public class UserServiceImpl implements UserService {
     if (userRepository.existsByName(request.name())){
       throw new DuplicatedNameException();
     }
+
+    String uploadedImageUrl = null;
+    if (request.profile() != null && !request.profile().isEmpty()){
+      uploadedImageUrl = profileImageStorage.upload(request.profile());
+    }else{
+      uploadedImageUrl = "/static/profile/woody.png"; //기본 이미지
+    }
+
     User user = User.builder()
         .name(request.name())
         .email(request.email())
@@ -38,7 +52,7 @@ public class UserServiceImpl implements UserService {
         .role(USER)
         .isLocked(false)
         .isTempPassword(false)
-        .profileImage(request.profileImage())
+        .profileImage(uploadedImageUrl)
         .build();
     return UserResponse.from(userRepository.save(user));
   }
@@ -50,13 +64,27 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserResponse update(UUID userId, UserUpdateRequest request) {
+  public UserResponse update(UUID userId, UserUpdateRequest request, MultipartFile profile) {
     User user= userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
-    if(request.newPassword()!=null) {
-      String encodedPassword = passwordEncoder.encode(request.newPassword());
-      user.update(request.newName(),encodedPassword);
+
+    String encodedPassword = null;
+    if(request.newPassword() != null){
+      encodedPassword = passwordEncoder.encode(request.newPassword());
     }
+
+    String newImageUrl = null;
+    if(profile != null && !profile.isEmpty()){
+      if(user.getProfileImage() != null && !user.getProfileImage().startsWith("/static/profile")){
+        profileImageStorage.delete(user.getProfileImage());
+      }
+      newImageUrl = profileImageStorage.upload(profile);
+    }else{
+      newImageUrl = user.getProfileImage();
+    }
+
+    user.update(request.newName(), encodedPassword, newImageUrl);
+
     return UserResponse.from(user);
   }
 
