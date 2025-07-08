@@ -17,7 +17,7 @@ import team03.mopl.domain.review.dto.ReviewUpdateRequest;
 import team03.mopl.domain.review.service.ReviewService;
 
 @RestController
-@RequestMapping("/api/review")
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
