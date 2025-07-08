@@ -45,6 +45,7 @@ public class Keyword {
   @Column(nullable = false, updatable = false)
   private String keyword;
 
+  @Builder.Default
   @OneToMany(mappedBy = "keyword", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<KeywordContent> keywordContents = new ArrayList<>();
 

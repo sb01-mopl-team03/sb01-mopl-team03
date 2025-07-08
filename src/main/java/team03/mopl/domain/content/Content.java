@@ -1,5 +1,6 @@
 package team03.mopl.domain.content;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -8,9 +9,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,6 +23,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import team03.mopl.domain.curation.entity.KeywordContent;
+import team03.mopl.domain.review.entity.Review;
 
 @Getter
 @Builder
@@ -62,6 +68,14 @@ public class Content {
 
   @Column(name = "url")
   private String url;
+
+  @Builder.Default
+  @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<KeywordContent> keywordContents = new ArrayList<>();
+
+  @Builder.Default
+  @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Review> reviews = new ArrayList<>();
 
   public void setAvgRating(BigDecimal avgRating) {
     this.avgRating = avgRating;

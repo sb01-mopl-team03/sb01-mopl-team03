@@ -58,9 +58,6 @@ public class Review {
   @Column(columnDefinition = "TEXT")
   private String comment;
 
-  @DecimalMin(value = "0.0", message = "별점은 0.0 이상이어야 합니다")
-  @DecimalMax(value = "5.0", message = "별점은 5.0 이하여야 합니다")
-  @Digits(integer = 1, fraction = 1, message = "별점은 소수점 한자리까지만 입력 가능합니다")
   @Column(nullable = false, precision = 2, scale = 1)
   private BigDecimal rating;
 
@@ -74,13 +71,15 @@ public class Review {
 
   public void update(String newTitle, String newComment, BigDecimal newRating) {
 
-    if (!newTitle.equals(title)) {
+    if (newTitle != null && !newTitle.equals(this.title)) {
       this.title = newTitle;
     }
-    if (!newComment.equals(comment)) {
+
+    if (!Objects.equals(newComment, this.comment)) {
       this.comment = newComment;
     }
-    if (!Objects.equals(newRating, rating)) {
+
+    if (newRating != null && !Objects.equals(newRating, this.rating)) {
       this.rating = newRating;
     }
   }
