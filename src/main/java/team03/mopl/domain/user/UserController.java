@@ -3,17 +3,21 @@ package team03.mopl.domain.user;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.review.dto.ReviewResponse;
 import team03.mopl.domain.review.service.ReviewService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,8 +28,8 @@ public class UserController {
   private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
 
-  @PostMapping
-  public ResponseEntity<UserResponse> create(@RequestBody UserCreateRequest request) {
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<UserResponse> create(@ModelAttribute UserCreateRequest request) {
     return ResponseEntity.ok(userService.create(request));
   }
 
@@ -35,8 +39,10 @@ public class UserController {
   }
 
   @PutMapping("/{userId}")
-  public ResponseEntity<UserResponse> update(@PathVariable UUID userId, @RequestBody UserUpdateRequest request) {
-    return ResponseEntity.ok(userService.update(userId,request));
+  public ResponseEntity<UserResponse> update(@PathVariable UUID userId,
+      @RequestPart UserUpdateRequest request,
+      @RequestPart(value = "profile", required = false) MultipartFile profile) {
+    return ResponseEntity.ok(userService.update(userId,request,profile));
   }
 
   @DeleteMapping("/{userId}")

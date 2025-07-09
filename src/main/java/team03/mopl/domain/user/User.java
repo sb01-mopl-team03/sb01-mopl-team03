@@ -66,12 +66,15 @@ public class User {
   @Column(length = 255)
   private String profileImage;
 
-  public void update(String name, String password) {
+  public void update(String name, String password, String profileImage) {
     if (name != null && !name.equals(this.name)) {
       this.name = name;
     }
     if (password != null && !password.equals(this.password)) {
       this.password = password;
+    }
+    if (profileImage != null && !profileImage.equals(this.profileImage)) {
+      this.profileImage = profileImage;
     }
   }
 }

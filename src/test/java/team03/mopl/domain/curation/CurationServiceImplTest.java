@@ -223,15 +223,12 @@ class CurationServiceImplTest {
 
   @Nested
   @DisplayName("사용자 추천 콘텐츠 조회")
-  class GetRecommendationsForUser {
+  class GetRecommendationsByKeyword {
 
     @Test
     @DisplayName("성공")
     void success() {
       // given
-      int limit = 5;
-
-      // 이 테스트에서는 keyword.getId()만 필요하므로 최소한의 Mock 설정
       keyword = mock(Keyword.class);
       when(keyword.getId()).thenReturn(keywordId);
 
@@ -241,11 +238,10 @@ class CurationServiceImplTest {
       when(keywordContentRepository.findByKeywordId(keywordId)).thenReturn(List.of(keywordContent));
 
       // when
-      List<Content> result = curationService.getRecommendationsForUser(userId, limit);
+      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertTrue(result.size() <= limit);
       assertEquals(content, result.get(0));
 
       verify(keywordRepository, times(1)).findAllByUserId(userId);
@@ -260,7 +256,7 @@ class CurationServiceImplTest {
       when(keywordRepository.findAllByUserId(userId)).thenReturn(List.of());
 
       // when
-      List<Content> result = curationService.getRecommendationsForUser(userId, limit);
+      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
