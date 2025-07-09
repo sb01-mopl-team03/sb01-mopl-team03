@@ -80,6 +80,8 @@ dependencies {
     testImplementation 'org.springframework:spring-websocket'
     testImplementation 'org.springframework:spring-messaging'
 
+    //S3
+    implementation 'software.amazon.awssdk:s3:2.31.7'
 }
 
 tasks.named('test') {
