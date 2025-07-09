@@ -17,7 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.storage.ProfileImageStorage;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -27,6 +29,9 @@ class UserServiceImplTest {
 
   @Mock
   private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private ProfileImageStorage profileImageStorage;
 
   @InjectMocks
   private UserServiceImpl userService;
@@ -110,10 +115,68 @@ class UserServiceImplTest {
     given(passwordEncoder.encode("newpass")).willReturn("encoded-newpass");
 
     // when
-    UserResponse response = userService.update(id, request);
+    UserResponse response = userService.update(id, request,null);
 
     // then
     assertThat(user.getPassword()).isEqualTo("encoded-newpass");
+  }
+
+  @Test
+  @DisplayName("유저 이름만 수정")
+  void updateUserNameOnly() {
+    // given
+    UUID id = UUID.randomUUID();
+    User user = User.builder()
+        .id(id)
+        .email("aaa@a.com")
+        .name("수정맨")
+        .password("old")
+        .role(Role.USER)
+        .profileImage("/static/profile/woody.png")
+        .build();
+
+    UserUpdateRequest request = new UserUpdateRequest("변경된이름", null);
+    given(userRepository.findById(id)).willReturn(Optional.of(user));
+
+    // when
+    UserResponse response = userService.update(id, request, null);
+
+    // then
+    assertThat(user.getName()).isEqualTo("변경된이름");
+    assertThat(user.getPassword()).isEqualTo("old"); // 비밀번호는 변경 안 됨
+    assertThat(response.name()).isEqualTo("변경된이름");
+  }
+
+
+  @Test
+  @DisplayName("유저 프로필 이미지 수정")
+  void updateUserProfileImage() {
+    // given
+    UUID id = UUID.randomUUID();
+    User user = User.builder()
+        .id(id)
+        .email("profile@test.com")
+        .name("프로필")
+        .password("pw")
+        .role(Role.USER)
+        .profileImage("/local/profile/old.png")
+        .build();
+
+    MultipartFile newProfile = mock(MultipartFile.class);
+    given(newProfile.isEmpty()).willReturn(false);
+    given(userRepository.findById(id)).willReturn(Optional.of(user));
+    given(profileImageStorage.upload(newProfile)).willReturn("/local/profile/new.png");
+
+    UserUpdateRequest request = new UserUpdateRequest(null, null);
+
+    // when
+    UserResponse response = userService.update(id, request, newProfile);
+
+    // then
+    assertThat(user.getProfileImage()).isEqualTo("/local/profile/new.png");
+    assertThat(response.profileImage()).isEqualTo("/local/profile/new.png");
+
+    then(profileImageStorage).should().delete("/local/profile/old.png");
   }
 
   @Test

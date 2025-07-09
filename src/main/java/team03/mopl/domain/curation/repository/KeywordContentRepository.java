@@ -10,4 +10,6 @@ public interface KeywordContentRepository extends JpaRepository<KeywordContent, 
   List<KeywordContent> findByKeywordId(UUID keywordId);
 
   boolean existsByKeywordIdAndContentId(UUID keywordId, UUID contentId);
+
+  void deleteByKeywordId(UUID keywordId);
 }
