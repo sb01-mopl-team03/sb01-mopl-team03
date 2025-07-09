@@ -40,7 +40,7 @@ CREATE TABLE "keywords"
     "user_id"    UUID                    NOT NULL,
     "keyword"    VARCHAR(100)            NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
-    FOREIGN KEY ("user_id") REFERENCES "users" ("id")
+    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 
 -- 키워드-콘텐츠 관계 테이블
@@ -51,8 +51,8 @@ CREATE TABLE "keyword_contents"
     "content_id" UUID                    NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("keyword_id", "content_id"),
-    FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id"),
-    FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
+    FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
 -- 리뷰 테이블
@@ -67,8 +67,8 @@ CREATE TABLE "reviews"
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("user_id", "content_id"),
-    FOREIGN KEY ("user_id") REFERENCES "users" ("id"),
-    FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
+    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ,
+    FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
 -- 플레이리스트 테이블
@@ -103,7 +103,7 @@ CREATE TABLE "subscriptions"
     "subscriber_id" UUID                    NOT NULL,
     "created_at"    TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("playlist_id", "subscriber_id"),
-    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id"),
+    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE ,
     FOREIGN KEY ("subscriber_id") REFERENCES "users" ("id")
 );
 

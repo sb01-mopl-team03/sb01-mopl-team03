@@ -386,7 +386,7 @@ class WatchRoomServiceImplTest {
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
-          .currentTime(10.0)
+          .playTime(10.0)
           .build();
 
       VideoControlRequest request = new VideoControlRequest(VideoControlAction.PAUSE, 10.0);
@@ -423,7 +423,7 @@ class WatchRoomServiceImplTest {
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(false)
-          .currentTime(10.0)
+          .playTime(10.0)
           .build();
 
       VideoControlRequest request = new VideoControlRequest(VideoControlAction.PLAY, 10.0);
@@ -460,7 +460,7 @@ class WatchRoomServiceImplTest {
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
-          .currentTime(10.0)
+          .playTime(10.0)
           .build();
 
       VideoControlRequest request = new VideoControlRequest(VideoControlAction.SEEK, 20.0);

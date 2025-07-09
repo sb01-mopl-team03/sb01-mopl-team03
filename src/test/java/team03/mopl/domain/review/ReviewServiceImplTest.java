@@ -266,7 +266,7 @@ class ReviewServiceImplTest {
     void success() {
       when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 
-      ReviewResponse result = reviewService.find(reviewId);
+      ReviewResponse result = reviewService.get(reviewId);
 
       assertNotNull(result);
       assertEquals(review.getTitle(), result.title());
@@ -281,7 +281,7 @@ class ReviewServiceImplTest {
 
       when(reviewRepository.findById(randomReviewId)).thenReturn(Optional.empty());
 
-      assertThrows(ReviewNotFoundException.class, () -> reviewService.find(randomReviewId));
+      assertThrows(ReviewNotFoundException.class, () -> reviewService.get(randomReviewId));
     }
   }
 
@@ -306,7 +306,7 @@ class ReviewServiceImplTest {
       when(userRepository.existsById(userId)).thenReturn(true);
       when(reviewRepository.findAllByUserId(userId)).thenReturn(reviews);
 
-      List<ReviewResponse> result = reviewService.findAllByUser(userId);
+      List<ReviewResponse> result = reviewService.getAllByUser(userId);
 
       assertNotNull(result);
       assertEquals(2, result.size());
@@ -321,7 +321,7 @@ class ReviewServiceImplTest {
 
       when(userRepository.existsById(randomUserId)).thenReturn(false);
 
-      assertThrows(UserNotFoundException.class, () -> reviewService.findAllByUser(randomUserId));
+      assertThrows(UserNotFoundException.class, () -> reviewService.getAllByUser(randomUserId));
     }
   }
 
@@ -346,7 +346,7 @@ class ReviewServiceImplTest {
       when(contentRepository.existsById(contentId)).thenReturn(true);
       when(reviewRepository.findAllByContentId(contentId)).thenReturn(reviews);
 
-      List<ReviewResponse> result = reviewService.findAllByContent(contentId);
+      List<ReviewResponse> result = reviewService.getAllByContent(contentId);
 
       assertNotNull(result);
       assertEquals(2, result.size());
@@ -361,7 +361,7 @@ class ReviewServiceImplTest {
 
       when(contentRepository.existsById(randomContentId)).thenReturn(false);
 
-      assertThrows(ContentNotFoundException.class, () -> reviewService.findAllByContent(randomContentId));
+      assertThrows(ContentNotFoundException.class, () -> reviewService.getAllByContent(randomContentId));
     }
   }
 

@@ -19,11 +19,13 @@ import org.springframework.http.ResponseEntity;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.content.controller.ContentController;
 import team03.mopl.domain.review.controller.ReviewController;
 import team03.mopl.domain.review.dto.ReviewCreateRequest;
 import team03.mopl.domain.review.dto.ReviewResponse;
 import team03.mopl.domain.review.dto.ReviewUpdateRequest;
 import team03.mopl.domain.review.service.ReviewService;
+import team03.mopl.domain.user.UserController;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("리뷰 컨트롤러 테스트")
@@ -34,6 +36,12 @@ class ReviewControllerTest {
 
   @InjectMocks
   private ReviewController reviewController;
+
+  @InjectMocks
+  private ContentController contentController;
+
+  @InjectMocks
+  private UserController userController;
 
   @Nested
   @DisplayName("리뷰 생성 요청")
@@ -106,9 +114,9 @@ class ReviewControllerTest {
     void success() {
       UUID reviewId = UUID.randomUUID();
 
-      ResponseEntity<ReviewResponse> response = reviewController.find(reviewId);
+      ResponseEntity<ReviewResponse> response = reviewController.get(reviewId);
 
-      verify(reviewService).find(reviewId);
+      verify(reviewService).get(reviewId);
     }
 
     @Test
@@ -116,9 +124,9 @@ class ReviewControllerTest {
     void failsWhenReviewNotFound() {
       UUID reviewId = UUID.randomUUID();
 
-      when(reviewService.find(reviewId)).thenThrow(new ReviewNotFoundException());
+      when(reviewService.get(reviewId)).thenThrow(new ReviewNotFoundException());
 
-      assertThrows(ReviewNotFoundException.class, () -> reviewController.find(reviewId));
+      assertThrows(ReviewNotFoundException.class, () -> reviewController.get(reviewId));
     }
   }
 
@@ -131,9 +139,9 @@ class ReviewControllerTest {
     void success() {
       UUID userId = UUID.randomUUID();
 
-      ResponseEntity<List<ReviewResponse>> response = reviewController.findAllByUser(userId);
+      ResponseEntity<List<ReviewResponse>> response = userController.getAllByUser(userId);
 
-      verify(reviewService).findAllByUser(userId);
+      verify(reviewService).getAllByUser(userId);
     }
 
     @Test
@@ -141,9 +149,9 @@ class ReviewControllerTest {
     void failsWhenUserNotFound() {
       UUID userId = UUID.randomUUID();
 
-      when(reviewService.findAllByUser(userId)).thenThrow(new UserNotFoundException());
+      when(reviewService.getAllByUser(userId)).thenThrow(new UserNotFoundException());
 
-      assertThrows(UserNotFoundException.class, () -> reviewController.findAllByUser(userId));
+      assertThrows(UserNotFoundException.class, () -> userController.getAllByUser(userId));
     }
   }
 
@@ -156,9 +164,9 @@ class ReviewControllerTest {
     void success() {
       UUID contentId = UUID.randomUUID();
 
-      ResponseEntity<List<ReviewResponse>> response = reviewController.findAllByContent(contentId);
+      ResponseEntity<List<ReviewResponse>> response = contentController.getAllByContent(contentId);
 
-      verify(reviewService).findAllByContent(contentId);
+      verify(reviewService).getAllByContent(contentId);
     }
 
     @Test
@@ -166,9 +174,9 @@ class ReviewControllerTest {
     void failsWhenContentNotFound() {
       UUID contentId = UUID.randomUUID();
 
-      when(reviewService.findAllByContent(contentId)).thenThrow(new ContentNotFoundException());
+      when(reviewService.getAllByContent(contentId)).thenThrow(new ContentNotFoundException());
 
-      assertThrows(ContentNotFoundException.class, () -> reviewController.findAllByContent(contentId));
+      assertThrows(ContentNotFoundException.class, () -> contentController.getAllByContent(contentId));
     }
   }
 
@@ -245,7 +253,7 @@ class ReviewControllerTest {
     void success() {
       UUID userId = UUID.randomUUID();
 
-      ResponseEntity<Void> response = reviewController.deleteAllByUser(userId);
+      ResponseEntity<Void> response = userController.deleteAllByUser(userId);
 
       assertNull(response.getBody());
 
@@ -259,7 +267,7 @@ class ReviewControllerTest {
 
       doThrow(new UserNotFoundException()).when(reviewService).deleteAllByUser(userId);
 
-      assertThrows(UserNotFoundException.class, () -> reviewController.deleteAllByUser(userId));
+      assertThrows(UserNotFoundException.class, () -> userController.deleteAllByUser(userId));
     }
   }
 }
