@@ -3,6 +3,7 @@ package team03.mopl.domain.watchroom.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.user.User;
 
 
 @Entity
@@ -35,8 +37,9 @@ public class WatchRoom {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column(name = "owner_id", nullable = false)
-  private UUID ownerId;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "owner_id", nullable = false)
+  private User owner;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -91,12 +94,12 @@ public class WatchRoom {
   }
 
   //방장 변경
-  public void changeOwner(UUID newOwnerId) {
-    this.ownerId = newOwnerId;
+  public void changeOwner(User newOwner) {
+    this.owner = newOwner;
   }
 
   //방장인지 확인
   public boolean isOwner(UUID userId) {
-    return this.ownerId.equals(userId);
+    return this.owner.equals(userId);
   }
 }
