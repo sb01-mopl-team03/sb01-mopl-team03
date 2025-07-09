@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.review.dto.ReviewResponse;
 import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.domain.subscription.dto.SubscriptionDto;
+import team03.mopl.domain.subscription.service.SubscriptionService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +28,7 @@ public class UserController {
   private final UserService userService;
   private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
+  private final SubscriptionService subscriptionService;
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<UserResponse> create(@ModelAttribute UserCreateRequest request) {
@@ -64,6 +66,13 @@ public class UserController {
   @GetMapping("/{userId}/reviews")
   public ResponseEntity<List<ReviewResponse>> getAllByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
+  }
+
+  @GetMapping("/{userId}/subscriptions")
+  public ResponseEntity<List<SubscriptionDto>> getUserSubscriptions(
+      @PathVariable UUID userId) {
+    List<SubscriptionDto> subscriptions = subscriptionService.getSubscriptions(userId);
+    return ResponseEntity.ok(subscriptions);
   }
 
 }

@@ -28,7 +28,11 @@ public enum ErrorCode {
   //Notification
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다."),
 
-  KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_001", "해당 사용자의 키워드를 찾을 수 없습니다.");
+  KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_001", "해당 사용자의 키워드를 찾을 수 없습니다."),
+
+  NOT_SUBSCRIBED(HttpStatus.NOT_FOUND, "SUBSCRIPTION_001", "구독하지 않은 플레이리스트입니다."),
+  ALREADY_SUBSCRIBED(HttpStatus.CONFLICT, "SUBSCRIPTION_002", "이미 구독 중인 플레이리스트입니다."),
+  SELF_SUBSCRIPTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_003", "자신의 플레이리스트는 구독할 수 없습니다.");
 
 
   private HttpStatus status;
