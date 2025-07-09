@@ -139,7 +139,7 @@ class ReviewControllerTest {
     void success() {
       UUID userId = UUID.randomUUID();
 
-      ResponseEntity<List<ReviewResponse>> response = userController.getAllByUser(userId);
+      ResponseEntity<List<ReviewResponse>> response = userController.getAllReviewByUser(userId);
 
       verify(reviewService).getAllByUser(userId);
     }
@@ -151,7 +151,7 @@ class ReviewControllerTest {
 
       when(reviewService.getAllByUser(userId)).thenThrow(new UserNotFoundException());
 
-      assertThrows(UserNotFoundException.class, () -> userController.getAllByUser(userId));
+      assertThrows(UserNotFoundException.class, () -> userController.getAllReviewByUser(userId));
     }
   }
 
@@ -241,33 +241,6 @@ class ReviewControllerTest {
       doThrow(new ReviewNotFoundException()).when(reviewService).delete(reviewId);
 
       assertThrows(ReviewNotFoundException.class, () -> reviewController.delete(reviewId));
-    }
-  }
-
-  @Nested
-  @DisplayName("유저별 리뷰 전체 삭제 요청")
-  class DeleteAllByUser {
-
-    @Test
-    @DisplayName("성공")
-    void success() {
-      UUID userId = UUID.randomUUID();
-
-      ResponseEntity<Void> response = userController.deleteAllByUser(userId);
-
-      assertNull(response.getBody());
-
-      verify(reviewService).deleteAllByUser(userId);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 유저")
-    void failsWhenUserNotFound() {
-      UUID userId = UUID.randomUUID();
-
-      doThrow(new UserNotFoundException()).when(reviewService).deleteAllByUser(userId);
-
-      assertThrows(UserNotFoundException.class, () -> userController.deleteAllByUser(userId));
     }
   }
 }
