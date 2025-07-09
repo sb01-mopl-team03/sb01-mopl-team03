@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
@@ -644,9 +645,13 @@ public class CurationServiceImpl implements CurationService {
 
   @Override
   @Transactional
-  public void delete(UUID keywordId) {
+  public void delete(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findById(keywordId)
             .orElseThrow(KeywordNotFoundException::new);
+
+    if (!keyword.getUser().getId().equals(userId)) {
+      throw new KeywordDeleteDeniedException();
+    }
 
     keywordRepository.delete(keyword);
   }
