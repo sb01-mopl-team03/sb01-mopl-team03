@@ -21,6 +21,8 @@ public class JwtServiceImpl implements JwtService {
   @Transactional
   public void save(User user, String accessToken, String refreshToken,
       long refreshTokenExpirationMillis) {
+    jwtSessionRepository.findByUser(user).ifPresent(jwtSessionRepository::delete);
+
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expiresAt = now.plusNanos(refreshTokenExpirationMillis * 1_000_000);
 
