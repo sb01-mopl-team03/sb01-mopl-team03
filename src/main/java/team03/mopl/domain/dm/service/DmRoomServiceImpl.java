@@ -1,8 +1,9 @@
 package team03.mopl.domain.dm.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import team03.mopl.domain.dm.repository.DmRoomRepository;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.service.NotificationService;
+import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
 @Service
@@ -34,15 +36,16 @@ public class DmRoomServiceImpl implements DmRoomService {
   public DmRoomDto createRoom(UUID senderId, UUID receiverId) {
     log.info("createRoom - DM 방 생성 요청: senderId={}, receiverId={}", senderId, receiverId);
     //추후 유저 검증 필요
-    userRepository.findById(senderId).orElseThrow(() -> {
+    User sender = userRepository.findById(senderId).orElseThrow(() -> {
       log.warn("createRoom - 유저(senderId) 없음: {}", senderId);
       return new UserNotFoundException();
     });
-    userRepository.findById(receiverId).orElseThrow(() -> {
+    User receiver = userRepository.findById(receiverId).orElseThrow(() -> {
       log.warn("createRoom - 유저(receiverId) 없음: {}", receiverId);
       return new UserNotFoundException();
     });
-    DmRoomDto roomDto = DmRoomDto.from(dmRoomRepository.save(new DmRoom(senderId, receiverId)));
+    DmRoom dmRoom = dmRoomRepository.save(new DmRoom(senderId, receiverId));
+    DmRoomDto roomDto = DmRoomDto.from(sender.getName(), receiver.getName(), dmRoom);
     log.info("createRoom - DM 방 생성 완료: roomId={}", roomDto.getId());
 
     // 알림 전송 추가
@@ -54,27 +57,44 @@ public class DmRoomServiceImpl implements DmRoomService {
   @Override
   public DmRoomDto getRoom(UUID roomId) {
     log.info("getRoom - roomId={}", roomId);
-    return DmRoomDto.from(
-        dmRoomRepository.findById(roomId).orElseThrow(() -> {
-          log.warn("getRoom - 존재하지 않는 roomId={}", roomId);
-          return new DmRoomNotFoundException();
-        })
-    );
+    DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
+      log.warn("getRoom - 존재하지 않는 roomId={}", roomId);
+      return new DmRoomNotFoundException();
+    });
+    User sender = userRepository.findById(dmRoom.getSenderId()).orElseThrow(UserNotFoundException::new);
+    User receiver = userRepository.findById(dmRoom.getReceiverId()).orElseThrow(UserNotFoundException::new);
+    return DmRoomDto.from(sender.getName(), receiver.getName(), dmRoom);
   }
 
   @Override
   @Transactional
   public DmRoomDto findOrCreateRoom(UUID userA, UUID userB) {
-    return dmRoomRepository.findByRoomBetweenUsers(userA, userB).map(DmRoomDto::from).orElseGet(() -> createRoom(userA, userB));
+    User sender = userRepository.findById(userA).orElseThrow(UserNotFoundException::new);
+    User receiver = userRepository.findById(userB).orElseThrow(UserNotFoundException::new);
+    Optional<DmRoom> optionalDmRoom = dmRoomRepository.findByRoomBetweenUsers(userA, userB);
+    return optionalDmRoom.map(dmRoom -> DmRoomDto.from(sender.getName(), receiver.getName(), dmRoom)).orElseGet(() -> createRoom(userA, userB));
   }
 
   // 유저의 모든 채팅방
   @Override
   public List<DmRoomDto> getAllRoomsForUser(UUID userId) {
-    //내가 sender 이거나 receiver 이거나
-    return dmRoomRepository.findBySenderIdOrReceiverId(userId, userId).stream()
-        .map(d -> DmRoomDto.from(d.getMessages().get(d.getMessages().size() - 1).getContent(), getUnreadCount(d.getId(), userId), d)).toList();
+    List<DmRoom> dmRooms = dmRoomRepository.findBySenderIdOrReceiverId(userId, userId);
+    List<DmRoomDto> dmRoomDtos = new ArrayList<>();
+    for (DmRoom dmRoom : dmRooms) {
+      List<Dm> messages = dmRoom.getMessages();
+      String content = null;
+      if (!messages.isEmpty()) {
+        content = messages.get(messages.size() - 1).getContent();
+      }
+      int unreadCount = getUnreadCount(dmRoom.getId(), userId);
+      User sender = userRepository.findById(dmRoom.getSenderId()).orElseThrow(UserNotFoundException::new);
+      User receiver = userRepository.findById(dmRoom.getReceiverId()).orElseThrow(UserNotFoundException::new);
+
+      dmRoomDtos.add(DmRoomDto.from(content, unreadCount, sender.getName(), receiver.getName(), dmRoom));
+    }
+    return dmRoomDtos;
   }
+
 
   public int getUnreadCount(UUID roomId, UUID userId) {
     DmRoom dmRoom = dmRoomRepository.findById(roomId)

@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.dm.dto.DmRoomDto;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRoomRepository;
@@ -132,7 +133,8 @@ class DmRoomServiceImplTest {
     DmRoom dmRoom = new DmRoom(roomId, senderId, receiverId);
 
     given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom));
-
+    given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
+    given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
     // when
     var result = dmRoomService.getRoom(roomId);
 
@@ -164,7 +166,8 @@ class DmRoomServiceImplTest {
 
     given(dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId))
         .willReturn(Optional.of(existingRoom));
-
+    when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+    when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
     // when
     var result = dmRoomService.findOrCreateRoom(senderId, receiverId);
 
@@ -218,11 +221,7 @@ class DmRoomServiceImplTest {
     UUID userA = UUID.randomUUID();
     UUID userB = UUID.randomUUID();
     //userA가 존재하지 않을 때
-    when(dmRoomRepository.findByRoomBetweenUsers(userA, userB))
-        .thenReturn(Optional.empty());
-
     when(userRepository.findById(userA)).thenReturn(Optional.empty());
-
     assertThrows(UserNotFoundException.class, () -> {
       dmRoomService.findOrCreateRoom(userA, userB);
     });
@@ -243,49 +242,47 @@ class DmRoomServiceImplTest {
     // given
     UUID roomId1 = UUID.randomUUID();
     UUID roomId2 = UUID.randomUUID();
+    UUID senderId = UUID.randomUUID();
+    UUID receiverId = UUID.randomUUID();
 
-    // 메시지
+    // 메시지 생성
     Dm message1 = new Dm(senderId, "안녕1");
     Dm message2 = new Dm(senderId, "안녕2");
 
-    // 메시지의 readUserIds
-    message1.getReadUserIds().add(receiverId); // user가 읽음
-    // message2는 user가 안 읽음
+    // 메시지 읽음 설정
+    message1.getReadUserIds().add(receiverId);
+    // message2는 읽은 사람 없음
 
-    // DmRoom 2개
+    // 방
     DmRoom room1 = new DmRoom(roomId1, senderId, receiverId);
-    DmRoom room2 = new DmRoom(roomId2, senderId, receiverId);
-
-    // 메시지 추가
     room1.getMessages().add(message1);
+    DmRoom room2 = new DmRoom(roomId2, senderId, receiverId);
     room2.getMessages().add(message2);
 
-    // repository mock
+    // Repository Stubbing
     given(dmRoomRepository.findBySenderIdOrReceiverId(senderId, senderId))
         .willReturn(List.of(room1, room2));
-
-    // getUnreadCount는 실제 메서드를 호출하고 싶으면 spy를 쓰거나,
-    // 아니면 그냥 이렇게 stub
+    given(userRepository.findById(senderId)).willReturn(Optional.of(sender));
+    given(userRepository.findById(receiverId)).willReturn(Optional.of(receiver));
     given(dmRoomRepository.findById(roomId1)).willReturn(Optional.of(room1));
     given(dmRoomRepository.findById(roomId2)).willReturn(Optional.of(room2));
 
     // when
-    var results = dmRoomService.getAllRoomsForUser(senderId);
+    List<DmRoomDto> results = dmRoomService.getAllRoomsForUser(senderId);
 
     // then
     assertThat(results).hasSize(2);
 
-    var roomDto1 = results.get(0);
-    var roomDto2 = results.get(1);
+    DmRoomDto dto1 = results.stream().filter(d -> d.getId().equals(roomId1)).findFirst().orElseThrow();
+    DmRoomDto dto2 = results.stream().filter(d -> d.getId().equals(roomId2)).findFirst().orElseThrow();
 
-    // 마지막 메시지
-    assertThat(roomDto1.getLastMessage()).isEqualTo("안녕1");
-    assertThat(roomDto2.getLastMessage()).isEqualTo("안녕2");
+    assertThat(dto1.getLastMessage()).isEqualTo("안녕1");
+    assertThat(dto2.getLastMessage()).isEqualTo("안녕2");
 
-    // 안 읽은 메시지 개수 ( 만든 사람은 자동으로 읽게 됨 -> 시작부터 1개 이상 )
-    assertThat(roomDto1.getNewMessageCount()).isEqualTo(1L);
-    assertThat(roomDto2.getNewMessageCount()).isEqualTo(1L);
+    assertThat(dto1.getNewMessageCount()).isEqualTo(1L);
+    assertThat(dto2.getNewMessageCount()).isEqualTo(1L);
   }
+
 
 
   @Test

@@ -86,7 +86,7 @@ class DmControllerTest {
     );
 
     // when & then
-    mockMvc.perform(get("/api/dm/{roomId}/dm", roomId))
+    mockMvc.perform(get("/api/dm/{roomId}", roomId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].content").value("안녕 DM"))
         .andExpect(jsonPath("$[0].senderId").value(userId.toString()));
