@@ -8,13 +8,13 @@ import team03.mopl.common.exception.follow.AlreadyFollowingException;
 import team03.mopl.common.exception.follow.CantFollowSelfException;
 import team03.mopl.common.exception.follow.FollowNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.entity.Follow;
 import team03.mopl.domain.follow.repository.FollowRepository;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.service.NotificationService;
 import team03.mopl.domain.user.UserRepository;
 import team03.mopl.domain.user.User;
-import team03.mopl.domain.user.UserResponse;
 import team03.mopl.domain.user.UserService;
 
 @Service
@@ -58,16 +58,16 @@ public class FollowServiceImpl implements FollowService {
 
   //나의 팔로잉 목록
   @Override
-  public List<UserResponse> getFollowing(UUID userId) {
+  public List<FollowResponse> getFollowing(UUID userId) {
     List<UUID> list = followRepository.findAllByFollowerId(userId).stream().map(Follow::getFollowingId).toList();
-    return list.stream().map(userService::find).toList();
+    return list.stream().map( id -> FollowResponse.fromUserResponse(id, userService.find(id))).toList();
   }
 
   //나를 팔로우하는 사람들 목록
   @Override
-  public List<UserResponse> getFollowers(UUID userId) {
+  public List<FollowResponse> getFollowers(UUID userId) {
     List<UUID> list = followRepository.findAllByFollowingId(userId).stream().map(Follow::getFollowerId).toList();
-    return list.stream().map(userService::find).toList();
+    return list.stream().map(id -> FollowResponse.fromUserResponse(id, userService.find(id))).toList();
   }
 
   @Override
