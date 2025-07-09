@@ -64,10 +64,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void delete(UUID userId) {
-    userRepository.deleteById(userId);
-
     // User 삭제 시 Follow 관계도 같이 삭제
     followService.deletedUserUnfollow(userId);
+
+    userRepository.deleteById(userId);
+
   }
 
   @Override
