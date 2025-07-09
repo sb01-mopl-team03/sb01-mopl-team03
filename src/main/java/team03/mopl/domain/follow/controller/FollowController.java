@@ -3,6 +3,7 @@ package team03.mopl.domain.follow.controller;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import team03.mopl.domain.user.UserResponse;
 @RestController
 @RequestMapping("/api/follows")
 @RequiredArgsConstructor
+@Slf4j
 public class FollowController {
 
   private final FollowService followService;

@@ -10,12 +10,13 @@ public enum NotificationType {
   FOLLOWED("followed"),
   UNFOLLOWED("unfollowed"),
   DM_RECEIVED("dm_received"),
-  NEW_DM_ROOM("created new DM room");
+  NEW_DM_ROOM("created new DM room"),
+  CONNECTED("connected");
 
-  private final String eventName;
+  private final String notificationName;
 
-  NotificationType(String eventName) {
-    this.eventName = eventName;
+  NotificationType(String notificationName) {
+    this.notificationName = notificationName;
   }
 
 }
