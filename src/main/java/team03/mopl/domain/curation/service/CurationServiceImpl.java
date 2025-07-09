@@ -28,7 +28,7 @@ import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
 import team03.mopl.domain.curation.repository.KeywordRepository;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
@@ -616,7 +616,7 @@ public class CurationServiceImpl implements CurationService {
   // TODO: 리뷰 등록되면 자동으로 평균 평점 계산하도록 event 생성
   private BigDecimal getAvgRating(Content content) {
     try {
-      List<ReviewResponse> reviews = reviewService.getAllByContent(content.getId());
+      List<ReviewDto> reviews = reviewService.getAllByContent(content.getId());
 
       if (reviews.isEmpty()) {
         log.info("getAvgRating - 콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());

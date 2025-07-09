@@ -18,13 +18,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.review.ReviewDeleteDeniedException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
+import team03.mopl.common.exception.review.ReviewUpdateDeniedException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.review.dto.ReviewCreateRequest;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.dto.ReviewUpdateRequest;
 import team03.mopl.domain.review.entity.Review;
 import team03.mopl.domain.review.repository.ReviewRepository;
@@ -99,6 +101,7 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       ReviewCreateRequest request = new ReviewCreateRequest(
           userId,
           contentId,
@@ -113,8 +116,10 @@ class ReviewServiceImplTest {
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
       when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
-      ReviewResponse result = reviewService.create(request);
+      // when
+      ReviewDto result = reviewService.create(request);
 
+      // then
       assertNotNull(result);
       assertEquals(review.getTitle(), result.title());
       assertEquals(review.getComment(), result.comment());
@@ -126,6 +131,7 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 유저")
     void failsWhenUserNotFound() {
+      // given
       UUID randomUserId = UUID.randomUUID();
       ReviewCreateRequest request = new ReviewCreateRequest(
           randomUserId,
@@ -137,6 +143,7 @@ class ReviewServiceImplTest {
 
       when(userRepository.existsById(randomUserId)).thenReturn(false);
 
+      // when & then
       assertThrows(UserNotFoundException.class, () -> reviewService.create(request));
 
       verify(reviewRepository, never()).save(any(Review.class));
@@ -145,6 +152,7 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 콘텐츠")
     void failsWhenContentNotFound() {
+      // given
       UUID randomContentId = UUID.randomUUID();
       ReviewCreateRequest request = new ReviewCreateRequest(
           userId,
@@ -157,6 +165,7 @@ class ReviewServiceImplTest {
       when(userRepository.existsById(userId)).thenReturn(true);
       when(contentRepository.existsById(randomContentId)).thenReturn(false);
 
+      // when & then
       assertThrows(ContentNotFoundException.class, () -> reviewService.create(request));
 
       verify(reviewRepository, never()).save(any(Review.class));
@@ -165,6 +174,7 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("유저 조회 실패")
     void failsWhenUserFindFailed() {
+      // given
       ReviewCreateRequest request = new ReviewCreateRequest(
           userId,
           contentId,
@@ -177,6 +187,7 @@ class ReviewServiceImplTest {
       when(contentRepository.existsById(contentId)).thenReturn(true);
       when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
+      // when & then
       assertThrows(UserNotFoundException.class, () -> reviewService.create(request));
 
       verify(reviewRepository, never()).save(any(Review.class));
@@ -185,6 +196,7 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("콘텐츠 조회 실패")
     void failsWhenContentFindFailed() {
+      // given
       ReviewCreateRequest request = new ReviewCreateRequest(
           userId,
           contentId,
@@ -198,6 +210,7 @@ class ReviewServiceImplTest {
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
       when(contentRepository.findById(contentId)).thenReturn(Optional.empty());
 
+      // when & then
       assertThrows(ContentNotFoundException.class, () -> reviewService.create(request));
 
       verify(reviewRepository, never()).save(any(Review.class));
@@ -211,37 +224,28 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       ReviewUpdateRequest request = new ReviewUpdateRequest(
           "수정된 리뷰 제목",
           "수정된 리뷰 내용",
           BigDecimal.valueOf(4)
       );
 
-      Review updatedReview = Review.builder()
-          .id(reviewId)
-          .user(user)
-          .content(content)
-          .title("수정된 리뷰 제목")
-          .comment("수정된 리뷰 내용")
-          .rating(BigDecimal.valueOf(4))
-          .build();
-
       when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-      when(reviewRepository.save(any(Review.class))).thenReturn(updatedReview);
+      when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
-      ReviewResponse result = reviewService.update(reviewId, request);
+      // when
+      ReviewDto result = reviewService.update(reviewId, request, userId);
 
+      // then
       assertNotNull(result);
-      assertEquals("수정된 리뷰 제목", result.title());
-      assertEquals("수정된 리뷰 내용", result.comment());
-      assertEquals(BigDecimal.valueOf(4), result.rating());
-
       verify(reviewRepository, times(1)).save(any(Review.class));
     }
 
     @Test
     @DisplayName("존재하지 않는 리뷰")
     void failsWhenReviewNotFound() {
+      // given
       UUID randomReviewId = UUID.randomUUID();
       ReviewUpdateRequest request = new ReviewUpdateRequest(
           "수정된 리뷰 제목",
@@ -251,7 +255,27 @@ class ReviewServiceImplTest {
 
       when(reviewRepository.findById(randomReviewId)).thenReturn(Optional.empty());
 
-      assertThrows(ReviewNotFoundException.class, () -> reviewService.update(randomReviewId, request));
+      // when & then
+      assertThrows(ReviewNotFoundException.class, () -> reviewService.update(randomReviewId, request, userId));
+
+      verify(reviewRepository, never()).save(any(Review.class));
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 리뷰 수정 시도")
+    void failsWhenNotReviewOwner() {
+      // given
+      UUID otherUserId = UUID.randomUUID();
+      ReviewUpdateRequest request = new ReviewUpdateRequest(
+          "수정된 리뷰 제목",
+          "수정된 리뷰 내용",
+          BigDecimal.valueOf(4)
+      );
+
+      when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
+
+      // when & then
+      assertThrows(ReviewUpdateDeniedException.class, () -> reviewService.update(reviewId, request, otherUserId));
 
       verify(reviewRepository, never()).save(any(Review.class));
     }
@@ -259,15 +283,18 @@ class ReviewServiceImplTest {
 
   @Nested
   @DisplayName("리뷰 조회")
-  class FindReview {
+  class GetReview {
 
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 
-      ReviewResponse result = reviewService.get(reviewId);
+      // when
+      ReviewDto result = reviewService.get(reviewId);
 
+      // then
       assertNotNull(result);
       assertEquals(review.getTitle(), result.title());
       assertEquals(review.getComment(), result.comment());
@@ -277,21 +304,24 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 리뷰")
     void failsWhenReviewNotFound() {
+      // given
       UUID randomReviewId = UUID.randomUUID();
 
       when(reviewRepository.findById(randomReviewId)).thenReturn(Optional.empty());
 
+      // when & then
       assertThrows(ReviewNotFoundException.class, () -> reviewService.get(randomReviewId));
     }
   }
 
   @Nested
   @DisplayName("유저별 리뷰 조회")
-  class FindAllByUser {
+  class GetAllByUser {
 
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       Review review2 = Review.builder()
           .id(UUID.randomUUID())
           .user(user)
@@ -306,8 +336,10 @@ class ReviewServiceImplTest {
       when(userRepository.existsById(userId)).thenReturn(true);
       when(reviewRepository.findAllByUserId(userId)).thenReturn(reviews);
 
-      List<ReviewResponse> result = reviewService.getAllByUser(userId);
+      // when
+      List<ReviewDto> result = reviewService.getAllByUser(userId);
 
+      // then
       assertNotNull(result);
       assertEquals(2, result.size());
       assertEquals(review.getTitle(), result.get(0).title());
@@ -317,21 +349,24 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 유저")
     void failsWhenUserNotFound() {
+      // given
       UUID randomUserId = UUID.randomUUID();
 
       when(userRepository.existsById(randomUserId)).thenReturn(false);
 
+      // when & then
       assertThrows(UserNotFoundException.class, () -> reviewService.getAllByUser(randomUserId));
     }
   }
 
   @Nested
   @DisplayName("콘텐츠별 리뷰 조회")
-  class FindAllByContent {
+  class GetAllByContent {
 
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       Review review2 = Review.builder()
           .id(UUID.randomUUID())
           .user(user)
@@ -346,8 +381,10 @@ class ReviewServiceImplTest {
       when(contentRepository.existsById(contentId)).thenReturn(true);
       when(reviewRepository.findAllByContentId(contentId)).thenReturn(reviews);
 
-      List<ReviewResponse> result = reviewService.getAllByContent(contentId);
+      // when
+      List<ReviewDto> result = reviewService.getAllByContent(contentId);
 
+      // then
       assertNotNull(result);
       assertEquals(2, result.size());
       assertEquals(review.getTitle(), result.get(0).title());
@@ -357,10 +394,12 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 콘텐츠")
     void failsWhenContentNotFound() {
+      // given
       UUID randomContentId = UUID.randomUUID();
 
       when(contentRepository.existsById(randomContentId)).thenReturn(false);
 
+      // when & then
       assertThrows(ContentNotFoundException.class, () -> reviewService.getAllByContent(randomContentId));
     }
   }
@@ -372,50 +411,42 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("성공")
     void success() {
+      // given
       when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 
-      reviewService.delete(reviewId);
+      // when
+      reviewService.delete(reviewId, userId);
 
+      // then
       verify(reviewRepository, times(1)).delete(review);
     }
 
     @Test
     @DisplayName("존재하지 않는 리뷰")
     void failsWhenReviewNotFound() {
+      // given
       UUID randomReviewId = UUID.randomUUID();
 
       when(reviewRepository.findById(randomReviewId)).thenReturn(Optional.empty());
 
-      assertThrows(ReviewNotFoundException.class, () -> reviewService.delete(randomReviewId));
+      // when & then
+      assertThrows(ReviewNotFoundException.class, () -> reviewService.delete(randomReviewId, userId));
 
       verify(reviewRepository, never()).delete(any(Review.class));
     }
-  }
-
-  @Nested
-  @DisplayName("유저별 리뷰 전체 삭제")
-  class DeleteAllByUser {
 
     @Test
-    @DisplayName("성공")
-    void success() {
-      when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    @DisplayName("다른 사용자의 리뷰 삭제 시도")
+    void failsWhenNotReviewOwner() {
+      // given
+      UUID otherUserId = UUID.randomUUID();
 
-      reviewService.deleteAllByUser(userId);
+      when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 
-      verify(reviewRepository, times(1)).deleteAllByUserId(userId);
-    }
+      // when & then
+      assertThrows(ReviewDeleteDeniedException.class, () -> reviewService.delete(reviewId, otherUserId));
 
-    @Test
-    @DisplayName("존재하지 않는 유저")
-    void failsWhenUserNotFound() {
-      UUID randomUserId = UUID.randomUUID();
-
-      when(userRepository.findById(randomUserId)).thenReturn(Optional.empty());
-
-      assertThrows(UserNotFoundException.class, () -> reviewService.deleteAllByUser(randomUserId));
-
-      verify(reviewRepository, never()).deleteAllByUserId(any());
+      verify(reviewRepository, never()).delete(any(Review.class));
     }
   }
 }

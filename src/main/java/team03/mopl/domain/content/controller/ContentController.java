@@ -16,7 +16,7 @@ import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.service.ContentService;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 
 @Slf4j
@@ -46,7 +46,7 @@ public class ContentController {
   }
 
   @GetMapping("/{contentId}/reviews")
-  public ResponseEntity<List<ReviewResponse>> getAllByContent(@PathVariable UUID contentId) {
+  public ResponseEntity<List<ReviewDto>> getAllByContent(@PathVariable UUID contentId) {
     return ResponseEntity.ok(reviewService.getAllByContent(contentId));
   }
 }
