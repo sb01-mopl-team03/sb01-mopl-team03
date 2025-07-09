@@ -23,7 +23,7 @@ public class ContentSearchRequest {
   private String title;
 
   @AllowedValues(enumClass = ContentType.class, message = "contentType은 MOVIE, TV, SPORTS 중 하나여야 합니다.")
-  private String ContentType;
+  private String contentType = "MOVIE";
 
   @AllowedValues(enumClass = SortBy.class, message = "sortBy는 TITLE, RELEASE_AT 중 하나여야 합니다.")
   private String sortBy = "TITLE";
