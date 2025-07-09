@@ -107,12 +107,7 @@ public class FollowServiceImpl implements FollowService {
   public List<UserResponse> getFollowing(UUID userId) {
     log.info("getFollowing - 팔로잉 목록 조회: userId={}", userId);
     List<UUID> list = followRepository.findAllByFollowerId(userId).stream().map(Follow::getFollowingId).toList();
-    return list.stream()
-        .map(userRepository::findById)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .map(UserResponse::from)
-        .toList();
+    return list.stream().map( id -> FollowResponse.fromUserResponse(id, userService.find(id))).toList();
   }
 
   //나를 팔로우하는 사람들 목록
@@ -120,12 +115,7 @@ public class FollowServiceImpl implements FollowService {
   public List<UserResponse> getFollowers(UUID userId) {
     log.info("getFollowers - 팔로워 목록 조회: userId={}", userId);
     List<UUID> list = followRepository.findAllByFollowingId(userId).stream().map(Follow::getFollowerId).toList();
-    return list.stream()
-        .map(userRepository::findById)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .map(UserResponse::from)
-        .toList();
+    return list.stream().map(id -> FollowResponse.fromUserResponse(id, userService.find(id))).toList();
   }
 
   @Override

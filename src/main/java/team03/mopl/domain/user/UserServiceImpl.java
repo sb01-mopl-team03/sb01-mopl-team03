@@ -13,8 +13,7 @@ import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.follow.service.FollowService;
-import team03.mopl.domain.oauth2.GoogleUserInfo;
-import team03.mopl.domain.oauth2.KakaoUserInfo;
+import team03.mopl.storage.ProfileImageStorage;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,12 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final FollowService followService;
+  private final ProfileImageStorage profileImageStorage;
+
+  @PostConstruct
+  public void logStorageType() {
+    log.info("ProfileImageStorage : {}", profileImageStorage.getClass().getSimpleName());
+  }
 
   @Override
   public UserResponse create(UserCreateRequest request) {
