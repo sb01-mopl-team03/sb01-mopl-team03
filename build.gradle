@@ -80,8 +80,12 @@ dependencies {
     testImplementation 'org.springframework:spring-websocket'
     testImplementation 'org.springframework:spring-messaging'
 
+    //OpenAPI 문서
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+
     //S3
     implementation 'software.amazon.awssdk:s3:2.31.7'
+
 }
 
 tasks.named('test') {
