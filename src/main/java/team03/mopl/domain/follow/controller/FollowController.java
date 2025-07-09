@@ -26,14 +26,12 @@ public class FollowController {
 
   @PostMapping("/follow")
   public ResponseEntity<Void> follow(@RequestBody FollowRequest request) {
-    log.info("follow - 팔로우 요청: followerId={}, followingId={}", request.getFollowerId(), request.getFollowingId());
     followService.follow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/unfollow")
   public ResponseEntity<Void> unfollow(@RequestBody FollowRequest request) {
-    log.info("unfollow - 언팔로우 요청: followerId={}, followingId={}", request.getFollowerId(), request.getFollowingId());
     followService.unfollow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }
@@ -43,7 +41,6 @@ public class FollowController {
   public ResponseEntity<List<UserResponse>> getFollowing(
       @PathVariable(name = "userId") UUID userId
   ) {
-    log.info("getFollowing - 팔로잉 목록 조회 요청: userId={}", userId);
     return ResponseEntity.ok(followService.getFollowing(userId));
   }
 
@@ -52,7 +49,6 @@ public class FollowController {
   public ResponseEntity<List<UserResponse>> getFollowers(
       @PathVariable(name = "userId") UUID userId
   ) {
-    log.info("getFollowers - 팔로워 목록 조회 요청: userId={}", userId);
     return ResponseEntity.ok(followService.getFollowers(userId));
   }
 
@@ -61,7 +57,6 @@ public class FollowController {
   public ResponseEntity<Boolean> isFollowing(
       @PathVariable(name = "followerId") UUID followerId, @PathVariable(name = "followingId") UUID followingId
   ) {
-    log.info("isFollowing - 팔로우 여부 확인 요청: followerId={}, followingId={}", followerId, followingId);
     return ResponseEntity.ok(followService.isFollowing(followerId, followingId));
   }
 }

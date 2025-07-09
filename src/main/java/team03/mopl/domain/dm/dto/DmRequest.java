@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DmMessage {
+public class DmRequest {
   private UUID senderId;
   private UUID roomId;
   private String content;

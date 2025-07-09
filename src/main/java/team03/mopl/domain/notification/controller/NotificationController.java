@@ -35,7 +35,7 @@ public class NotificationController {
   public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails user,
       @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId) {
     UUID userId = user.getId();
-    log.info("알림 SSE 구독 요청: userId={}, lastEventId={}", userId, lastEventId);
+    log.debug("알림 SSE 구독 요청: userId={}, lastEventId={}", userId, lastEventId);
 
     // 1. 연결된 사실을 알림으로 저장
     NotificationDto notificationDto = new NotificationDto(userId, NotificationType.CONNECTED, "SSE 연결 완료");

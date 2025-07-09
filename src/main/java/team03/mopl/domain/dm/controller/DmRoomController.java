@@ -26,7 +26,6 @@ public class DmRoomController {
 
   @GetMapping("/{dmRoomId}") // 룸 ID를 통한 조회
   public ResponseEntity<DmRoomDto> getRoom(@PathVariable(name = "dmRoomId") UUID dmRoomId) {
-    log.info("getRoom - DM 룸 단건 조회 요청: roomId={}", dmRoomId);
     return ResponseEntity.ok(dmRoomService.getRoom(dmRoomId));
   }
   @GetMapping("/userRoom") // UserA와 UserB가 연결된 룸 조회 / 없으면 생성
@@ -35,23 +34,21 @@ public class DmRoomController {
       @RequestParam(name = "userB") UUID userB
   ) {
     UUID userA = userDetails.getId();
-    log.info("getOrCreateRoom - DM 룸 조회/생성 요청: userA={}, userB={}", userA, userB);
     DmRoomDto dmRoomDto = dmRoomService.findOrCreateRoom(userA, userB);
     return ResponseEntity.ok(dmRoomDto.getId());
   }
   @GetMapping("/") //유저의 모든 룸 조회
   public ResponseEntity<List<DmRoomDto>> getAllRooms(@AuthenticationPrincipal CustomUserDetails userDetails) {
     UUID userId = userDetails.getId();
-    log.info("getAllRooms - 유저의 모든 DM 룸 조회 요청: userId={}", userId);
     return ResponseEntity.ok().body(dmRoomService.getAllRoomsForUser(userId));
   }
+
   @DeleteMapping("/{roomId}") // 유저가 속한 룸 삭제
   public ResponseEntity<Void> deleteRoom(
       @PathVariable(name = "roomId") UUID roomId,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     UUID userId = userDetails.getId();
-    log.info("deleteRoom - DM 룸 삭제 요청: userId={}, roomId={}", userId, roomId);
     dmRoomService.deleteRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }
