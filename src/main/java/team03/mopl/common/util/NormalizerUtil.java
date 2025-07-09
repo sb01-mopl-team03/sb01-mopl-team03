@@ -24,17 +24,19 @@ public class NormalizerUtil {
     }
 
     // 1. 다이어크리틱스 제거 -> input: é -> return: e, `
-    // 호환을 위해 최대한 분리하도록 NFKD 이용
-    String normalized = Normalizer.normalize(input, Form.NFKD);
+    String normalized = Normalizer.normalize(input, Form.NFD);
     // 2. 다이어크리틱스의 악센트 제거
     // \\p{InCombiningDiacriticalMarks}: 유니코드의 모든 결합 악센트 문자
     normalized = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
-    // 3. 소문자로 변경
+    // 3. 분해됐던 한글 자모를 완성형 한글로 합친다.
+    normalized = Normalizer.normalize(normalized, Form.NFC);
+
+    // 4. 소문자로 변경
     normalized = normalized.toLowerCase();
 
-    // 4. 한글, 알파벳, 숫자 제외 모든 특수문자와 공백 제거
-    normalized = normalized.replaceAll("[^a-z0-9가-힣ㄱ-ㅎㅏ-ㅣ]", "");
+    // 5. 한글, 알파벳, 한자, 숫자 제외 모든 특수문자와 공백 제거
+    normalized = normalized.replaceAll("[^a-z0-9가-힣ㄱ-ㅎㅏ-ㅣ\\p{IsHan}]", "");
 
     return normalized;
   }
