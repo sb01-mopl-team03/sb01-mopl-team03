@@ -616,7 +616,7 @@ public class CurationServiceImpl implements CurationService {
   // TODO: 리뷰 등록되면 자동으로 평균 평점 계산하도록 event 생성
   private BigDecimal getAvgRating(Content content) {
     try {
-      List<ReviewResponse> reviews = reviewService.findAllByContent(content.getId());
+      List<ReviewResponse> reviews = reviewService.getAllByContent(content.getId());
 
       if (reviews.isEmpty()) {
         log.info("getAvgRating - 콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());
