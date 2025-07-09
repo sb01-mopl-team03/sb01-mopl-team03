@@ -2,6 +2,7 @@ package team03.mopl.domain.follow.dto;
 
 
 import java.util.UUID;
+import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserResponse;
 
 public record FollowResponse(
@@ -11,12 +12,14 @@ public record FollowResponse(
     String role,
     String profileImage
 ) {
-
-  public static FollowResponse fromUserResponse(UUID id, UserResponse userResponse) {
-    return new FollowResponse(id,
-        userResponse.email(),
-        userResponse.name(),
-        userResponse.role(),
-        userResponse.profileImage());
+  
+  public static FollowResponse fromUser(User user) {
+    return new FollowResponse(
+        user.getId(),
+        user.getEmail(),
+        user.getName(),
+        user.getRole().toString(),
+        user.getProfileImage()
+    );
   }
 }
