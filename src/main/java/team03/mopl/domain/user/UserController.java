@@ -60,10 +60,4 @@ public class UserController {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
   }
 
-  @DeleteMapping("/{userId}/reviews")
-  public ResponseEntity<Void> deleteAllByUser(@PathVariable UUID userId) {
-    reviewService.deleteAllByUser(userId);
-    return ResponseEntity.noContent().build();
-  }
-
 }
