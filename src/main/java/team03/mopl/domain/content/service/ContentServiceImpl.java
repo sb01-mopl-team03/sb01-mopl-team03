@@ -136,7 +136,7 @@ public class ContentServiceImpl implements ContentService {
 
   // review 평점의 평균값 게산
   private BigDecimal calculateRating(UUID contentId) {
-    List<ReviewResponse> reviews = reviewService.findAllByContent(contentId);
+    List<ReviewResponse> reviews = reviewService.getAllByContent(contentId);
     if (reviews == null || reviews.isEmpty()) {
       return BigDecimal.ZERO;
     }

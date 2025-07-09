@@ -114,9 +114,7 @@ CREATE TABLE "follows"
     "follower_id"  UUID                    NOT NULL,
     "following_id" UUID                    NOT NULL,
     "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
-    UNIQUE ("follower_id", "following_id"),
-    FOREIGN KEY ("follower_id") REFERENCES "users" ("id"),
-    FOREIGN KEY ("following_id") REFERENCES "users" ("id")
+    UNIQUE ("follower_id", "following_id")
 );
 
 -- 채팅&시청방 테이블

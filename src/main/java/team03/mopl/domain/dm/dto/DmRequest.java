@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DmMessage {
-  private UUID roomId;
+public class DmRequest {
   private UUID senderId;
+  private UUID roomId;
   private String content;
   private boolean isRead;
   private LocalDateTime createdAt;

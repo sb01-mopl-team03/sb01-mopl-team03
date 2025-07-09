@@ -51,6 +51,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/auth/temp-password").permitAll()
             .requestMatchers("/profile/**").permitAll()
             .requestMatchers("/ws/**").permitAll() // WebSocket 핸드쉐이크 허용
+            .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
             .anyRequest().hasRole("USER")
         )
         .oauth2Login(oauth2 -> oauth2
