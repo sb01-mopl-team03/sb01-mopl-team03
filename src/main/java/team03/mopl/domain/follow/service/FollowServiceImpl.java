@@ -10,6 +10,7 @@ import team03.mopl.common.exception.follow.AlreadyFollowingException;
 import team03.mopl.common.exception.follow.CantFollowSelfException;
 import team03.mopl.common.exception.follow.FollowNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.entity.Follow;
 import team03.mopl.domain.follow.repository.FollowRepository;
 import team03.mopl.domain.notification.dto.NotificationDto;
@@ -17,7 +18,6 @@ import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.service.NotificationService;
 import team03.mopl.domain.user.UserRepository;
 import team03.mopl.domain.user.User;
-import team03.mopl.domain.user.UserResponse;
 import team03.mopl.domain.user.UserService;
 
 @Service

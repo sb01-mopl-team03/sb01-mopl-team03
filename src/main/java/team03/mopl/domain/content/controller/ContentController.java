@@ -2,6 +2,7 @@ package team03.mopl.domain.content.controller;
 
 
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,8 @@ import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.service.ContentService;
+import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.service.ReviewService;
 
 @Slf4j
 @RestController
@@ -23,6 +26,7 @@ import team03.mopl.domain.content.service.ContentService;
 public class ContentController {
 
   private final ContentService contentService;
+  private final ReviewService reviewService;
 
 //  @GetMapping
 //  public ResponseEntity<List<ContentDto>> getAll() {
@@ -39,5 +43,10 @@ public class ContentController {
       @Valid @ModelAttribute ContentSearchRequest contentSearchRequest
   ) {
     return ResponseEntity.ok(contentService.getCursorPage(contentSearchRequest));
+  }
+
+  @GetMapping("/{contentId}/reviews")
+  public ResponseEntity<List<ReviewResponse>> getAllByContent(@PathVariable UUID contentId) {
+    return ResponseEntity.ok(reviewService.getAllByContent(contentId));
   }
 }

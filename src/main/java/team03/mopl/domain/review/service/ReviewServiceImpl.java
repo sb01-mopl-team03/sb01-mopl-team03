@@ -61,14 +61,14 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
-  public ReviewResponse find(UUID reviewId) {
+  public ReviewResponse get(UUID reviewId) {
     Review review = reviewRepository.findById(reviewId).orElseThrow(ReviewNotFoundException::new);
 
     return ReviewResponse.from(review);
   }
 
   @Override
-  public List<ReviewResponse> findAllByUser(UUID userId) {
+  public List<ReviewResponse> getAllByUser(UUID userId) {
     if (!userRepository.existsById(userId)) {
       log.debug("존재하지 않는 유저입니다. 유저 ID: ", userId);
       throw new UserNotFoundException();
@@ -79,7 +79,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
-  public List<ReviewResponse> findAllByContent(UUID contentId) {
+  public List<ReviewResponse> getAllByContent(UUID contentId) {
     if (!contentRepository.existsById(contentId)) {
       log.debug("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: ", contentId);
       throw new ContentNotFoundException();

@@ -2,7 +2,7 @@ package team03.mopl.domain.follow.service;
 
 import java.util.List;
 import java.util.UUID;
-import team03.mopl.domain.user.UserResponse;
+import team03.mopl.domain.follow.dto.FollowResponse;
 
 public interface FollowService {
   void follow(UUID followerId, UUID followingId);

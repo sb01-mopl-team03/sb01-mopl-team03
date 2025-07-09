@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.follow.dto.FollowRequest;
+import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
 
@@ -38,7 +39,7 @@ public class FollowController {
 
   // 팔로잉 목록
   @GetMapping("/{userId}/following")
-  public ResponseEntity<List<UserResponse>> getFollowing(
+  public ResponseEntity<List<FollowResponse>> getFollowing(
       @PathVariable(name = "userId") UUID userId
   ) {
     return ResponseEntity.ok(followService.getFollowing(userId));
@@ -46,7 +47,7 @@ public class FollowController {
 
   // 팔로워 목록
   @GetMapping("/{userId}/followers")
-  public ResponseEntity<List<UserResponse>> getFollowers(
+  public ResponseEntity<List<FollowResponse>> getFollowers(
       @PathVariable(name = "userId") UUID userId
   ) {
     return ResponseEntity.ok(followService.getFollowers(userId));

@@ -26,7 +26,9 @@ public enum ErrorCode {
   ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_002", "이미 팔로우하고 있습니다."),
   CANNOT_FOLLOW_SELF(HttpStatus.BAD_REQUEST, "FOLLOW_003", "자기 자신을 팔로우하고 있습니다."),
   //Notification
-  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다.");
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다."),
+
+  KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_001", "해당 사용자의 키워드를 찾을 수 없습니다.");
 
 
   private HttpStatus status;
