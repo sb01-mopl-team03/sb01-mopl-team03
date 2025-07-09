@@ -1,6 +1,5 @@
 package team03.mopl.domain.review.controller;
 
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import team03.mopl.domain.review.dto.ReviewUpdateRequest;
 import team03.mopl.domain.review.service.ReviewService;
 
 @RestController
-@RequestMapping("/api/review")
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
@@ -30,18 +29,8 @@ public class ReviewController {
   }
 
   @GetMapping("/{reviewId}")
-  public ResponseEntity<ReviewResponse> find(@PathVariable UUID reviewId) {
-    return ResponseEntity.ok(reviewService.find(reviewId));
-  }
-
-  @GetMapping("/{userId}")
-  public ResponseEntity<List<ReviewResponse>> findAllByUser(@PathVariable UUID userId) {
-    return ResponseEntity.ok(reviewService.findAllByUser(userId));
-  }
-
-  @GetMapping("/{contentId}")
-  public ResponseEntity<List<ReviewResponse>> findAllByContent(@PathVariable UUID contentId) {
-    return ResponseEntity.ok(reviewService.findAllByContent(contentId));
+  public ResponseEntity<ReviewResponse> get(@PathVariable UUID reviewId) {
+    return ResponseEntity.ok(reviewService.get(reviewId));
   }
 
   @PatchMapping("/{reviewId}")
@@ -53,12 +42,6 @@ public class ReviewController {
   @DeleteMapping("/{reviewId}")
   public ResponseEntity<Void> delete(@PathVariable UUID reviewId) {
     reviewService.delete(reviewId);
-    return ResponseEntity.noContent().build();
-  }
-
-  @DeleteMapping("/{userId}")
-  public ResponseEntity<Void> deleteAllByUser(@PathVariable UUID userId) {
-    reviewService.deleteAllByUser(userId);
     return ResponseEntity.noContent().build();
   }
 }

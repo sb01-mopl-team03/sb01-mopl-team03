@@ -12,11 +12,11 @@ public interface ReviewService {
 
   ReviewResponse update(UUID reviewId, ReviewUpdateRequest request);
 
-  ReviewResponse find(UUID reviewId);
+  ReviewResponse get(UUID reviewId);
 
-  List<ReviewResponse> findAllByUser(UUID userId);
+  List<ReviewResponse> getAllByUser(UUID userId);
 
-  List<ReviewResponse> findAllByContent(UUID contentId);
+  List<ReviewResponse> getAllByContent(UUID contentId);
 
   void delete(UUID reviewId);
 

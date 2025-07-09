@@ -1,6 +1,7 @@
 package team03.mopl.domain.curation;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,12 +17,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.curation.controller.CurationController;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
+import team03.mopl.domain.curation.repository.KeywordRepository;
 import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
@@ -32,6 +36,12 @@ class CurationControllerTest {
 
   @Mock
   private CurationService curationService;
+
+  @Mock
+  private KeywordRepository keywordRepository;
+
+  @Mock
+  private UserDetails userDetails;
 
   @InjectMocks
   private CurationController curationController;
@@ -92,7 +102,7 @@ class CurationControllerTest {
   }
 
   @Nested
-  @DisplayName("사용자 추천 콘텐츠 조회 요청")
+  @DisplayName("키워드별 콘텐츠 조회 요청")
   class GetRecommendations {
 
     @Test
@@ -100,7 +110,7 @@ class CurationControllerTest {
     void success() {
       // given
       UUID userId = UUID.randomUUID();
-      int limit = 10;
+      UUID keywordId = UUID.randomUUID();
 
       Content mockContent1 = Content.builder()
           .id(UUID.randomUUID())
@@ -122,10 +132,11 @@ class CurationControllerTest {
 
       List<Content> mockRecommendations = List.of(mockContent1, mockContent2);
 
-      when(curationService.getRecommendationsForUser(userId, limit)).thenReturn(mockRecommendations);
+      when(userDetails.getUsername()).thenReturn(userId.toString());
+      when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(userId, limit);
+      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
@@ -133,28 +144,7 @@ class CurationControllerTest {
       assertEquals(mockContent1.getTitle(), response.getBody().get(0).getTitle());
       assertEquals(mockContent2.getTitle(), response.getBody().get(1).getTitle());
 
-      verify(curationService).getRecommendationsForUser(userId, limit);
-    }
-
-    @Test
-    @DisplayName("기본 limit 값 사용")
-    void successWithDefaultLimit() {
-      // given
-      UUID userId = UUID.randomUUID();
-      int defaultLimit = 10;
-
-      List<Content> mockRecommendations = List.of();
-
-      when(curationService.getRecommendationsForUser(userId, defaultLimit)).thenReturn(mockRecommendations);
-
-      // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(userId, defaultLimit);
-
-      // then
-      assertNotNull(response.getBody());
-      assertTrue(response.getBody().isEmpty());
-
-      verify(curationService).getRecommendationsForUser(userId, defaultLimit);
+      verify(curationService).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
@@ -162,52 +152,75 @@ class CurationControllerTest {
     void returnsEmptyRecommendations() {
       // given
       UUID userId = UUID.randomUUID();
-      int limit = 5;
+      UUID keywordId = UUID.randomUUID();
 
       List<Content> emptyRecommendations = List.of();
 
-      when(curationService.getRecommendationsForUser(userId, limit)).thenReturn(emptyRecommendations);
+      when(userDetails.getUsername()).thenReturn(userId.toString());
+      when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(emptyRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(userId, limit);
+      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
       assertTrue(response.getBody().isEmpty());
 
-      verify(curationService).getRecommendationsForUser(userId, limit);
+      verify(curationService).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
-    @DisplayName("limit 값보다 적은 추천 콘텐츠")
-    void returnsFewerThanLimit() {
+    @DisplayName("사용자 인증 정보로부터 userId 추출")
+    void extractsUserIdFromUserDetails() {
       // given
       UUID userId = UUID.randomUUID();
-      int limit = 10;
+      UUID keywordId = UUID.randomUUID();
 
-      Content mockContent = Content.builder()
-          .id(UUID.randomUUID())
-          .title("유일한 추천 콘텐츠")
-          .description("추천된 유일한 콘텐츠")
-          .contentType(ContentType.MOVIE)
-          .releaseDate(LocalDateTime.now())
-          .avgRating(BigDecimal.valueOf(3.5))
-          .build();
+      List<Content> mockRecommendations = List.of();
 
-      List<Content> mockRecommendations = List.of(mockContent);
-
-      when(curationService.getRecommendationsForUser(userId, limit)).thenReturn(mockRecommendations);
+      when(userDetails.getUsername()).thenReturn(userId.toString());
+      when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(userId, limit);
+      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
-      assertNotNull(response.getBody());
-      assertEquals(1, response.getBody().size());
-      assertTrue(response.getBody().size() < limit);
-      assertEquals(mockContent.getTitle(), response.getBody().get(0).getTitle());
+      verify(userDetails).getUsername();
+      verify(curationService).getRecommendationsByKeyword(keywordId, userId);
+    }
+  }
 
-      verify(curationService).getRecommendationsForUser(userId, limit);
+  @Nested
+  @DisplayName("키워드 삭제 요청")
+  class DeleteKeyword {
+
+    @Test
+    @DisplayName("성공")
+    void success() {
+      // given
+      UUID keywordId = UUID.randomUUID();
+
+      // when
+      ResponseEntity<Void> response = curationController.delete(keywordId);
+
+      // then
+      assertEquals(204, response.getStatusCodeValue()); // NO_CONTENT
+      assertNull(response.getBody());
+
+      verify(curationService).delete(keywordId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 키워드 삭제 시도")
+    void failsWhenKeywordNotFound() {
+      // given
+      UUID keywordId = UUID.randomUUID();
+
+      // void 메서드에 대한 예외 설정은 doThrow 사용
+      doThrow(new KeywordNotFoundException()).when(curationService).delete(keywordId);
+
+      // when & then
+      assertThrows(KeywordNotFoundException.class, () -> curationController.delete(keywordId));
     }
   }
 }

@@ -13,9 +13,11 @@ public interface CurationService {
 
   List<Content> curateContentForKeyword(Keyword keyword);
 
-  List<Content> getRecommendationsForUser(UUID userId, int limit);
+  List<Content> getRecommendationsByKeyword(UUID keywordId, UUID userId);
 
   void batchCurationForNewContents(List<Content> newContents);
 
   void updateContentRating(UUID contentId);
+
+  void delete(UUID keywordId);
 }
