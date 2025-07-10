@@ -8,7 +8,7 @@ public interface SubscriptionService {
 
   SubscriptionDto subscribe(UUID userId, UUID playlistId);
 
-  void unsubscribe(UUID userId, UUID playlistId);
+  void unsubscribe(UUID subscriptionId, UUID userId);
 
   List<SubscriptionDto> getSubscriptions(UUID userId); // 사용자의 구독 목록 조회
 
