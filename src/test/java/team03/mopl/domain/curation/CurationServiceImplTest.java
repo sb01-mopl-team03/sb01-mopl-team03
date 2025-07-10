@@ -22,6 +22,7 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
@@ -118,12 +119,12 @@ class CurationServiceImplTest {
       when(keywordContentRepository.save(any(KeywordContent.class))).thenReturn(new KeywordContent(keyword, content));
 
       // when
-      Keyword result = curationService.registerKeyword(userId, keywordText);
+      KeywordDto result = curationService.registerKeyword(userId, keywordText);
 
       // then
       assertNotNull(result);
-      assertEquals("액션", result.getKeyword());
-      assertEquals(user, result.getUser());
+      assertEquals("액션", result.keyword());
+      assertEquals(userId, result.userId());
 
       verify(keywordRepository, times(1)).save(any(Keyword.class));
     }
@@ -155,7 +156,7 @@ class CurationServiceImplTest {
       when(contentRepository.findAll()).thenReturn(List.of());
 
       // when
-      Keyword result = curationService.registerKeyword(userId, keywordText);
+      KeywordDto result = curationService.registerKeyword(userId, keywordText);
 
       // then
       assertNotNull(result);
@@ -191,12 +192,12 @@ class CurationServiceImplTest {
       when(keywordContentRepository.save(any(KeywordContent.class))).thenReturn(new KeywordContent(keyword, actionMovie));
 
       // when
-      List<Content> result = curationService.curateContentForKeyword(keyword);
+      List<ContentDto> result = curationService.curateContentForKeyword(keyword);
 
       // then
       assertNotNull(result);
       // 액션 관련 콘텐츠가 더 높은 점수를 받아야 함
-      assertTrue(result.stream().anyMatch(c -> c.getTitle().contains("액션")));
+      assertTrue(result.stream().anyMatch(c -> c.title().contains("액션")));
     }
 
     @Test
@@ -214,7 +215,7 @@ class CurationServiceImplTest {
       when(contentRepository.findAll()).thenReturn(List.of(unrelatedContent));
 
       // when
-      List<Content> result = curationService.curateContentForKeyword(keyword);
+      List<ContentDto> result = curationService.curateContentForKeyword(keyword);
 
       // then
       assertNotNull(result);

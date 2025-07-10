@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.UUID;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
-import team03.mopl.domain.curation.entity.Keyword;
+import team03.mopl.domain.curation.dto.KeywordDto;
 
 public interface CurationService {
 
   void init();
 
-  Keyword registerKeyword(UUID userId, String keywordText);
+  KeywordDto registerKeyword(UUID userId, String keywordText);
 
-  List<Content> curateContentForKeyword(Keyword keyword);
+  List<ContentDto> curateContentForKeyword(Keyword keyword);
 
   List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId);
 

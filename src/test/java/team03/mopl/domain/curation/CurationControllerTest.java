@@ -23,6 +23,7 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.controller.CurationController;
+import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.repository.KeywordRepository;
@@ -73,15 +74,16 @@ class CurationControllerTest {
           .keyword(keywordText)
           .build();
 
-      when(curationService.registerKeyword(userId, keywordText)).thenReturn(mockKeyword);
+      when(curationService.registerKeyword(userId, keywordText)).thenReturn(
+          KeywordDto.from(mockKeyword));
 
       // when
-      ResponseEntity<Keyword> response = curationController.registerKeyword(request);
+      ResponseEntity<KeywordDto> response = curationController.registerKeyword(request);
 
       // then
       assertNotNull(response.getBody());
-      assertEquals(keywordText, response.getBody().getKeyword());
-      assertEquals(mockUser, response.getBody().getUser());
+      assertEquals(keywordText, response.getBody().keyword());
+      assertEquals(mockUser.getId(), response.getBody().userId());
 
       verify(curationService).registerKeyword(userId, keywordText);
     }
