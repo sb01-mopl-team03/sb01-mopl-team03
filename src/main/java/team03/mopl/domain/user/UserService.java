@@ -3,8 +3,7 @@ package team03.mopl.domain.user;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.multipart.MultipartFile;
-import team03.mopl.domain.oauth2.GoogleUserInfo;
-import team03.mopl.domain.oauth2.KakaoUserInfo;
+
 
 public interface UserService {
   UserResponse create(UserCreateRequest request);
