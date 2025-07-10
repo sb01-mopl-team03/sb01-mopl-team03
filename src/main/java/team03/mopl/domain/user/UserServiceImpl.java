@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.storage.ProfileImageStorage;
 
 @Service
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final FollowService followService;
   private final ProfileImageStorage profileImageStorage;
 
   @PostConstruct
@@ -90,7 +92,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void delete(UUID userId) {
+    // User 삭제 시 Follow 관계도 같이 삭제
+    followService.deletedUserUnfollow(userId);
+
     userRepository.deleteById(userId);
+
   }
 
   @Override

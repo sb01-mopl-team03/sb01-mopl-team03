@@ -7,7 +7,7 @@ import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 
 public interface NotificationService {
-  void sendNotification(UUID receiverId, NotificationType type, String content);
+  UUID sendNotification(NotificationDto notificationDto);
   List<NotificationDto> getNotifications(UUID receiverId);
   void markAllAsRead(UUID notificationId);
 }

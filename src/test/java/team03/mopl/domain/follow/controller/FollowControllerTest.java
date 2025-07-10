@@ -1,5 +1,6 @@
 package team03.mopl.domain.follow.controller;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -17,11 +18,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
+import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
 
@@ -31,8 +34,16 @@ class FollowControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Autowired
   private FollowService followService;
+
+  @TestConfiguration
+  static class configuration {
+    @Bean
+    public FollowService followService() {
+      return mock(FollowService.class);
+    }
+  }
 
   @Test
   void testFollow() throws Exception {
@@ -74,7 +85,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowing() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("user1@example.com", "user1", "USER", false, null);
+    FollowResponse user = new FollowResponse( userId, "user1@example.com", "user1", "USER", null);
     when(followService.getFollowing(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/following", userId))
@@ -89,7 +100,7 @@ class FollowControllerTest {
   @WithMockUser(username = "testuser", roles = "USER")
   void testGetFollowers() throws Exception {
     UUID userId = UUID.randomUUID();
-    UserResponse user = new UserResponse("follower@example.com", "follower", "USER", false, null);
+    FollowResponse user = new FollowResponse( userId,"follower@example.com", "follower", "USER", null);
     when(followService.getFollowers(userId)).thenReturn(List.of(user));
 
     mockMvc.perform(get("/api/follows/{userId}/followers", userId))

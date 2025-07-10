@@ -1,10 +1,12 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team03.mopl.common.exception.dm.DmContentTooLongException;
+import team03.mopl.common.exception.dm.DmNotFoundException;
+import team03.mopl.common.exception.dm.DmRoomNotFoundException;
+import team03.mopl.domain.dm.dto.SendDmDto;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRepository;
@@ -60,7 +66,7 @@ class DmServiceImplTest {
         .willAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    var result = dmService.sendDm(senderId, roomId, content);
+    var result = dmService.sendDm(new SendDmDto(senderId, roomId, content));
 
     // then
     assertThat(result).isNotNull();
@@ -68,11 +74,38 @@ class DmServiceImplTest {
     assertThat(result.getSenderId()).isEqualTo(senderId);
 
     then(notificationService).should().sendNotification(
-        eq(dmRoom.getReceiverId()),
-        eq(NotificationType.DM_RECEIVED),
-        eq(content)
+        argThat(dto ->
+            dto.getReceiverId().equals(dmRoom.getReceiverId())
+                && dto.getNotificationType() == NotificationType.DM_RECEIVED
+                && dto.getContent().equals(content)
+        )
     );
   }
+
+  @Test
+  @DisplayName("roomId 에 해당하는 DmRoom 이 없을 때")
+  void sendDm_shouldThrowDmRoomNotFoundException_whenRoomNotFound() {
+    UUID senderId = UUID.randomUUID();
+    UUID roomId = UUID.randomUUID();
+
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+    assertThrows(DmRoomNotFoundException.class, () -> {
+      dmService.sendDm(new SendDmDto(senderId, roomId, "hello"));
+    });
+  }
+
+  @Test
+  @DisplayName("255자를 초과하는 content 에러")
+  void sendDm_shouldThrowContentTooLongException_whenContentExceeds255() {
+    // given
+    String tooLongContent = "a".repeat(256);
+
+    assertThrows(DmContentTooLongException.class, () -> {
+      dmService.sendDm(new SendDmDto(senderId, roomId, tooLongContent));
+    });
+  }
+
 
   @Test
   @DisplayName("DM 리스트 조회 - getDmList (모두 읽음 처리 포함)")
@@ -115,6 +148,19 @@ class DmServiceImplTest {
   }
 
   @Test
+  @DisplayName("roomId 로 찾을 수 있는 DmRoom 이 없을 때")
+  void readAll_shouldThrowDmRoomNotFoundException_whenRoomNotFound() {
+    UUID roomId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+    assertThrows(DmRoomNotFoundException.class, () -> {
+      dmService.readAll(roomId, userId);
+    });
+  }
+
+  @Test
   @DisplayName("DM 삭제 - deleteDm")
   void deleteDm() {
     // given
@@ -127,5 +173,17 @@ class DmServiceImplTest {
 
     // then
     then(dmRepository).should().delete(dm);
+  }
+
+  @Test
+  @DisplayName("dmId 에 해당하는 Dm 이 없을 때")
+  void deleteDm_shouldThrowIllegalArgumentException_whenDmNotFound() {
+    UUID dmId = UUID.randomUUID();
+
+    when(dmRepository.findById(dmId)).thenReturn(Optional.empty());
+
+    assertThrows(DmNotFoundException.class, () -> {
+      dmService.deleteDm(dmId);
+    });
   }
 }

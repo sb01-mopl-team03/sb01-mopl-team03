@@ -3,6 +3,7 @@ package team03.mopl.domain.dm.controller;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,9 +20,9 @@ import team03.mopl.jwt.CustomUserDetails;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/dmRooms")
+@Slf4j
 public class DmRoomController {
   private final DmRoomService dmRoomService;
-  private final DmService dmService;
 
   @GetMapping("/{dmRoomId}") // 룸 ID를 통한 조회
   public ResponseEntity<DmRoomDto> getRoom(@PathVariable(name = "dmRoomId") UUID dmRoomId) {
@@ -41,6 +42,7 @@ public class DmRoomController {
     UUID userId = userDetails.getId();
     return ResponseEntity.ok().body(dmRoomService.getAllRoomsForUser(userId));
   }
+
   @DeleteMapping("/{roomId}") // 유저가 속한 룸 삭제
   public ResponseEntity<Void> deleteRoom(
       @PathVariable(name = "roomId") UUID roomId,
@@ -50,7 +52,4 @@ public class DmRoomController {
     dmRoomService.deleteRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }
-
-
-
 }

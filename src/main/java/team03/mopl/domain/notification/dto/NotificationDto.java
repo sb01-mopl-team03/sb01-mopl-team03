@@ -11,16 +11,22 @@ import team03.mopl.domain.notification.entity.NotificationType;
 @RequiredArgsConstructor
 public class NotificationDto {
 
-  private final UUID id;
+  private final UUID receiverId;
   private final String content;
   private final NotificationType notificationType;
   private final LocalDateTime createdAt;
 
   public NotificationDto(String content, NotificationType notificationType, LocalDateTime createdAt) {
-    this.id = null;
+    this.receiverId = null;
     this.content = content;
     this.notificationType = notificationType;
     this.createdAt = createdAt;
+  }
+  public NotificationDto(UUID receiverId, NotificationType notificationType,String content) {
+    this.receiverId = receiverId;
+    this.content = content;
+    this.notificationType = notificationType;
+    this.createdAt = null;
   }
 
   public static NotificationDto from(String content, NotificationType notificationType, LocalDateTime createdAt) {
