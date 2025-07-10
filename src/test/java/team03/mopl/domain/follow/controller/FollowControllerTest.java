@@ -26,7 +26,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
-import team03.mopl.domain.user.UserResponse;
 
 @WebMvcTest(FollowController.class)
 class FollowControllerTest {

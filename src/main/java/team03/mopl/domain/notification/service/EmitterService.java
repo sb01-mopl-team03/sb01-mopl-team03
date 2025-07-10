@@ -33,13 +33,6 @@ public class EmitterService {
     emitter.onTimeout(() -> handleEmitterTermination(emitterId, "onTimeout"));
     emitter.onError(e -> handleEmitterError(emitterId, e));
 
-    // 더미 데이터 전송 (503 방지)
-    // 구독만 해놓고 아무런 데이터를 일정 시간 이상 안 보내면 브라우저 쪽에서 503 에러로 연결 중지시킴
-    // 이건 좀 더 생각해봐야 할 듯 - 순환참조?
-    //NotificationDto notificationDto = new NotificationDto(userId, NotificationType.CONNECTED, "SSE 연결 완료");
-    //UUID initConnectedId  = notificationService.sendNotification(notificationDto);
-    //sendInitNotification(emitter, emitterId, initConnectedId , notificationDto);
-
     // 미수신 데이터 재전송
     // 연결이 일시적으로 끊기고 나서 클라이언트는 SSE 재연결 시도 후 Last-Event-ID를 헤더로 함께 보냄
     // 서버는 마지막으로 받은 이벤트 ID를 알게되고 이후부터 알림 다시 보냄
