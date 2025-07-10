@@ -239,6 +239,9 @@ class ReviewServiceImplTest {
 
       // then
       assertNotNull(result);
+      assertEquals("수정된 리뷰 제목", result.title());
+      assertEquals("수정된 리뷰 내용", result.comment());
+      assertEquals(BigDecimal.valueOf(4), result.rating());
       verify(reviewRepository, times(1)).save(any(Review.class));
     }
 
