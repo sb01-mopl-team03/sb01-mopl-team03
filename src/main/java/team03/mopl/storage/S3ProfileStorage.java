@@ -31,7 +31,6 @@ public class S3ProfileStorage implements ProfileImageStorage{
               .bucket(bucket)
               .key(fileName)
               .contentType(file.getContentType())
-              .acl(ObjectCannedACL.PUBLIC_READ)
               .build(),
           software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(),
               file.getSize())

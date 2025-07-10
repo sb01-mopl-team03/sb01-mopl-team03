@@ -55,6 +55,22 @@ public class SecurityConfig {
             .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
             .anyRequest().hasRole("USER")
         )
+        .exceptionHandling(ex -> ex
+            .authenticationEntryPoint(((request, response, authException) -> {
+              if (!response.isCommitted()) {
+                response.setStatus(401);
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write("{\"error\":\"" + authException.getMessage() + "\"}");
+              }
+            }))
+            .accessDeniedHandler(((request, response, authException) -> {
+              if (!response.isCommitted()) {
+                response.setStatus(403);
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write("{\"error\":\"" + authException.getMessage() + "\"}");
+              }
+            }))
+        )
         .oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo
                 .userService(customOAuth2UserService))
