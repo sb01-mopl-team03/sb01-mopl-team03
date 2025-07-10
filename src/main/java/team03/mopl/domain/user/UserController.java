@@ -19,6 +19,8 @@ import team03.mopl.domain.playlist.service.PlaylistService;
 import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.domain.subscription.dto.SubscriptionDto;
+import team03.mopl.domain.subscription.service.SubscriptionService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,6 +30,7 @@ public class UserController {
   private final UserService userService;
   private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
+  private final SubscriptionService subscriptionService;
   private final PlaylistService playlistService;
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -72,5 +75,10 @@ public class UserController {
   public ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(playlistService.getAllByUser(userId));
   }
-
+  
+  @GetMapping("/{userId}/subscriptions")
+  public ResponseEntity<List<SubscriptionDto>> getUserSubscriptions(
+      @PathVariable UUID userId) {
+    List<SubscriptionDto> subscriptions = subscriptionService.getSubscriptions(userId);
+    return ResponseEntity.ok(subscriptions);
 }
