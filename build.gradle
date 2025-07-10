@@ -14,8 +14,10 @@ java {
     }
 }
 
+// repositories를 dependencies 앞에 배치 (중요!)
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 jacoco {
@@ -26,66 +28,64 @@ ext {
     queryDslVersion = "5.1.0"
 }
 
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
-    //queryDsl
+    // Lombok
+    implementation 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // QueryDSL
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
     annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
-    //OAuth2
+    // OAuth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-    //jwt
+    // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // Security
+    implementation 'org.springframework.security:spring-security-messaging'
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    runtimeOnly 'org.postgresql:postgresql'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // 레포지토리 단위 테스트 코드용 H2
-    runtimeOnly 'com.h2database:h2'
-
-
-    // AI
+    // AI (Stanford CoreNLP만 사용)
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
     implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
-    implementation 'com.github.vinhkhuc:jfasttext:0.5'
+    implementation 'com.github.shin285:KOMORAN:3.3.9'
 
-    // Spring Batch
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
-    testImplementation 'org.springframework.batch:spring-batch-test'
-
-    // Actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    // Prometheus
+    // Monitoring
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    //websocket
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation 'org.springframework.security:spring-security-messaging'
-    testImplementation 'org.springframework:spring-websocket'
-    testImplementation 'org.springframework:spring-messaging'
 
-    //OpenAPI 문서
+    // Documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
-    //S3
+    // AWS S3
     implementation 'software.amazon.awssdk:s3:2.31.7'
 
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2' // 테스트용
+
+    // Test Dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'org.springframework:spring-websocket'
+    testImplementation 'org.springframework:spring-messaging'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
@@ -93,19 +93,14 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.named('jacocoTestReport'){
+tasks.named('jacocoTestReport') {
     dependsOn test
-    reports{
+    reports {
         xml.required = true
-        html.required =true
+        html.required = true
     }
 }
 
 tasks.withType(JavaExec) {
     jvmArgs = ['-Xmx4g', '-Xms1g']
-}
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }  // 이 라인 추가
 }

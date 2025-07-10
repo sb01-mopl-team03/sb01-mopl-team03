@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
@@ -91,16 +92,10 @@ class CurationServiceImplTest {
 
     keywordId = UUID.randomUUID();
     keyword = Keyword.builder()
+        .id(keywordId)
         .user(user)
         .keyword("액션")
         .build();
-  }
-
-  private void setupKeywordMock() {
-    keyword = mock(Keyword.class);
-    when(keyword.getId()).thenReturn(keywordId);
-    when(keyword.getUser()).thenReturn(user);
-    when(keyword.getKeyword()).thenReturn("액션");
   }
 
   @Nested
@@ -127,6 +122,7 @@ class CurationServiceImplTest {
       assertEquals(userId, result.userId());
 
       verify(keywordRepository, times(1)).save(any(Keyword.class));
+      verify(contentRepository, times(1)).findAll();
     }
 
     @Test
@@ -196,7 +192,7 @@ class CurationServiceImplTest {
 
       // then
       assertNotNull(result);
-      // 액션 관련 콘텐츠가 더 높은 점수를 받아야 함
+      // 액션 관련 콘텐츠가 포함되어야 함
       assertTrue(result.stream().anyMatch(c -> c.title().contains("액션")));
     }
 
@@ -219,7 +215,8 @@ class CurationServiceImplTest {
 
       // then
       assertNotNull(result);
-      // 임계값 이하의 콘텐츠는 포함되지 않아야 함
+      // 임계값 이하의 콘텐츠는 포함되지 않을 수 있음
+      verify(contentRepository, times(1)).findAll();
     }
   }
 
@@ -231,12 +228,23 @@ class CurationServiceImplTest {
     @DisplayName("성공")
     void success() {
       // given
-      keyword = mock(Keyword.class);
-      when(keyword.getId()).thenReturn(keywordId);
+      Keyword testKeyword = Keyword.builder()
+          .id(keywordId)
+          .user(user)
+          .keyword("테스트키워드")
+          .build();
 
-      KeywordContent keywordContent = new KeywordContent(keyword, content);
+      Content testContent = Content.builder()
+          .id(UUID.randomUUID())
+          .title("테스트 콘텐츠")
+          .description("테스트 설명")
+          .contentType(ContentType.MOVIE)
+          .avgRating(BigDecimal.valueOf(4.5))
+          .build();
 
-      when(keywordRepository.findAllByUserId(userId)).thenReturn(List.of(keyword));
+      KeywordContent keywordContent = new KeywordContent(testKeyword, testContent);
+
+      when(keywordRepository.findByIdAndUserId(keywordId, userId)).thenReturn(Optional.of(testKeyword));
       when(keywordContentRepository.findByKeywordId(keywordId)).thenReturn(List.of(keywordContent));
 
       // when
@@ -244,18 +252,40 @@ class CurationServiceImplTest {
 
       // then
       assertNotNull(result);
-      assertEquals(content.getTitle(), result.get(0).title());
+      assertEquals(1, result.size());
+      assertEquals(testContent.getTitle(), result.get(0).title());
 
-      verify(keywordRepository, times(1)).findAllByUserId(userId);
+      verify(keywordRepository, times(1)).findByIdAndUserId(keywordId, userId);
+      verify(keywordContentRepository, times(1)).findByKeywordId(keywordId);
     }
 
     @Test
-    @DisplayName("등록된 키워드가 없는 경우")
-    void noRegisteredKeywords() {
+    @DisplayName("키워드를 찾을 수 없는 경우 예외 발생")
+    void keywordNotFound() {
       // given
-      int limit = 5;
+      when(keywordRepository.findByIdAndUserId(keywordId, userId)).thenReturn(Optional.empty());
 
-      when(keywordRepository.findAllByUserId(userId)).thenReturn(List.of());
+      // when & then
+      assertThrows(KeywordNotFoundException.class, () -> {
+        curationService.getRecommendationsByKeyword(keywordId, userId);
+      });
+
+      verify(keywordRepository, times(1)).findByIdAndUserId(keywordId, userId);
+      verify(keywordContentRepository, never()).findByKeywordId(any());
+    }
+
+    @Test
+    @DisplayName("키워드는 존재하지만 매칭된 콘텐츠가 없는 경우")
+    void noMatchingContents() {
+      // given
+      Keyword testKeyword = Keyword.builder()
+          .id(keywordId)
+          .user(user)
+          .keyword("테스트키워드")
+          .build();
+
+      when(keywordRepository.findByIdAndUserId(keywordId, userId)).thenReturn(Optional.of(testKeyword));
+      when(keywordContentRepository.findByKeywordId(keywordId)).thenReturn(List.of()); // 빈 리스트
 
       // when
       List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
@@ -264,75 +294,97 @@ class CurationServiceImplTest {
       assertNotNull(result);
       assertTrue(result.isEmpty());
 
-      verify(keywordRepository, times(1)).findAllByUserId(userId);
+      verify(keywordRepository, times(1)).findByIdAndUserId(keywordId, userId);
+      verify(keywordContentRepository, times(1)).findByKeywordId(keywordId);
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 키워드에 접근하는 경우 예외 발생")
+    void accessOtherUserKeyword() {
+      // given
+      UUID otherUserId = UUID.randomUUID();
+      when(keywordRepository.findByIdAndUserId(keywordId, otherUserId)).thenReturn(Optional.empty());
+
+      // when & then
+      assertThrows(KeywordNotFoundException.class, () -> {
+        curationService.getRecommendationsByKeyword(keywordId, otherUserId);
+      });
+
+      verify(keywordRepository, times(1)).findByIdAndUserId(keywordId, otherUserId);
     }
   }
 
-  // TODO: 배치 큐레이션
-//  @Nested
-//  @DisplayName("신규 콘텐츠 배치 큐레이션")
-//  class BatchCurationForNewContents {
-//
-//    @Test
-//    @DisplayName("성공")
-//    void success() {
-//      // given
-//      List<Content> newContents = List.of(content);
-//
-//      when(keywordRepository.findAll()).thenReturn(List.of(keyword));
-//
-//      // when
-//      curationService.batchCurationForNewContents(newContents);
-//
-//      // then
-//      verify(keywordRepository, times(1)).findAll();
-//    }
-//
-//    @Test
-//    @DisplayName("이미 존재하는 키워드-콘텐츠 관계")
-//    void alreadyExistingRelation() {
-//      // given
-//      List<Content> newContents = List.of(content);
-//      setupKeywordMock(); // Mock 설정
-//
-//      when(keywordRepository.findAll()).thenReturn(List.of(keyword));
-//      when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId)).thenReturn(true);
-//
-//      // when
-//      curationService.batchCurationForNewContents(newContents);
-//
-//      // then
-//      verify(keywordContentRepository, never()).save(any(KeywordContent.class));
-//    }
-//
-//    @Test
-//    @DisplayName("빈 콘텐츠 리스트")
-//    void emptyContentList() {
-//      // given
-//      List<Content> newContents = List.of();
-//
-//      // when
-//      curationService.batchCurationForNewContents(newContents);
-//
-//      // then
-//      verify(keywordRepository, times(1)).findAll();
-//      verify(keywordContentRepository, never()).save(any(KeywordContent.class));
-//    }
-//  }
-
   @Nested
-  @DisplayName("콘텐츠 평점 업데이트")
-  class UpdateContentRating {
-    UUID id = UUID.randomUUID();
-    UUID authorId = UUID.randomUUID();
-    String authorName = "테스트사용자";
+  @DisplayName("신규 콘텐츠 배치 큐레이션")
+  class BatchCurationForNewContents {
 
     @Test
     @DisplayName("성공")
     void success() {
       // given
+      List<Content> newContents = List.of(content);
+
+      when(keywordRepository.findAll()).thenReturn(List.of(keyword));
+      when(keywordContentRepository.existsByKeywordIdAndContentId(any(), any())).thenReturn(false);
+      when(keywordContentRepository.save(any(KeywordContent.class))).thenReturn(new KeywordContent(keyword, content));
+
+      // when
+      curationService.batchCurationForNewContents(newContents);
+
+      // then
+      verify(keywordRepository, times(1)).findAll();
+      // 점수가 임계값(0.25)을 넘으면 저장되어야 함
+    }
+
+    @Test
+    @DisplayName("이미 존재하는 키워드-콘텐츠 관계")
+    void alreadyExistingRelation() {
+      // given
+      List<Content> newContents = List.of(content);
+
+      when(keywordRepository.findAll()).thenReturn(List.of(keyword));
+      when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId)).thenReturn(true);
+
+      // when
+      curationService.batchCurationForNewContents(newContents);
+
+      // then
+      verify(keywordRepository, times(1)).findAll();
+      verify(keywordContentRepository, never()).save(any(KeywordContent.class));
+    }
+
+    @Test
+    @DisplayName("빈 콘텐츠 리스트")
+    void emptyContentList() {
+      // given
+      List<Content> newContents = List.of();
+
+      when(keywordRepository.findAll()).thenReturn(List.of(keyword));
+
+      // when
+      curationService.batchCurationForNewContents(newContents);
+
+      // then
+      verify(keywordRepository, times(1)).findAll();
+      verify(keywordContentRepository, never()).save(any(KeywordContent.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("콘텐츠 평점 업데이트")
+  class UpdateContentRating {
+
+    @Test
+    @DisplayName("성공")
+    void success() {
+      // given
+      UUID reviewId1 = UUID.randomUUID();
+      UUID reviewId2 = UUID.randomUUID();
+      UUID authorId = UUID.randomUUID();
+      String authorName = "테스트사용자";
+
       ReviewDto review1 = new ReviewDto(
-          id,
+          reviewId1,
           authorId,
           authorName,
           "좋은 영화",
@@ -341,7 +393,7 @@ class CurationServiceImplTest {
       );
 
       ReviewDto review2 = new ReviewDto(
-          id,
+          reviewId2,
           authorId,
           authorName,
           "괜찮은 영화",
@@ -357,8 +409,9 @@ class CurationServiceImplTest {
       curationService.updateContentRating(contentId);
 
       // then
-      verify(contentRepository, times(1)).save(any(Content.class));
+      verify(contentRepository, times(1)).findById(contentId);
       verify(reviewService, times(1)).getAllByContent(contentId);
+      verify(contentRepository, times(1)).save(any(Content.class));
     }
 
     @Test
@@ -373,7 +426,9 @@ class CurationServiceImplTest {
       curationService.updateContentRating(randomContentId);
 
       // then
+      verify(contentRepository, times(1)).findById(randomContentId);
       verify(contentRepository, never()).save(any(Content.class));
+      verify(reviewService, never()).getAllByContent(any());
     }
 
     @Test
@@ -388,6 +443,8 @@ class CurationServiceImplTest {
       curationService.updateContentRating(contentId);
 
       // then
+      verify(contentRepository, times(1)).findById(contentId);
+      verify(reviewService, times(1)).getAllByContent(contentId);
       verify(contentRepository, times(1)).save(any(Content.class));
     }
 
@@ -395,8 +452,13 @@ class CurationServiceImplTest {
     @DisplayName("평점이 null인 리뷰가 포함된 경우")
     void reviewsWithNullRating() {
       // given
+      UUID reviewId1 = UUID.randomUUID();
+      UUID reviewId2 = UUID.randomUUID();
+      UUID authorId = UUID.randomUUID();
+      String authorName = "테스트사용자";
+
       ReviewDto reviewWithNullRating = new ReviewDto(
-          id,
+          reviewId1,
           authorId,
           authorName,
           "평점 없는 리뷰",
@@ -405,7 +467,7 @@ class CurationServiceImplTest {
       );
 
       ReviewDto normalReview = new ReviewDto(
-          id,
+          reviewId2,
           authorId,
           authorName,
           "일반 리뷰",
@@ -421,7 +483,73 @@ class CurationServiceImplTest {
       curationService.updateContentRating(contentId);
 
       // then
+      verify(contentRepository, times(1)).findById(contentId);
+      verify(reviewService, times(1)).getAllByContent(contentId);
       verify(contentRepository, times(1)).save(any(Content.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("키워드 삭제")
+  class DeleteKeyword {
+
+    @Test
+    @DisplayName("성공")
+    void success() {
+      // given
+      when(keywordRepository.findById(keywordId)).thenReturn(Optional.of(keyword));
+
+      // when
+      curationService.delete(keywordId, userId);
+
+      // then
+      verify(keywordRepository, times(1)).findById(keywordId);
+      verify(keywordRepository, times(1)).delete(keyword);
+    }
+
+    @Test
+    @DisplayName("키워드를 찾을 수 없는 경우")
+    void keywordNotFound() {
+      // given
+      when(keywordRepository.findById(keywordId)).thenReturn(Optional.empty());
+
+      // when & then
+      assertThrows(KeywordNotFoundException.class, () -> {
+        curationService.delete(keywordId, userId);
+      });
+
+      verify(keywordRepository, times(1)).findById(keywordId);
+      verify(keywordRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 키워드 삭제 시도")
+    void deleteOtherUserKeyword() {
+      // given
+      UUID otherUserId = UUID.randomUUID();
+      User otherUser = User.builder()
+          .id(otherUserId)
+          .name("다른유저")
+          .email("other@test.com")
+          .password("test")
+          .role(Role.USER)
+          .build();
+
+      Keyword otherUserKeyword = Keyword.builder()
+          .id(keywordId)
+          .user(otherUser)
+          .keyword("액션")
+          .build();
+
+      when(keywordRepository.findById(keywordId)).thenReturn(Optional.of(otherUserKeyword));
+
+      // when & then
+      assertThrows(team03.mopl.common.exception.curation.KeywordDeleteDeniedException.class, () -> {
+        curationService.delete(keywordId, userId);
+      });
+
+      verify(keywordRepository, times(1)).findById(keywordId);
+      verify(keywordRepository, never()).delete(any());
     }
   }
 }
