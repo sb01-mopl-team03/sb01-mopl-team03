@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.SortBy;
 import team03.mopl.domain.content.SortDirection;
@@ -16,6 +17,7 @@ import team03.mopl.domain.content.validation.AllowedValues;
  * 모든 필드가 nullable 합니다.
  */
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor // @ModelAttribute 가 바인딩할 때 요구하는 생성자
 public class ContentSearchRequest {
@@ -23,7 +25,7 @@ public class ContentSearchRequest {
   private String title;
 
   @AllowedValues(enumClass = ContentType.class, message = "contentType은 MOVIE, TV, SPORTS 중 하나여야 합니다.")
-  private String ContentType;
+  private String contentType;
 
   @AllowedValues(enumClass = SortBy.class, message = "sortBy는 TITLE, RELEASE_AT 중 하나여야 합니다.")
   private String sortBy = "TITLE";
