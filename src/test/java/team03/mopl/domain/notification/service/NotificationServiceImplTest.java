@@ -24,6 +24,7 @@ import team03.mopl.domain.notification.dto.NotificationPagingDto;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.repository.NotificationRepository;
+import team03.mopl.domain.notification.repository.NotificationRepositoryCustom;
 import team03.mopl.domain.user.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +32,8 @@ class NotificationServiceImplTest {
 
   @Mock
   private NotificationRepository notificationRepository;
+  @Mock
+  private NotificationRepositoryCustom notificationRepositoryCustom;
   @Mock
   private EmitterService emitterService;
   @Mock
@@ -66,22 +69,27 @@ class NotificationServiceImplTest {
   }
 
   @Test
-  @DisplayName("getNotifications - 알림 목록 조회")
-  void getNotifications() {
+  @DisplayName("getNotifications - 알림 목록 조회 (커서 없이)")
+  void getNotifications_noCursor() {
     // given
     UUID receiverId = UUID.randomUUID();
     Notification n1 = new Notification(receiverId, NotificationType.FOLLOWED, "팔로우 알림");
     Notification n2 = new Notification(receiverId, NotificationType.DM_RECEIVED, "DM 알림");
 
-    when(notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId))
+    // 커서 없이 20개 요청, 반환은 2개 (hasNext = false)
+    when(notificationRepository.count()).thenReturn(2L);
+    when(notificationRepositoryCustom.findByCursor(receiverId, 21, null, null)) // size + 1
         .thenReturn(List.of(n1, n2));
 
+    NotificationPagingDto dto = new NotificationPagingDto(null, 20);
+
     // when
-    NotificationPagingDto notificationPagingDto = new NotificationPagingDto(null, 20);
-    var result = notificationService.getNotifications(notificationPagingDto, receiverId);
+    var result = notificationService.getNotifications(dto, receiverId);
 
     // then
     assertThat(result.data()).hasSize(2);
+    assertThat(result.hasNext()).isFalse();
+    assertThat(result.nextCursor()).isNull();
     assertThat(result.data().get(0).getContent()).isEqualTo("팔로우 알림");
     assertThat(result.data().get(1).getContent()).isEqualTo("DM 알림");
   }
