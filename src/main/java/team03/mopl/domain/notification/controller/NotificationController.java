@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,6 +70,16 @@ public class NotificationController {
     log.info("알림 읽음 처리 완료: userId={}, 알림 수={}", userId, list.size());
     return ResponseEntity.ok(list);
   }
-
+  @DeleteMapping("/{notificationId}")
+  public ResponseEntity<Void> deleteNotification(@PathVariable("notificationId") UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
+    notificationService.deleteNotification(notificationId);
+    return ResponseEntity.noContent().build();
+  }
+  @DeleteMapping("/user/{userId}")
+  public ResponseEntity<Void> deleteNotificationByUserId(@PathVariable("userId") UUID userId, @AuthenticationPrincipal CustomUserDetails user) {
+    UUID authenticatedUserId = user.getId();
+    notificationService.deleteNotificationByUserId(userId, authenticatedUserId);
+    return ResponseEntity.noContent().build();
+  }
 
 }

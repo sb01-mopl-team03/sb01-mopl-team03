@@ -1,5 +1,6 @@
 package team03.mopl.domain.notification.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -8,6 +9,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team03.mopl.common.exception.notification.NotificationNotFoundException;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.dto.NotificationPagingDto;
 import team03.mopl.domain.notification.entity.Notification;
@@ -100,5 +103,48 @@ class NotificationServiceImplTest {
     assertThat(n1.isRead()).isTrue();
     assertThat(n2.isRead()).isTrue();
     then(notificationRepository).should().saveAll(anyList());
+  }
+
+  @Test
+  @DisplayName("deleteNotificationByUserId - 인증된 사용자가 읽은 알림 삭제 요청 시 삭제됨")
+  void deleteNotificationByUserId() {
+    // given
+    UUID authenticatedUserId = receiverId;
+
+    // when
+    notificationService.deleteNotificationByUserId(receiverId, authenticatedUserId);
+
+    // then
+    then(notificationRepository).should().deleteByReceiverIdAndIsRead(receiverId, true);
+  }
+  @Test
+  @DisplayName("deleteNotification - 존재하는 알림 ID로 삭제 요청 시 정상 삭제됨")
+  void deleteNotification_success() {
+    // given
+    UUID notificationId = UUID.randomUUID();
+    Notification notification = new Notification(receiverId, NotificationType.DM_RECEIVED, "테스트 알림");
+    given(notificationRepository.findById(notificationId)).willReturn(Optional.of(notification));
+
+    // when
+    notificationService.deleteNotification(notificationId);
+
+    // then
+    then(notificationRepository).should().findById(notificationId);
+    then(notificationRepository).should().deleteById(notificationId);
+  }
+
+  @Test
+  @DisplayName("deleteNotification - 존재하지 않는 알림 ID로 삭제 요청 시 예외 발생")
+  void deleteNotification_notFound() {
+    // given
+    UUID notificationId = UUID.randomUUID();
+    given(notificationRepository.findById(notificationId)).willReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> notificationService.deleteNotification(notificationId))
+        .isInstanceOf(NotificationNotFoundException.class);
+
+    then(notificationRepository).should().findById(notificationId);
+    then(notificationRepository).shouldHaveNoMoreInteractions(); // deleteById가 호출되지 않았는지 확인
   }
 }
