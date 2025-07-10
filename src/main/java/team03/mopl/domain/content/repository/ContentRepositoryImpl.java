@@ -45,7 +45,7 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
     } else {
       mainSort = new OrderSpecifier<>(orderDirection, content.titleNormalized);
     }
-    OrderSpecifier<?> idSort = new OrderSpecifier<>(Order.ASC, content.id);
+    OrderSpecifier<?> idSort = new OrderSpecifier<>(orderDirection, content.id);
 
     // 3. 필터링 조건 조립
     BooleanExpression titleExpression =
@@ -94,7 +94,7 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
       if (isDesc) {
         // 내림차순: 커서 일자보다 이전 일자이되 동일한 일자일시 id가 더 큰 값들
         return content.releaseDate.lt(localDateTimeCursor)
-            .or(content.releaseDate.eq(localDateTimeCursor).and(content.id.gt(cursorId)));
+            .or(content.releaseDate.eq(localDateTimeCursor).and(content.id.lt(cursorId)));
       } else {
         // 오름차순: 커서 일자보다 이후 일자이되 동일한 일자일시 id가 더 큰 값들
         return content.releaseDate.gt(localDateTimeCursor)
@@ -104,13 +104,12 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
       if(isDesc){
         // 내림차순: 커서 제목보다 사전적으로 이전 제목이되 동일한 제목일시 id가 더 큰 값들 
         return content.titleNormalized.lt(cursor)
-            .or(content.titleNormalized.eq(cursor).and(content.id.gt(cursorId)));
+            .or(content.titleNormalized.eq(cursor).and(content.id.lt(cursorId)));
       } else {
         // 오름차순: 커서 제목보다 사전적으로 이후 제목이되 동일한 제목일시 id가 더 큰 값들
         return content.titleNormalized.gt(cursor)
             .or(content.titleNormalized.eq(cursor).and(content.id.gt(cursorId)));
       }
     }
-
   }
 }
