@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.domain.curation.dto.KeywordDto;
+import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
 import team03.mopl.domain.playlist.service.PlaylistService;
 import team03.mopl.domain.review.dto.ReviewDto;
@@ -32,6 +34,7 @@ public class UserController {
   private final ReviewService reviewService;
   private final SubscriptionService subscriptionService;
   private final PlaylistService playlistService;
+  private final CurationService curationService;
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<UserResponse> create(@ModelAttribute UserCreateRequest request) {
@@ -69,6 +72,11 @@ public class UserController {
   @GetMapping("/{userId}/reviews")
   public ResponseEntity<List<ReviewDto>> getAllReviewByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
+  }
+
+  @GetMapping("/{userId}/keywords")
+  public ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId) {
+    return ResponseEntity.ok(curationService.getKeywordsByUser(userId));
   }
 
   @GetMapping("/{userId}/playlists")

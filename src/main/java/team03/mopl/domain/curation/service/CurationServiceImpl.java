@@ -411,7 +411,7 @@ public class CurationServiceImpl implements CurationService {
         .trim();
   }
 
-  // 다국어 콘텐츠 타입 매칭 (기존과 동일)
+  // 다국어 콘텐츠 타입 매칭
   private double calculateMultilingualTypeMatch(String keyword, ContentType contentType) {
     keyword = keyword.toLowerCase();
 
@@ -440,7 +440,6 @@ public class CurationServiceImpl implements CurationService {
     return 0.0;
   }
 
-  // 나머지 메서드들 (기존과 동일)
   @Override
   public List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
@@ -457,6 +456,15 @@ public class CurationServiceImpl implements CurationService {
         })
         .map(ContentDto::from)
         .toList();
+  }
+
+  @Override
+  @Transactional
+  public List<KeywordDto> getKeywordsByUser(UUID userId) {
+    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+
+    List<Keyword> keywords = keywordRepository.findAllByUserId(userId);
+    return keywords.stream().map(KeywordDto::from).toList();
   }
 
   @Override
