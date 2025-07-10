@@ -186,7 +186,7 @@ public class ContentServiceImpl implements ContentService {
       lastValue = contentDto.titleNormalized();
     }
 
-    Cursor cursor = new Cursor(lastId, lastValue);
+    Cursor cursor = new Cursor(lastValue, lastId);
     try {
       // 1. 객체 → JSON 변환
       String cursorToJson = objectMapper.writeValueAsString(cursor);

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springdoc.core.annotations.ParameterObject;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.SortBy;
@@ -18,6 +19,7 @@ import team03.mopl.domain.content.validation.AllowedValues;
  * 모든 필드가 nullable 합니다.
  */
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor // @ModelAttribute 가 바인딩할 때 요구하는 생성자
 public class ContentSearchRequest {
