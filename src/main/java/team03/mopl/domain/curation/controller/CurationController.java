@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.repository.KeywordRepository;
@@ -34,13 +35,13 @@ public class CurationController {
   }
 
   @GetMapping("/{keywordId}/contents")
-  public ResponseEntity<List<Content>> getRecommendations(
+  public ResponseEntity<List<ContentDto>> getRecommendations(
       @PathVariable UUID keywordId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     UUID userId = userDetails.getId();
 
-    List<Content> recommendations = curationService.getRecommendationsByKeyword(keywordId, userId);
+    List<ContentDto> recommendations = curationService.getRecommendationsByKeyword(keywordId, userId);
     return ResponseEntity.ok(recommendations);
   }
 
