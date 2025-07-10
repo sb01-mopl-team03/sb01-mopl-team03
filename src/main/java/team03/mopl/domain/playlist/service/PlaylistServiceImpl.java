@@ -92,7 +92,7 @@ public class PlaylistServiceImpl implements PlaylistService {
   @Override
   public List<PlaylistDto> getAllByName(String name) {
     if (name == null || name.trim().isEmpty()) {
-      return Collections.emptyList();
+      return playlistRepository.findAll().stream().map(PlaylistDto::from).toList();
     }
 
     // 검색어를 정규화

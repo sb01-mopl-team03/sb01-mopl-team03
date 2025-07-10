@@ -14,8 +14,6 @@ public interface PlaylistService {
 
   List<PlaylistDto> getAllByName(String name);
 
-  List<PlaylistDto> getAll();
-
   PlaylistDto update(UUID playlistId, PlaylistUpdateRequest request, UUID userId);
 
   void delete(UUID playlistId, UUID userId);
