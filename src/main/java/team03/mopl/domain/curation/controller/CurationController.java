@@ -1,5 +1,6 @@
 package team03.mopl.domain.curation.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class CurationController {
   private final CurationService curationService;
 
   @PostMapping()
-  public ResponseEntity<Keyword> registerKeyword(@RequestBody KeywordRequest request) {
+  public ResponseEntity<Keyword> registerKeyword(@Valid @RequestBody KeywordRequest request) {
     Keyword keyword = curationService.registerKeyword(request.userId(), request.keyword());
     return ResponseEntity.ok(keyword);
   }
