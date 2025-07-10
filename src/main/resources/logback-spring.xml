@@ -3,7 +3,7 @@
   <property name="LOG_PATH" value=".logs"/>
   <!-- 로그 패턴 -->
   <!-- e,g, 2025-07-04 15:10:20.456 [INFO] [nio-8080-exec-1] UserService - create - 유저 생성 시작: userId=abc123, email=email@example.com... -->
-  <property name="LOG_PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{simple} - %msg%n"/>
+  <property name="LOG_PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{0} - %msg%n"/>
 
   <!-- 콘솔 -->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
