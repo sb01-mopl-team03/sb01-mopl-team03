@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.domain.notification.dto.NotificationDto;
+import team03.mopl.domain.notification.dto.NotificationPagingDto;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.repository.NotificationRepository;
@@ -73,12 +74,13 @@ class NotificationServiceImplTest {
         .thenReturn(List.of(n1, n2));
 
     // when
-    var result = notificationService.getNotifications(receiverId);
+    NotificationPagingDto notificationPagingDto = new NotificationPagingDto(null, 20);
+    var result = notificationService.getNotifications(notificationPagingDto, receiverId);
 
     // then
-    assertThat(result).hasSize(2);
-    assertThat(result.get(0).getContent()).isEqualTo("팔로우 알림");
-    assertThat(result.get(1).getContent()).isEqualTo("DM 알림");
+    assertThat(result.data()).hasSize(2);
+    assertThat(result.data().get(0).getContent()).isEqualTo("팔로우 알림");
+    assertThat(result.data().get(1).getContent()).isEqualTo("DM 알림");
   }
 
   @Test

@@ -33,6 +33,6 @@ public class NotificationDto {
     return new NotificationDto(content, notificationType, createdAt);
   }
   public static NotificationDto from(Notification notification) {
-    return new NotificationDto(notification.getContent(), notification.getType(), notification.getCreatedAt());
+    return new NotificationDto(notification.getReceiverId(), notification.getContent(), notification.getType(), notification.getCreatedAt());
   }
 }
