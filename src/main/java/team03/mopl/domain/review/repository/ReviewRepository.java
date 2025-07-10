@@ -12,5 +12,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
   List<Review> findAllByContentId(UUID contentId);
 
+  boolean existsByUserIdAndContentId(UUID userId, UUID contentId);
+
   void deleteAllByUserId(UUID userId);
 }
