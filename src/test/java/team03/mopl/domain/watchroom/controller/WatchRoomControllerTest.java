@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -64,7 +65,8 @@ class WatchRoomControllerTest {
       WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId);
       String requestBody = objectMapper.writeValueAsString(request);
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트용 콘텐츠 제목", ownerId, 1L);
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트용 콘텐츠 제목", ownerId, "유저1",
+          LocalDateTime.now(), 1L);
 
       when(watchRoomService.create(request)).thenReturn(responseDto);
 
@@ -95,9 +97,12 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "인터스텔라", ownerId, 1L);
-      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "장고", ownerId, 2L);
-      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "오징어게임5", ownerId, 3L);
+      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "인터스텔라", ownerId, "유저1",
+          LocalDateTime.now(), 1L);
+      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "장고", ownerId, "유저1",
+          LocalDateTime.now(), 2L);
+      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "오징어게임5", ownerId, "유저1",
+          LocalDateTime.now(), 3L);
 
       List<WatchRoomDto> responseDtos = List.of(responseDto1, responseDto2, responseDto3);
 
@@ -122,12 +127,13 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트 콘텐츠 제목", ownerId, 1L);
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트 콘텐츠 제목", ownerId, "유저1",
+          LocalDateTime.now(), 1L);
 
       when(watchRoomService.getById(roomId)).thenReturn(responseDto);
 
       //when & then
-      mockMvc.perform(get("/api/rooms/"+ roomId)
+      mockMvc.perform(get("/api/rooms/" + roomId)
               .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -145,7 +151,7 @@ class WatchRoomControllerTest {
       when(watchRoomService.getById(randomId)).thenThrow(new WatchRoomRoomNotFoundException());
 
       //when & then
-      mockMvc.perform(get("/api/rooms/"+ randomId)
+      mockMvc.perform(get("/api/rooms/" + randomId)
               .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isNotFound());
     }

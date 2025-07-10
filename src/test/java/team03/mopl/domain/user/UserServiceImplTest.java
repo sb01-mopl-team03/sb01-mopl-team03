@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.storage.ProfileImageStorage;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +33,9 @@ class UserServiceImplTest {
 
   @Mock
   private ProfileImageStorage profileImageStorage;
+
+  @Mock
+  private FollowService followService;
 
   @InjectMocks
   private UserServiceImpl userService;

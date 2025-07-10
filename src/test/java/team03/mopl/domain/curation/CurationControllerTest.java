@@ -17,18 +17,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.controller.CurationController;
+import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.repository.KeywordRepository;
 import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
+import team03.mopl.jwt.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("큐레이션 컨트롤러 테스트")
@@ -41,7 +43,7 @@ class CurationControllerTest {
   private KeywordRepository keywordRepository;
 
   @Mock
-  private UserDetails userDetails;
+  private CustomUserDetails userDetails;
 
   @InjectMocks
   private CurationController curationController;
@@ -72,15 +74,16 @@ class CurationControllerTest {
           .keyword(keywordText)
           .build();
 
-      when(curationService.registerKeyword(userId, keywordText)).thenReturn(mockKeyword);
+      when(curationService.registerKeyword(userId, keywordText)).thenReturn(
+          KeywordDto.from(mockKeyword));
 
       // when
-      ResponseEntity<Keyword> response = curationController.registerKeyword(request);
+      ResponseEntity<KeywordDto> response = curationController.registerKeyword(request);
 
       // then
       assertNotNull(response.getBody());
-      assertEquals(keywordText, response.getBody().getKeyword());
-      assertEquals(mockUser, response.getBody().getUser());
+      assertEquals(keywordText, response.getBody().keyword());
+      assertEquals(mockUser.getId(), response.getBody().userId());
 
       verify(curationService).registerKeyword(userId, keywordText);
     }
@@ -130,19 +133,19 @@ class CurationControllerTest {
           .avgRating(BigDecimal.valueOf(4.0))
           .build();
 
-      List<Content> mockRecommendations = List.of(mockContent1, mockContent2);
+      List<ContentDto> mockRecommendations = List.of(ContentDto.from(mockContent1), ContentDto.from(mockContent2));
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
       assertEquals(2, response.getBody().size());
-      assertEquals(mockContent1.getTitle(), response.getBody().get(0).getTitle());
-      assertEquals(mockContent2.getTitle(), response.getBody().get(1).getTitle());
+      assertEquals(mockContent1.getTitle(), response.getBody().get(0).title());
+      assertEquals(mockContent2.getTitle(), response.getBody().get(1).title());
 
       verify(curationService).getRecommendationsByKeyword(keywordId, userId);
     }
@@ -154,13 +157,13 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
 
-      List<Content> emptyRecommendations = List.of();
+      List<ContentDto> emptyRecommendations = List.of();
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(emptyRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
@@ -176,13 +179,13 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
 
-      List<Content> mockRecommendations = List.of();
+      List<ContentDto> mockRecommendations = List.of();
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       verify(userDetails).getUsername();
@@ -199,15 +202,16 @@ class CurationControllerTest {
     void success() {
       // given
       UUID keywordId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
 
       // when
-      ResponseEntity<Void> response = curationController.delete(keywordId);
+      ResponseEntity<Void> response = curationController.delete(keywordId, userDetails);
 
       // then
       assertEquals(204, response.getStatusCodeValue()); // NO_CONTENT
       assertNull(response.getBody());
 
-      verify(curationService).delete(keywordId);
+      verify(curationService).delete(keywordId, userId);
     }
 
     @Test
@@ -215,12 +219,13 @@ class CurationControllerTest {
     void failsWhenKeywordNotFound() {
       // given
       UUID keywordId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
 
       // void 메서드에 대한 예외 설정은 doThrow 사용
-      doThrow(new KeywordNotFoundException()).when(curationService).delete(keywordId);
+      doThrow(new KeywordNotFoundException()).when(curationService).delete(keywordId, userId);
 
       // when & then
-      assertThrows(KeywordNotFoundException.class, () -> curationController.delete(keywordId));
+      assertThrows(KeywordNotFoundException.class, () -> curationController.delete(keywordId, userDetails));
     }
   }
 }

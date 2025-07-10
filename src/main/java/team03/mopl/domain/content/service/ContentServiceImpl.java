@@ -19,7 +19,7 @@ import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.repository.ContentRepository;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 
 @Slf4j
@@ -136,13 +136,13 @@ public class ContentServiceImpl implements ContentService {
 
   // review 평점의 평균값 게산
   private BigDecimal calculateRating(UUID contentId) {
-    List<ReviewResponse> reviews = reviewService.getAllByContent(contentId);
+    List<ReviewDto> reviews = reviewService.getAllByContent(contentId);
     if (reviews == null || reviews.isEmpty()) {
       return BigDecimal.ZERO;
     }
 
     BigDecimal sum = reviews.stream()
-        .map(ReviewResponse::rating)
+        .map(ReviewDto::rating)
         .filter(Objects::nonNull) // null 값 제외
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -186,7 +186,7 @@ public class ContentServiceImpl implements ContentService {
       lastValue = contentDto.titleNormalized();
     }
 
-    Cursor cursor = new Cursor(lastId, lastValue);
+    Cursor cursor = new Cursor(lastValue, lastId);
     try {
       // 1. 객체 → JSON 변환
       String cursorToJson = objectMapper.writeValueAsString(cursor);

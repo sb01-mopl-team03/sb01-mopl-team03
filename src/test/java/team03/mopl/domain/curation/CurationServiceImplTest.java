@@ -20,13 +20,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
 import team03.mopl.domain.curation.repository.KeywordRepository;
 import team03.mopl.domain.curation.service.CurationServiceImpl;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
@@ -117,12 +119,12 @@ class CurationServiceImplTest {
       when(keywordContentRepository.save(any(KeywordContent.class))).thenReturn(new KeywordContent(keyword, content));
 
       // when
-      Keyword result = curationService.registerKeyword(userId, keywordText);
+      KeywordDto result = curationService.registerKeyword(userId, keywordText);
 
       // then
       assertNotNull(result);
-      assertEquals("액션", result.getKeyword());
-      assertEquals(user, result.getUser());
+      assertEquals("액션", result.keyword());
+      assertEquals(userId, result.userId());
 
       verify(keywordRepository, times(1)).save(any(Keyword.class));
     }
@@ -154,7 +156,7 @@ class CurationServiceImplTest {
       when(contentRepository.findAll()).thenReturn(List.of());
 
       // when
-      Keyword result = curationService.registerKeyword(userId, keywordText);
+      KeywordDto result = curationService.registerKeyword(userId, keywordText);
 
       // then
       assertNotNull(result);
@@ -190,12 +192,12 @@ class CurationServiceImplTest {
       when(keywordContentRepository.save(any(KeywordContent.class))).thenReturn(new KeywordContent(keyword, actionMovie));
 
       // when
-      List<Content> result = curationService.curateContentForKeyword(keyword);
+      List<ContentDto> result = curationService.curateContentForKeyword(keyword);
 
       // then
       assertNotNull(result);
       // 액션 관련 콘텐츠가 더 높은 점수를 받아야 함
-      assertTrue(result.stream().anyMatch(c -> c.getTitle().contains("액션")));
+      assertTrue(result.stream().anyMatch(c -> c.title().contains("액션")));
     }
 
     @Test
@@ -213,7 +215,7 @@ class CurationServiceImplTest {
       when(contentRepository.findAll()).thenReturn(List.of(unrelatedContent));
 
       // when
-      List<Content> result = curationService.curateContentForKeyword(keyword);
+      List<ContentDto> result = curationService.curateContentForKeyword(keyword);
 
       // then
       assertNotNull(result);
@@ -238,11 +240,11 @@ class CurationServiceImplTest {
       when(keywordContentRepository.findByKeywordId(keywordId)).thenReturn(List.of(keywordContent));
 
       // when
-      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertEquals(content, result.get(0));
+      assertEquals(content.getTitle(), result.get(0).title());
 
       verify(keywordRepository, times(1)).findAllByUserId(userId);
     }
@@ -256,7 +258,7 @@ class CurationServiceImplTest {
       when(keywordRepository.findAllByUserId(userId)).thenReturn(List.of());
 
       // when
-      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
@@ -321,18 +323,27 @@ class CurationServiceImplTest {
   @Nested
   @DisplayName("콘텐츠 평점 업데이트")
   class UpdateContentRating {
+    UUID id = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    String authorName = "테스트사용자";
 
     @Test
     @DisplayName("성공")
     void success() {
       // given
-      ReviewResponse review1 = new ReviewResponse(
+      ReviewDto review1 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "좋은 영화",
           "재미있어요",
           BigDecimal.valueOf(5)
       );
 
-      ReviewResponse review2 = new ReviewResponse(
+      ReviewDto review2 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "괜찮은 영화",
           "보통이에요",
           BigDecimal.valueOf(3)
@@ -384,13 +395,19 @@ class CurationServiceImplTest {
     @DisplayName("평점이 null인 리뷰가 포함된 경우")
     void reviewsWithNullRating() {
       // given
-      ReviewResponse reviewWithNullRating = new ReviewResponse(
+      ReviewDto reviewWithNullRating = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "평점 없는 리뷰",
           "평점을 주지 않았어요",
           null
       );
 
-      ReviewResponse normalReview = new ReviewResponse(
+      ReviewDto normalReview = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "일반 리뷰",
           "좋아요",
           BigDecimal.valueOf(4)

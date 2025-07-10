@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,7 +17,7 @@ import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.service.ContentService;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 
 @Slf4j
@@ -40,13 +41,13 @@ public class ContentController {
 
   @GetMapping
   public ResponseEntity<CursorPageResponseDto<ContentDto>> getAll(
-      @Valid @ModelAttribute ContentSearchRequest contentSearchRequest
+      @Valid @ParameterObject @ModelAttribute ContentSearchRequest contentSearchRequest
   ) {
     return ResponseEntity.ok(contentService.getCursorPage(contentSearchRequest));
   }
 
   @GetMapping("/{contentId}/reviews")
-  public ResponseEntity<List<ReviewResponse>> getAllByContent(@PathVariable UUID contentId) {
+  public ResponseEntity<List<ReviewDto>> getAllByContent(@PathVariable UUID contentId) {
     return ResponseEntity.ok(reviewService.getAllByContent(contentId));
   }
 }

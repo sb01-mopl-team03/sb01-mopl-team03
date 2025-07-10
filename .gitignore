@@ -210,11 +210,11 @@ $RECYCLE.BIN/
 # .yaml
 **/application.yaml
 **/application-dev.yaml
-**/application-prod.yaml
 **/application-test.yaml
 
 # 환경변수
 .env
+mopl.env
 
 # build
 build/

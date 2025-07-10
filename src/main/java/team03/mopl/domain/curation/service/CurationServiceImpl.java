@@ -19,16 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
 import team03.mopl.domain.curation.repository.KeywordRepository;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
@@ -115,7 +118,7 @@ public class CurationServiceImpl implements CurationService {
   // 사용자 키워드 등록
   @Override
   @Transactional
-  public Keyword registerKeyword(UUID userId, String keywordText) {
+  public KeywordDto registerKeyword(UUID userId, String keywordText) {
     User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
     // 다국어 키워드 정규화
     String normalizedKeyword = normalizeMultilingualText(keywordText);
@@ -127,17 +130,17 @@ public class CurationServiceImpl implements CurationService {
         .build();
     keyword = keywordRepository.save(keyword);
 
-    List<Content> recommendations = curateContentForKeyword(keyword);
+    List<ContentDto> recommendations = curateContentForKeyword(keyword);
 
     log.info("registerKeyword - 다국어 키워드 등록: '{}' -> '{}' [{}] (매칭된 콘텐츠: {}개)",
         keywordText, normalizedKeyword, language, recommendations.size());
-    return keyword;
+    return KeywordDto.from(keyword);
   }
 
   // AI 기반 키워드별 콘텐츠 큐레이션
   @Override
   @Transactional
-  public List<Content> curateContentForKeyword(Keyword keyword) {
+  public List<ContentDto> curateContentForKeyword(Keyword keyword) {
     String keywordText = keyword.getKeyword();
     List<Content> recommendations = new ArrayList<>();
     List<Content> allContents = contentRepository.findAll();
@@ -164,7 +167,7 @@ public class CurationServiceImpl implements CurationService {
       return Double.compare(score2, score1);
     });
 
-    return recommendations;
+    return recommendations.stream().map(ContentDto::from).toList();
   }
 
   // 언어 감지
@@ -551,7 +554,7 @@ public class CurationServiceImpl implements CurationService {
 
   // TODO: 커서 페이지네이션
   @Override
-  public List<Content> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
+  public List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
         .orElseThrow(KeywordNotFoundException::new);
 
@@ -564,7 +567,8 @@ public class CurationServiceImpl implements CurationService {
           double score2 = calculateAIMatchingScore(keyword.getKeyword(), c2);
           return Double.compare(score2, score1); // 높은 점수부터
         })
-        .collect(Collectors.toList());
+        .map(ContentDto::from)
+        .toList();
   }
 
   // TODO: 배치작업
@@ -616,7 +620,7 @@ public class CurationServiceImpl implements CurationService {
   // TODO: 리뷰 등록되면 자동으로 평균 평점 계산하도록 event 생성
   private BigDecimal getAvgRating(Content content) {
     try {
-      List<ReviewResponse> reviews = reviewService.getAllByContent(content.getId());
+      List<ReviewDto> reviews = reviewService.getAllByContent(content.getId());
 
       if (reviews.isEmpty()) {
         log.info("getAvgRating - 콘텐츠 {}에 대한 리뷰가 없습니다.", content.getId());
@@ -644,9 +648,13 @@ public class CurationServiceImpl implements CurationService {
 
   @Override
   @Transactional
-  public void delete(UUID keywordId) {
+  public void delete(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findById(keywordId)
             .orElseThrow(KeywordNotFoundException::new);
+
+    if (!keyword.getUser().getId().equals(userId)) {
+      throw new KeywordDeleteDeniedException();
+    }
 
     keywordRepository.delete(keyword);
   }
