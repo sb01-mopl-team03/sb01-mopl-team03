@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+import team03.mopl.domain.oauth2.CustomOAuth2UserService;
+import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
 import team03.mopl.jwt.CustomUserDetailsService;
 import team03.mopl.jwt.JwtAuthenticationFilter;
 import team03.mopl.jwt.JwtBlacklist;
@@ -28,10 +30,13 @@ public class SecurityConfig {
   private final CustomUserDetailsService customUserDetailsService;
   private final JwtProvider jwtProvider;
   private final JwtBlacklist jwtBlacklist;
+  private final OAuth2SuccessHandler oAuth2SuccessHandler;
   private final CorsConfigurationSource corsConfigurationSource;
+  private final CustomOAuth2UserService customOAuth2UserService;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
 
     http
         .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -46,8 +51,13 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/auth/temp-password").permitAll()
             .requestMatchers("/profile/**").permitAll()
             .requestMatchers("/ws/**").permitAll() // WebSocket 핸드쉐이크 허용
+            .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
             .anyRequest().hasRole("USER")
         )
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(customOAuth2UserService))
+            .successHandler(oAuth2SuccessHandler))
         .addFilterBefore(
             new JwtAuthenticationFilter(jwtProvider, customUserDetailsService, jwtBlacklist),
             UsernamePasswordAuthenticationFilter.class);
@@ -60,11 +70,6 @@ public class SecurityConfig {
     return web -> web.ignoring()
         .requestMatchers("/profile/**")
         .requestMatchers("/ws/**");
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 
   @Bean

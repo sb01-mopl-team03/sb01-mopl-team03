@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
 import team03.mopl.domain.playlist.service.PlaylistService;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
 

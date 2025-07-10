@@ -3,7 +3,7 @@ CREATE TABLE "users"
 (
     "id"                       UUID PRIMARY KEY           NOT NULL,
     "email"                    VARCHAR(100) UNIQUE        NOT NULL,
-    "name"                     VARCHAR(100) UNIQUE        NOT NULL,
+    "name"                     VARCHAR(100)               NOT NULL,
     "password"                 VARCHAR(255)               NOT NULL,
     "created_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
     "updated_at"               TIMESTAMP   DEFAULT now()  NOT NULL,
@@ -114,9 +114,7 @@ CREATE TABLE "follows"
     "follower_id"  UUID                    NOT NULL,
     "following_id" UUID                    NOT NULL,
     "created_at"   TIMESTAMP DEFAULT now() NOT NULL,
-    UNIQUE ("follower_id", "following_id"),
-    FOREIGN KEY ("follower_id") REFERENCES "users" ("id"),
-    FOREIGN KEY ("following_id") REFERENCES "users" ("id")
+    UNIQUE ("follower_id", "following_id")
 );
 
 -- 채팅&시청방 테이블

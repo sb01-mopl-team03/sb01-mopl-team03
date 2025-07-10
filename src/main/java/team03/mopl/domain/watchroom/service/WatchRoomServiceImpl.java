@@ -17,7 +17,6 @@ import team03.mopl.domain.watchroom.dto.VideoSyncDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomInfoDto;
 import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
-import team03.mopl.domain.watchroom.exception.AlreadyJoinedWatchRoomRoomException;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;
@@ -46,7 +45,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         ContentNotFoundException::new);
 
     WatchRoom watchRoom = WatchRoom.builder()
-        .ownerId(owner.getId())
+        .owner(owner)
         .content(content)
         .build();
 
@@ -111,7 +110,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     User user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);
 
     //방장이 아니라면 제어 권한 없음
-    if(!watchRoom.getOwnerId().equals(user.getId())) {
+    if(!watchRoom.getOwner().equals(user.getId())) {
       throw new IllegalArgumentException("방장이 아님");
     }
 
@@ -189,7 +188,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
             null,
             //todo - 프로필 필드 추가 시 변경
             //participant.getUser().getProfile(),
-            participant.getUser().getId().equals(watchRoom.getOwnerId()))).toList();
+            participant.getUser().getId().equals(watchRoom.getOwner()))).toList();
 
     return ParticipantsInfoDto.builder()
         .participantDtoList(participantList)

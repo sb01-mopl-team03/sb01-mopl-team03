@@ -28,12 +28,12 @@ jobs:
     # Kafka, Redis 사용시 서비스 컨테이너 추가될 예정
 
     steps:
-      - name: Checkout code
+      - name: 코드 체크아웃
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Show latest commit
+      - name: 마지막 커밋 확인
         run: git log -1 --name-status
 
       - name: JDK setup
@@ -43,7 +43,7 @@ jobs:
           java-version: '17'
           cache: gradle
       
-      - name: gradlew 권한 부여
+      - name: gradlew 실행 권한 부여
         run: chmod +x gradlew
         
       - name: 테스트 수행
