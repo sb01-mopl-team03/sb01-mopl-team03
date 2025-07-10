@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.domain.playlist.dto.PlaylistDto;
+import team03.mopl.domain.playlist.service.PlaylistService;
 import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,7 @@ public class UserController {
   private final UserService userService;
   private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
+  private final PlaylistService playlistService;
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<UserResponse> create(@ModelAttribute UserCreateRequest request) {
@@ -62,8 +64,13 @@ public class UserController {
   }
 
   @GetMapping("/{userId}/reviews")
-  public ResponseEntity<List<ReviewDto>> getAllByUser(@PathVariable UUID userId) {
+  public ResponseEntity<List<ReviewResponse>> getAllReviewByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
+  }
+
+  @GetMapping("/{userId}/playlists")
+  public ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId) {
+    return ResponseEntity.ok(playlistService.getAllByUser(userId));
   }
 
 }

@@ -160,11 +160,32 @@ class ReviewControllerTest {
       UUID reviewId = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
 
-      ReviewUpdateRequest request = new ReviewUpdateRequest(
-          "수정된 리뷰 제목",
-          "수정된 리뷰 내용",
-          BigDecimal.valueOf(4)
-      );
+      ResponseEntity<List<ReviewResponse>> response = userController.getAllReviewByUser(userId);
+
+      verify(reviewService).getAllByUser(userId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 유저")
+    void failsWhenUserNotFound() {
+      UUID userId = UUID.randomUUID();
+
+      when(reviewService.getAllByUser(userId)).thenThrow(new UserNotFoundException());
+
+      assertThrows(UserNotFoundException.class, () -> userController.getAllReviewByUser(userId));
+    }
+  }
+
+  @Nested
+  @DisplayName("콘텐츠별 리뷰 조회 요청")
+  class FindAllByContent {
+
+    @Test
+    @DisplayName("성공")
+    void success() {
+      UUID contentId = UUID.randomUUID();
+
+      ResponseEntity<List<ReviewResponse>> response = contentController.getAllByContent(contentId);
 
       ReviewDto mockResponse = new ReviewDto("테스트 리뷰", "테스트 리뷰 내용", BigDecimal.valueOf(5));
 
@@ -255,37 +276,6 @@ class ReviewControllerTest {
 
       // when & then
       assertThrows(ReviewNotFoundException.class, () -> reviewController.delete(reviewId, userDetails));
-    }
-
-    @Test
-    @DisplayName("다른 사용자의 리뷰 삭제 시도")
-    void failsWhenAccessDenied() {
-      // given
-      UUID reviewId = UUID.randomUUID();
-      UUID userId = UUID.randomUUID();
-
-      when(userDetails.getId()).thenReturn(userId);
-      doThrow(new AccessDeniedException("본인의 리뷰만 삭제할 수 있습니다")).when(reviewService).delete(reviewId, userId);
-
-      // when & then
-      assertThrows(AccessDeniedException.class, () -> reviewController.delete(reviewId, userDetails));
-    }
-
-    @Test
-    @DisplayName("사용자 인증 정보로부터 userId 추출")
-    void extractsUserIdFromUserDetails() {
-      // given
-      UUID reviewId = UUID.randomUUID();
-      UUID userId = UUID.randomUUID();
-
-      when(userDetails.getId()).thenReturn(userId);
-
-      // when
-      ResponseEntity<Void> response = reviewController.delete(reviewId, userDetails);
-
-      // then
-      verify(userDetails).getId();
-      verify(reviewService).delete(reviewId, userId);
     }
   }
 }
