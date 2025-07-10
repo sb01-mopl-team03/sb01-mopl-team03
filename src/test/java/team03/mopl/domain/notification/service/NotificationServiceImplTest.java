@@ -4,12 +4,23 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -94,6 +105,7 @@ class NotificationServiceImplTest {
     assertThat(result.data().get(1).getContent()).isEqualTo("DM 알림");
   }
 
+
   @Test
   @DisplayName("markAllAsRead - 모든 알림 읽음 처리")
   void markAllAsRead() {
@@ -120,7 +132,7 @@ class NotificationServiceImplTest {
     UUID authenticatedUserId = receiverId;
 
     // when
-    notificationService.deleteNotificationByUserId(receiverId, authenticatedUserId);
+    notificationService.deleteNotificationByUserId(authenticatedUserId);
 
     // then
     then(notificationRepository).should().deleteByReceiverIdAndIsRead(receiverId, true);
@@ -155,4 +167,6 @@ class NotificationServiceImplTest {
     then(notificationRepository).should().findById(notificationId);
     then(notificationRepository).shouldHaveNoMoreInteractions(); // deleteById가 호출되지 않았는지 확인
   }
+
+
 }

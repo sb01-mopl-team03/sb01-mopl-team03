@@ -13,6 +13,5 @@ public interface NotificationService {
   CursorPageResponseDto<NotificationDto> getNotifications(NotificationPagingDto notificationPagingDto, UUID receiverId);
   void markAllAsRead(UUID notificationId);
   void deleteNotification(UUID notificationId);
-  void deleteNotificationByUserId(UUID userId, UUID authenticatedUserId);
+  void deleteNotificationByUserId(UUID authenticatedUserId);
 }
-

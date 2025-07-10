@@ -112,14 +112,10 @@ public class NotificationServiceImpl implements NotificationService{
   }
   @Override
   @Transactional
-  public void deleteNotificationByUserId(UUID userId, UUID authenticatedUserId) {
-    log.info("deleteNotification - 알림 삭제 시도: userId={}", userId);
-    if( !authenticatedUserId.equals(userId) ) {
-      // 알림 소지한 ID와 인증된 객체가 같아야 한다.
-      throw new UserNotFoundException();
-    }
+  public void deleteNotificationByUserId(UUID authenticatedUserId) {
+    log.info("deleteNotification - 알림 삭제 시도: userId={}", authenticatedUserId);
     //읽지 않은 알림 빼고 삭제
-    notificationRepository.deleteByReceiverIdAndIsRead(userId, true);
-    log.info("deleteNotification - 알림 삭제 완료: userId={}", userId);
+    notificationRepository.deleteByReceiverIdAndIsRead(authenticatedUserId, true);
+    log.info("deleteNotification - 알림 삭제 완료: userId={}", authenticatedUserId);
   }
 }

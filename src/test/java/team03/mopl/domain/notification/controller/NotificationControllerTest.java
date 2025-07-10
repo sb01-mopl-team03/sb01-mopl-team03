@@ -110,11 +110,11 @@ class NotificationControllerTest {
   void testGetNotifications() throws Exception {
     User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
     CustomUserDetails customUserDetails = new CustomUserDetails(user);
-
+    UUID notificationId = UUID.randomUUID();
     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
         customUserDetails.getAuthorities());
 
-    NotificationDto dto = new NotificationDto(user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED, LocalDateTime.of(2025, 7, 1, 12, 0));
+    NotificationDto dto = new NotificationDto(notificationId, user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED, LocalDateTime.of(2025, 7, 1, 12, 0));
 
     List<NotificationDto> notifications = List.of(dto);
 
@@ -124,7 +124,8 @@ class NotificationControllerTest {
     when(notificationService.getNotifications(any(NotificationPagingDto.class), eq(user.getId()))).thenReturn(response);
 
     mockMvc.perform(get("/api/notifications").with(authentication(authToken)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-        .andExpect(jsonPath("$.data[0].content").value("새로운 알림입니다.")).andExpect(jsonPath("$.data[0].notificationType").value("DM_RECEIVED"))
+        .andExpect(jsonPath("$.data[0].content").value("새로운 알림입니다."))
+        .andExpect(jsonPath("$.data[0].notificationType").value("DM_RECEIVED"))
         .andExpect(jsonPath("$.data[0].createdAt").exists()).andExpect(jsonPath("$.data[0].receiverId").value(dto.getReceiverId().toString()));
 
     verify(notificationService).markAllAsRead(user.getId());
@@ -137,9 +138,9 @@ class NotificationControllerTest {
     List<NotificationDto> firstPageData = new ArrayList<>();
     List<NotificationDto> secondPageData = new ArrayList<>();
     LocalDateTime now = LocalDateTime.now();
-
+    UUID notificationId = UUID.randomUUID();
     for (int i = 0; i < 30; i++) {
-      NotificationDto notificationDto = new NotificationDto(receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED, now.minusSeconds(30 - i));
+      NotificationDto notificationDto = new NotificationDto(notificationId, receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED, now.minusSeconds(30 - i));
       if (i < 20) {
         firstPageData.add(notificationDto);
       } else {
@@ -207,12 +208,14 @@ class NotificationControllerTest {
     // when & then
     mockMvc.perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .delete("/api/notifications/user/" + user.getId())
+                .delete("/api/notifications/userId")
                 .with(authentication(authToken))
                 .with(csrf())
         )
         .andExpect(status().isNoContent());
 
-    verify(notificationService).deleteNotificationByUserId(user.getId(), user.getId());
+    verify(notificationService).deleteNotificationByUserId(user.getId());
   }
+
+
 }
