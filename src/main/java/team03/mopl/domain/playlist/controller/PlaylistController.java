@@ -1,5 +1,6 @@
 package team03.mopl.domain.playlist.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,20 +29,16 @@ public class PlaylistController {
   private final PlaylistService playlistService;
 
   @PostMapping
-  public ResponseEntity<PlaylistDto> create(@RequestBody PlaylistCreateRequest request) {
+  public ResponseEntity<PlaylistDto> create(@Valid @RequestBody PlaylistCreateRequest request) {
     return ResponseEntity.ok(playlistService.create(request));
   }
 
   @GetMapping
   public ResponseEntity<List<PlaylistDto>> getPlaylists(
       @RequestParam(required = false) String name) {
-    if (name != null && !name.trim().isEmpty()) {
-      List<PlaylistDto> playlistDtos = playlistService.getAllByName(name);
-      return ResponseEntity.ok(playlistDtos);
-    } else {
-      List<PlaylistDto> playlistDtos = playlistService.getAll();
-      return ResponseEntity.ok(playlistDtos);
-    }
+
+    List<PlaylistDto> playlistDtos = playlistService.getAllByName(name);
+    return ResponseEntity.ok(playlistDtos);
   }
 
   @PatchMapping("/{playlistId}")
