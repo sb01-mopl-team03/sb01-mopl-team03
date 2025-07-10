@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,7 +62,7 @@ public class UserController {
   }
 
   @GetMapping("/{userId}/reviews")
-  public ResponseEntity<List<ReviewResponse>> getAllByUser(@PathVariable UUID userId) {
+  public ResponseEntity<List<ReviewDto>> getAllByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
   }
 
