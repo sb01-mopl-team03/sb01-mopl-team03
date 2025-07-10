@@ -36,8 +36,7 @@ public class WatchRoomController {
   }
 
   @PostMapping
-  public ResponseEntity<WatchRoomDto> createChatRoom(@RequestBody WatchRoomCreateRequest request,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
+  public ResponseEntity<WatchRoomDto> createChatRoom(@RequestBody WatchRoomCreateRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(watchRoomService.create(request));
   }
 }

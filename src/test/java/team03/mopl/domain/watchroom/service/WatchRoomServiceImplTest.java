@@ -105,7 +105,7 @@ class WatchRoomServiceImplTest {
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
           .content(content)
-          .ownerId(userId)
+          .owner(user)
           .build();
 
       WatchRoomDto expected = WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1L);
@@ -155,15 +155,22 @@ class WatchRoomServiceImplTest {
       UUID chatRoom1Id = UUID.randomUUID();
       WatchRoom watchRoom1 = WatchRoom.builder()
           .id(chatRoom1Id)
-          .ownerId(userId)
+          .owner(user)
           .content(content)
           .build();
 
       UUID user2Id = UUID.randomUUID();
+      User user2 = User.builder()
+          .id(user2Id)
+          .name("테스트유저2")
+          .email("test@test.com")
+          .password("test")
+          .role(Role.USER)
+          .build();
       UUID chatRoom2Id = UUID.randomUUID();
       WatchRoom watchRoom2 = WatchRoom.builder()
           .id(chatRoom2Id)
-          .ownerId(user2Id)
+          .owner(user2)
           .content(content)
           .build();
 
@@ -203,7 +210,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
           .content(content)
           .build();
 
@@ -268,7 +275,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
           .content(content)
           .build();
 
@@ -316,7 +323,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
           .content(content)
           .build();
 
@@ -382,7 +389,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
+
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
@@ -419,7 +427,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
+
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(false)
@@ -456,7 +465,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
-          .ownerId(userId)
+          .owner(user)
+
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
