@@ -35,7 +35,7 @@ public enum ErrorCode {
 
   NOT_SUBSCRIBED(HttpStatus.NOT_FOUND, "SUBSCRIPTION_001", "구독하지 않은 플레이리스트입니다."),
   ALREADY_SUBSCRIBED(HttpStatus.CONFLICT, "SUBSCRIPTION_002", "이미 구독 중인 플레이리스트입니다."),
-  SELF_SUBSCRIPTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_003", "자신의 플레이리스트는 구독할 수 없습니다.");
+  SELF_SUBSCRIPTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_003", "자신의 플레이리스트는 구독할 수 없습니다."),
 
   PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_001", "존재하지 않는 플레이리스트입니다."),
   PLAYLIST_DELETE_DENIED(HttpStatus.FORBIDDEN, "PLAYLIST_002", "본인의 플레이리스트만 삭제할 수 있습니다."),

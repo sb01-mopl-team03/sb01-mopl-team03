@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.domain.content.Content;
@@ -29,6 +28,7 @@ import team03.mopl.domain.curation.repository.KeywordRepository;
 import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
+import team03.mopl.jwt.CustomUserDetails;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("큐레이션 컨트롤러 테스트")
@@ -41,7 +41,7 @@ class CurationControllerTest {
   private KeywordRepository keywordRepository;
 
   @Mock
-  private UserDetails userDetails;
+  private CustomUserDetails userDetails;
 
   @InjectMocks
   private CurationController curationController;
@@ -199,15 +199,16 @@ class CurationControllerTest {
     void success() {
       // given
       UUID keywordId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
 
       // when
-      ResponseEntity<Void> response = curationController.delete(keywordId);
+      ResponseEntity<Void> response = curationController.delete(keywordId, userDetails);
 
       // then
       assertEquals(204, response.getStatusCodeValue()); // NO_CONTENT
       assertNull(response.getBody());
 
-      verify(curationService).delete(keywordId);
+      verify(curationService).delete(keywordId, userId);
     }
 
     @Test
@@ -215,12 +216,13 @@ class CurationControllerTest {
     void failsWhenKeywordNotFound() {
       // given
       UUID keywordId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
 
       // void 메서드에 대한 예외 설정은 doThrow 사용
-      doThrow(new KeywordNotFoundException()).when(curationService).delete(keywordId);
+      doThrow(new KeywordNotFoundException()).when(curationService).delete(keywordId, userId);
 
       // when & then
-      assertThrows(KeywordNotFoundException.class, () -> curationController.delete(keywordId));
+      assertThrows(KeywordNotFoundException.class, () -> curationController.delete(keywordId, userDetails));
     }
   }
 }

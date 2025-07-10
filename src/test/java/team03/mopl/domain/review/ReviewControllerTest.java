@@ -160,7 +160,7 @@ class ReviewControllerTest {
       UUID reviewId = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
 
-      ResponseEntity<List<ReviewResponse>> response = userController.getAllReviewByUser(userId);
+      ResponseEntity<List<ReviewDto>> response = userController.getAllReviewByUser(userId);
 
       verify(reviewService).getAllByUser(userId);
     }

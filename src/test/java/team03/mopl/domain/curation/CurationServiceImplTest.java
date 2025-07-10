@@ -321,18 +321,27 @@ class CurationServiceImplTest {
   @Nested
   @DisplayName("콘텐츠 평점 업데이트")
   class UpdateContentRating {
+    UUID id = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    String authorName = "테스트사용자";
 
     @Test
     @DisplayName("성공")
     void success() {
       // given
       ReviewDto review1 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "좋은 영화",
           "재미있어요",
           BigDecimal.valueOf(5)
       );
 
       ReviewDto review2 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "괜찮은 영화",
           "보통이에요",
           BigDecimal.valueOf(3)
@@ -385,12 +394,18 @@ class CurationServiceImplTest {
     void reviewsWithNullRating() {
       // given
       ReviewDto reviewWithNullRating = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "평점 없는 리뷰",
           "평점을 주지 않았어요",
           null
       );
 
       ReviewDto normalReview = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "일반 리뷰",
           "좋아요",
           BigDecimal.valueOf(4)

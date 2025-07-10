@@ -67,7 +67,7 @@ public class UserController {
   }
 
   @GetMapping("/{userId}/reviews")
-  public ResponseEntity<List<ReviewResponse>> getAllReviewByUser(@PathVariable UUID userId) {
+  public ResponseEntity<List<ReviewDto>> getAllReviewByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
   }
 
@@ -81,4 +81,5 @@ public class UserController {
       @PathVariable UUID userId) {
     List<SubscriptionDto> subscriptions = subscriptionService.getSubscriptions(userId);
     return ResponseEntity.ok(subscriptions);
+  }
 }

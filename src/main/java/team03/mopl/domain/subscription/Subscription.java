@@ -18,7 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import team03.mopl.domain.playlist.Playlist;
+import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.user.User;
 
 @Getter
