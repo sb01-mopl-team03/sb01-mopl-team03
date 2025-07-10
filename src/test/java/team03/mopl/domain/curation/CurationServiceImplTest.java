@@ -26,7 +26,7 @@ import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
 import team03.mopl.domain.curation.repository.KeywordRepository;
 import team03.mopl.domain.curation.service.CurationServiceImpl;
-import team03.mopl.domain.review.dto.ReviewResponse;
+import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.service.ReviewService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
@@ -321,18 +321,27 @@ class CurationServiceImplTest {
   @Nested
   @DisplayName("콘텐츠 평점 업데이트")
   class UpdateContentRating {
+    UUID id = UUID.randomUUID();
+    UUID authorId = UUID.randomUUID();
+    String authorName = "테스트사용자";
 
     @Test
     @DisplayName("성공")
     void success() {
       // given
-      ReviewResponse review1 = new ReviewResponse(
+      ReviewDto review1 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "좋은 영화",
           "재미있어요",
           BigDecimal.valueOf(5)
       );
 
-      ReviewResponse review2 = new ReviewResponse(
+      ReviewDto review2 = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "괜찮은 영화",
           "보통이에요",
           BigDecimal.valueOf(3)
@@ -384,13 +393,19 @@ class CurationServiceImplTest {
     @DisplayName("평점이 null인 리뷰가 포함된 경우")
     void reviewsWithNullRating() {
       // given
-      ReviewResponse reviewWithNullRating = new ReviewResponse(
+      ReviewDto reviewWithNullRating = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "평점 없는 리뷰",
           "평점을 주지 않았어요",
           null
       );
 
-      ReviewResponse normalReview = new ReviewResponse(
+      ReviewDto normalReview = new ReviewDto(
+          id,
+          authorId,
+          authorName,
           "일반 리뷰",
           "좋아요",
           BigDecimal.valueOf(4)
