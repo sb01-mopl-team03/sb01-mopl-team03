@@ -44,7 +44,7 @@ public class PlaylistController {
   @PatchMapping("/{playlistId}")
   public ResponseEntity<PlaylistDto> update(
       @PathVariable UUID playlistId,
-      @RequestBody PlaylistUpdateRequest request,
+      @Valid @RequestBody PlaylistUpdateRequest request,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     UUID userId = userDetails.getId();
