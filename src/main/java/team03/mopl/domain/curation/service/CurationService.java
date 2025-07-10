@@ -19,5 +19,5 @@ public interface CurationService {
 
   void updateContentRating(UUID contentId);
 
-  void delete(UUID keywordId);
+  void delete(UUID keywordId, UUID userId);
 }
