@@ -16,6 +16,8 @@ public enum ErrorCode {
   REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "존재하지 않는 리뷰입니다."),
   REVIEW_DELETE_DENIED(HttpStatus.FORBIDDEN, "REVIEW_002", "본인의 리뷰만 삭제할 수 있습니다."),
   REVIEW_UPDATE_DENIED(HttpStatus.FORBIDDEN, "REVIEW_003", "본인의 리뷰만 수정할 수 있습니다."),
+  DUPLICATED_REVIEW(HttpStatus.CONFLICT, "REVIEW_004", "해당 콘텐츠에 이미 리뷰를 작성했습니다."),
+
 
   CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다."),
   ALREADY_JOINED_CHATROOM(HttpStatus.CREATED, "CHATROOM_002", "이미 참여중인 채팅방입니다."),

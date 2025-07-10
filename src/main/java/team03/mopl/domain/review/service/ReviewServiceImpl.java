@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.review.DuplicateReviewException;
 import team03.mopl.common.exception.review.ReviewDeleteDeniedException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
 import team03.mopl.common.exception.review.ReviewUpdateDeniedException;
@@ -40,6 +41,12 @@ public class ReviewServiceImpl implements ReviewService {
     if (!contentRepository.existsById(request.contentId())) {
       log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: ", request.contentId());
       throw new ContentNotFoundException();
+    }
+
+    if (reviewRepository.existsByUserIdAndContentId(request.userId(), request.contentId())) {
+      log.warn("이미 리뷰를 작성한 콘텐츠입니다. 유저 ID: {}, 콘텐츠 ID: {}",
+          request.userId(), request.contentId());
+      throw new DuplicateReviewException();
     }
 
     User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
