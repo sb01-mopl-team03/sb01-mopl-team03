@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
 import team03.mopl.common.exception.subscription.AlreadySubscribedException;
-import team03.mopl.common.exception.subscription.NotSubscribedException;
 import team03.mopl.common.exception.subscription.SelfSubscriptionNotAllowedException;
+import team03.mopl.common.exception.subscription.SubscriptionDeleteDeniedException;
+import team03.mopl.common.exception.subscription.SubscriptionNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.playlist.repository.PlaylistRepository;
@@ -55,16 +56,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return SubscriptionDto.from(savedSubscription);
   }
 
-  // TODO: 이것도 구독한 사용자가 취소요청하는지 확인해야하나? (컨트롤러에서 @AUthentication~~ 사용)
   @Override
   @Transactional(readOnly = true)
-  public void unsubscribe(UUID userId, UUID playlistId) {
+  public void unsubscribe(UUID subscriptionId, UUID userId) {
 
-    if (!subscriptionRepository.existsByUserIdAndPlaylistId(userId, playlistId)) {
-      throw new NotSubscribedException();
+    Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(
+        SubscriptionNotFoundException::new);
+
+    if (!subscription.getUser().getId().equals(userId)) {
+      log.warn("구독자만 구독 취소할 수 있습니다. 구독자 ID: ", userId);
+      throw new SubscriptionDeleteDeniedException();
     }
 
-    subscriptionRepository.deleteByUserIdAndPlaylistId(userId, playlistId);
+    subscriptionRepository.deleteById(subscriptionId);
   }
 
   @Override

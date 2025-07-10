@@ -1,5 +1,6 @@
 package team03.mopl.domain.review.controller;
 
+import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class ReviewController {
   private final ReviewService reviewService;
 
   @PostMapping
-  public ResponseEntity<ReviewDto> create(@RequestBody ReviewCreateRequest request) {
+  public ResponseEntity<ReviewDto> create(@Valid @RequestBody ReviewCreateRequest request) {
     return ResponseEntity.ok(reviewService.create(request));
   }
 
@@ -37,7 +38,7 @@ public class ReviewController {
 
   @PatchMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> update(@PathVariable UUID reviewId,
-      @RequestBody ReviewUpdateRequest request,
+      @Valid @RequestBody ReviewUpdateRequest request,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     UUID userId = userDetails.getId();
