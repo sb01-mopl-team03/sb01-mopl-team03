@@ -6,11 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
 import team03.mopl.common.exception.subscription.AlreadySubscribedException;
 import team03.mopl.common.exception.subscription.NotSubscribedException;
 import team03.mopl.common.exception.subscription.SelfSubscriptionNotAllowedException;
 import team03.mopl.common.exception.user.UserNotFoundException;
-import team03.mopl.domain.playlist.Playlist;
+import team03.mopl.domain.playlist.entity.Playlist;
+import team03.mopl.domain.playlist.repository.PlaylistRepository;
 import team03.mopl.domain.subscription.Subscription;
 import team03.mopl.domain.subscription.dto.SubscriptionDto;
 import team03.mopl.domain.subscription.SubscriptionRepository;
@@ -30,10 +32,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   @Transactional(readOnly = true)
   public SubscriptionDto subscribe(UUID userId, UUID playlistId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException());
+        .orElseThrow(UserNotFoundException::new);
 
     Playlist playlist = playlistRepository.findById(playlistId)
-        .orElseThrow(() -> new PlaylistNotFoundException());
+        .orElseThrow(PlaylistNotFoundException::new);
 
     if (playlist.getUser().getId().equals(userId)) {
       throw new SelfSubscriptionNotAllowedException();
