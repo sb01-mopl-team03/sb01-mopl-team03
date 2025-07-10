@@ -21,6 +21,7 @@ import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.controller.CurationController;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
@@ -130,19 +131,19 @@ class CurationControllerTest {
           .avgRating(BigDecimal.valueOf(4.0))
           .build();
 
-      List<Content> mockRecommendations = List.of(mockContent1, mockContent2);
+      List<ContentDto> mockRecommendations = List.of(ContentDto.from(mockContent1), ContentDto.from(mockContent2));
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
       assertEquals(2, response.getBody().size());
-      assertEquals(mockContent1.getTitle(), response.getBody().get(0).getTitle());
-      assertEquals(mockContent2.getTitle(), response.getBody().get(1).getTitle());
+      assertEquals(mockContent1.getTitle(), response.getBody().get(0).title());
+      assertEquals(mockContent2.getTitle(), response.getBody().get(1).title());
 
       verify(curationService).getRecommendationsByKeyword(keywordId, userId);
     }
@@ -154,13 +155,13 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
 
-      List<Content> emptyRecommendations = List.of();
+      List<ContentDto> emptyRecommendations = List.of();
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(emptyRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
@@ -176,13 +177,13 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
 
-      List<Content> mockRecommendations = List.of();
+      List<ContentDto> mockRecommendations = List.of();
 
       when(userDetails.getUsername()).thenReturn(userId.toString());
       when(curationService.getRecommendationsByKeyword(keywordId, userId)).thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<List<Content>> response = curationController.getRecommendations(keywordId, userDetails);
+      ResponseEntity<List<ContentDto>> response = curationController.getRecommendations(keywordId, userDetails);
 
       // then
       verify(userDetails).getUsername();

@@ -24,6 +24,7 @@ import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
@@ -552,7 +553,7 @@ public class CurationServiceImpl implements CurationService {
 
   // TODO: 커서 페이지네이션
   @Override
-  public List<Content> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
+  public List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
         .orElseThrow(KeywordNotFoundException::new);
 
@@ -565,7 +566,9 @@ public class CurationServiceImpl implements CurationService {
           double score2 = calculateAIMatchingScore(keyword.getKeyword(), c2);
           return Double.compare(score2, score1); // 높은 점수부터
         })
-        .collect(Collectors.toList());
+        .toList()
+        .stream()
+    .map(ContentDto::from).toList();
   }
 
   // TODO: 배치작업

@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
@@ -238,11 +239,11 @@ class CurationServiceImplTest {
       when(keywordContentRepository.findByKeywordId(keywordId)).thenReturn(List.of(keywordContent));
 
       // when
-      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertEquals(content, result.get(0));
+      assertEquals(content.getTitle(), result.get(0).title());
 
       verify(keywordRepository, times(1)).findAllByUserId(userId);
     }
@@ -256,7 +257,7 @@ class CurationServiceImplTest {
       when(keywordRepository.findAllByUserId(userId)).thenReturn(List.of());
 
       // when
-      List<Content> result = curationService.getRecommendationsByKeyword(keywordId, userId);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);

@@ -3,6 +3,7 @@ package team03.mopl.domain.curation.service;
 import java.util.List;
 import java.util.UUID;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.entity.Keyword;
 
 public interface CurationService {
@@ -13,7 +14,7 @@ public interface CurationService {
 
   List<Content> curateContentForKeyword(Keyword keyword);
 
-  List<Content> getRecommendationsByKeyword(UUID keywordId, UUID userId);
+  List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId);
 
   void batchCurationForNewContents(List<Content> newContents);
 
