@@ -5,7 +5,6 @@ import java.util.UUID;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.dto.KeywordDto;
-import team03.mopl.domain.curation.entity.Keyword;
 
 public interface CurationService {
 

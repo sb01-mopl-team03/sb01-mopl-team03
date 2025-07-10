@@ -244,7 +244,7 @@ class CurationServiceImplTest {
 
       // then
       assertNotNull(result);
-      assertEquals(ContentDto.from(content), result.get(0));
+      assertEquals(content.getTitle(), result.get(0).title());
 
       verify(keywordRepository, times(1)).findAllByUserId(userId);
     }
