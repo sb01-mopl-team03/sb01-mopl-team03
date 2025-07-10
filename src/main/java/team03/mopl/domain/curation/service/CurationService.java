@@ -17,6 +17,8 @@ public interface CurationService {
 
   List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId);
 
+  List<KeywordDto> getKeywordsByUser(UUID userId);
+
   void batchCurationForNewContents(List<Content> newContents);
 
   void updateContentRating(UUID contentId);
