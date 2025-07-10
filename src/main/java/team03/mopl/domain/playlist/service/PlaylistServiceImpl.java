@@ -38,6 +38,9 @@ public class PlaylistServiceImpl implements PlaylistService {
 
   @Override
   public PlaylistDto create(PlaylistCreateRequest request) {
+    User user = userRepository.findById(request.userId())
+        .orElseThrow(UserNotFoundException::new);
+
     List<Content> contents = contentRepository.findAllById(request.contentIds());
     Set<UUID> existingContentIds = contents.stream()
         .map(Content::getId)
@@ -49,9 +52,6 @@ public class PlaylistServiceImpl implements PlaylistService {
         throw new ContentNotFoundException();
       }
     }
-
-    User user = userRepository.findById(request.userId())
-        .orElseThrow(UserNotFoundException::new);
 
     Playlist playlist = Playlist.builder()
         .name(request.name())
