@@ -27,6 +27,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private final PlaylistRepository playlistRepository;
 
   @Override
+  @Transactional(readOnly = true)
   public SubscriptionDto subscribe(UUID userId, UUID playlistId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new UserNotFoundException());
@@ -54,6 +55,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
   // TODO: 이것도 구독한 사용자가 취소요청하는지 확인해야하나? (컨트롤러에서 @AUthentication~~ 사용)
   @Override
+  @Transactional(readOnly = true)
   public void unsubscribe(UUID userId, UUID playlistId) {
 
     if (!subscriptionRepository.existsByUserIdAndPlaylistId(userId, playlistId)) {
