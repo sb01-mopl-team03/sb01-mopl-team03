@@ -89,6 +89,7 @@ public class PlaylistServiceImpl implements PlaylistService {
     return playlists.stream().map(PlaylistDto::from).toList();
   }
 
+  // TODO: 검색 속도 리팩토링
   @Override
   public List<PlaylistDto> getAllByName(String name) {
     if (name == null || name.trim().isEmpty()) {
