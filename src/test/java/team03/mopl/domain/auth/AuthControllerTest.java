@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.cors.CorsConfigurationSource;
 import team03.mopl.common.config.SecurityConfig;
 import team03.mopl.domain.oauth2.CustomOAuth2UserService;
 import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
@@ -60,6 +61,9 @@ class AuthControllerTest {
 
   @MockitoBean
   private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+  @MockitoBean
+  private CorsConfigurationSource corsConfigurationSource;
 
   private Cookie makeRefreshCookie(String value) {
     Cookie cookie = new Cookie("refresh", value);
