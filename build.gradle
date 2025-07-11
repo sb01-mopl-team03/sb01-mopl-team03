@@ -59,11 +59,23 @@ dependencies {
     // Security
     implementation 'org.springframework.security:spring-security-messaging'
 
-    // AI
+// AI - Stanford CoreNLP with JAXB exclusions
     implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
-    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
+    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4') {
+        exclude group: 'javax.xml.bind', module: 'jaxb-api'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
+    }
+    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4:models') {
+        exclude group: 'javax.xml.bind', module: 'jaxb-api'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
+        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
+    }
     implementation 'com.github.shin285:KOMORAN:3.3.9'
+
+    // Jakarta JAXB - 최신 버전 명시적 추가
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'
 
     // Monitoring
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'

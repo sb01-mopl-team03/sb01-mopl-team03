@@ -9,8 +9,7 @@ RUN chmod +x gradlew || true
 
 COPY src ./src
 
-#RUN ./gradlew build -x test
-RUN ./gradlew build
+RUN ./gradlew build -x test
 
 FROM eclipse-temurin:17-jre AS runtime
 WORKDIR /app
