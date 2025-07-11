@@ -65,6 +65,9 @@ class AuthControllerTest {
   @MockitoBean
   private CorsConfigurationSource corsConfigurationSource;
 
+  @MockitoBean
+  private CustomUserDetails customUserDetails;
+
   private Cookie makeRefreshCookie(String value) {
     Cookie cookie = new Cookie("refresh", value);
     cookie.setPath("/");
