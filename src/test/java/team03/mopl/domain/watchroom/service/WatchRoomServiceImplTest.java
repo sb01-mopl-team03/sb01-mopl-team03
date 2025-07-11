@@ -78,7 +78,6 @@ class WatchRoomServiceImplTest {
         .role(Role.USER)
         .build();
 
-    //todo - 빌더 또는 생성자 구현해주시면 수정하기
     contentId = UUID.randomUUID();
     content = Content.builder()
         .title("테스트콘텐츠")
