@@ -19,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.common.config.SecurityConfig;
+import team03.mopl.common.config.TestSecurityConfig;
 import team03.mopl.domain.oauth2.CustomOAuth2UserService;
 import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
 import team03.mopl.jwt.CustomUserDetails;
@@ -58,6 +59,9 @@ class AuthControllerTest {
 
   @MockitoBean
   private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+  @MockitoBean
+  private CustomUserDetails customUserDetails;
 
   private Cookie makeRefreshCookie(String value) {
     Cookie cookie = new Cookie("refresh", value);
