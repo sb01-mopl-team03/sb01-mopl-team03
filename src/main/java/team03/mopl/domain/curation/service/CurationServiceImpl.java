@@ -1,6 +1,10 @@
 package team03.mopl.domain.curation.service;
 
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.CoreMap;
 import jakarta.annotation.PostConstruct;
 import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
 import kr.co.shineware.nlp.komoran.core.Komoran;
@@ -103,20 +107,90 @@ public class CurationServiceImpl implements CurationService {
   public void init() {
     initializeAI();
     initializeKomoran();
-    log.info("init - 큐레이션 서비스 초기화 완료 (Komoran + 규칙 기반 모드)");
+    log.info("init - 큐레이션 서비스 초기화 완료 (Komoran + 혼합 언어 분석 모드)");
   }
 
-  // Stanford NLP 초기화
   private void initializeAI() {
     try {
       Properties props = new Properties();
-      props.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner");
+      props.setProperty("annotators", "tokenize,ssplit,pos,lemma");
       props.setProperty("ner.useSUTime", "false");
       this.nlpPipeline = new StanfordCoreNLP(props);
       log.info("initializeAI - Stanford CoreNLP 초기화 완료");
     } catch (Exception e) {
       log.warn("Stanford NLP 초기화 실패: {}", e.getMessage());
       this.nlpPipeline = null;
+    }
+  }
+
+  // 형태소 기반 유사도 계산 (혼합 언어 대응)
+  private double calculateMorphemeSimilarity(String keyword, String text) {
+    try {
+      List<String> keywordTokens = extractMultilingualTokens(keyword);
+      List<String> textTokens = extractMultilingualTokens(text);
+
+      if (keywordTokens.isEmpty() || textTokens.isEmpty()) return 0.0;
+
+      Set<String> keywordSet = new HashSet<>(keywordTokens);
+      Set<String> textSet = new HashSet<>(textTokens);
+
+      Set<String> intersection = new HashSet<>(keywordSet);
+      intersection.retainAll(textSet);
+
+      Set<String> union = new HashSet<>(keywordSet);
+      union.addAll(textSet);
+
+      return union.isEmpty() ? 0.0 : (double) intersection.size() / union.size();
+
+    } catch (Exception e) {
+      log.warn("혼합 언어 유사도 계산 실패: {}", e.getMessage());
+      return 0.0;
+    }
+  }
+
+  private List<String> extractMultilingualTokens(String text) {
+    List<String> tokens = new ArrayList<>();
+
+    if (text == null || text.isBlank()) return tokens;
+
+    if (KOREAN_PATTERN.matcher(text).find()) {
+      tokens.addAll(extractMeaningfulMorphemes(text));
+    }
+
+    if (ENGLISH_PATTERN.matcher(text).find()) {
+      tokens.addAll(lemmatizeText(text));
+    }
+
+    return tokens.stream()
+        .map(String::toLowerCase)
+        .filter(t -> t.length() > 1)
+        .distinct()
+        .toList();
+  }
+
+  private List<String> lemmatizeText(String text) {
+    if (nlpPipeline == null || text == null || text.trim().isEmpty()) return List.of();
+
+    try {
+      Annotation document = new Annotation(text);
+      nlpPipeline.annotate(document);
+
+      List<String> lemmas = new ArrayList<>();
+      List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+
+      for (CoreMap sentence : sentences) {
+        for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+          String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+          if (lemma != null && lemma.length() > 1 && !ENGLISH_STOPWORDS.contains(lemma.toLowerCase())) {
+            lemmas.add(lemma.toLowerCase());
+          }
+        }
+      }
+
+      return lemmas.stream().distinct().toList();
+    } catch (Exception e) {
+      log.warn("Lemmatization 실패: {}", e.getMessage());
+      return List.of();
     }
   }
 
@@ -233,37 +307,37 @@ public class CurationServiceImpl implements CurationService {
     );
   }
 
-  // 형태소 기반 유사도 계산
-  private double calculateMorphemeSimilarity(String keyword, String text) {
-    if (komoran == null) {
-      return calculateBasicWordSimilarity(keyword, text);
-    }
-
-    try {
-      List<String> keywordMorphemes = extractMeaningfulMorphemes(keyword);
-      List<String> textMorphemes = extractMeaningfulMorphemes(text);
-
-      if (keywordMorphemes.isEmpty() || textMorphemes.isEmpty()) {
-        return 0.0;
-      }
-
-      // Jaccard 유사도 계산
-      Set<String> keywordSet = new HashSet<>(keywordMorphemes);
-      Set<String> textSet = new HashSet<>(textMorphemes);
-
-      Set<String> intersection = new HashSet<>(keywordSet);
-      intersection.retainAll(textSet);
-
-      Set<String> union = new HashSet<>(keywordSet);
-      union.addAll(textSet);
-
-      return union.isEmpty() ? 0.0 : (double) intersection.size() / union.size();
-
-    } catch (Exception e) {
-      log.warn("형태소 분석 실패: {}", e.getMessage());
-      return calculateBasicWordSimilarity(keyword, text);
-    }
-  }
+//  // 형태소 기반 유사도 계산
+//  private double calculateMorphemeSimilarity(String keyword, String text) {
+//    if (komoran == null) {
+//      return calculateBasicWordSimilarity(keyword, text);
+//    }
+//
+//    try {
+//      List<String> keywordMorphemes = extractMeaningfulMorphemes(keyword);
+//      List<String> textMorphemes = extractMeaningfulMorphemes(text);
+//
+//      if (keywordMorphemes.isEmpty() || textMorphemes.isEmpty()) {
+//        return 0.0;
+//      }
+//
+//      // Jaccard 유사도 계산
+//      Set<String> keywordSet = new HashSet<>(keywordMorphemes);
+//      Set<String> textSet = new HashSet<>(textMorphemes);
+//
+//      Set<String> intersection = new HashSet<>(keywordSet);
+//      intersection.retainAll(textSet);
+//
+//      Set<String> union = new HashSet<>(keywordSet);
+//      union.addAll(textSet);
+//
+//      return union.isEmpty() ? 0.0 : (double) intersection.size() / union.size();
+//
+//    } catch (Exception e) {
+//      log.warn("형태소 분석 실패: {}", e.getMessage());
+//      return calculateBasicWordSimilarity(keyword, text);
+//    }
+//  }
 
   // 의미있는 형태소 추출
   private List<String> extractMeaningfulMorphemes(String text) {
