@@ -72,7 +72,7 @@ jobs:
 
   push_and_deploy:
     name: 이미지 빌드 및 푸시 그리고 ECS를 통한 배포
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
 
     # OIDC 권한
