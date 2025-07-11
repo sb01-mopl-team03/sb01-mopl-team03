@@ -31,7 +31,6 @@ import team03.mopl.jwt.JwtService;
 import team03.mopl.jwt.TokenPair;
 
 @WebMvcTest(AuthController.class)
-@ActiveProfiles("test")
 @Import(SecurityConfig.class)
 class AuthControllerTest {
 
