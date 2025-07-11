@@ -1,0 +1,65 @@
+name : Run Tests
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
+      - "release/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: jwt
+    # PostgreSQL 테스트용 서비스 컨테이너 설정
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+    # Kafka, Redis 사용시 서비스 컨테이너 추가될 예정
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 마지막 커밋 확인
+        run: git log -1 --name-status
+
+      - name: JDK setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      
+      - name: gradlew 실행 권한 부여
+        run: chmod +x gradlew
+        
+      - name: 테스트 수행
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_TOKEN_EXPIRATION: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
+          JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
+
+        run: ./gradlew test
+      # codecov 확인
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
