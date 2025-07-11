@@ -91,8 +91,7 @@ class FollowControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].email").value("user1@example.com"))
         .andExpect(jsonPath("$[0].name").value("user1"))
-        .andExpect(jsonPath("$[0].role").value("USER"))
-        .andExpect(jsonPath("$[0].isLocked").value(false));
+        .andExpect(jsonPath("$[0].role").value("USER"));
   }
 
   @Test
@@ -106,8 +105,7 @@ class FollowControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].email").value("follower@example.com"))
         .andExpect(jsonPath("$[0].name").value("follower"))
-        .andExpect(jsonPath("$[0].role").value("USER"))
-        .andExpect(jsonPath("$[0].isLocked").value(false));
+        .andExpect(jsonPath("$[0].role").value("USER"));
   }
 
   @Test

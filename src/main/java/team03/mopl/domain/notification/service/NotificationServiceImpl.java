@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
+import team03.mopl.common.exception.notification.NotificationNotFoundException;
+import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.dto.NotificationPagingDto;
@@ -100,4 +102,20 @@ public class NotificationServiceImpl implements NotificationService{
     log.info("markAllAsRead - 알림 읽음 처리 완료: receiverId={}, 읽은 알림 수={}", receiverId, unread.size());
   }
 
+  @Override
+  @Transactional
+  public void deleteNotification(UUID notificationId) {
+    log.info("deleteNotification - 알림 삭제 시도: notificationId={}", notificationId);
+    notificationRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
+    notificationRepository.deleteById(notificationId);
+    log.info("deleteNotification - 알림 삭제 완료: notificationId={}", notificationId);
+  }
+  @Override
+  @Transactional
+  public void deleteNotificationByUserId(UUID authenticatedUserId) {
+    log.info("deleteNotification - 알림 삭제 시도: userId={}", authenticatedUserId);
+    //읽지 않은 알림 빼고 삭제
+    notificationRepository.deleteByReceiverIdAndIsRead(authenticatedUserId, true);
+    log.info("deleteNotification - 알림 삭제 완료: userId={}", authenticatedUserId);
+  }
 }

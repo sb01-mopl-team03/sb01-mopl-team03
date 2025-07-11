@@ -50,9 +50,6 @@ public class DmServiceImpl implements DmService {
     dm.setDmRoom(dmRoom); // 연관관계 설정
 
     // 알림 전송 추가
-    System.out.println("sendDmDto = " + sendDmDto.getSenderId());
-    System.out.println("dmRoomgetSenderId = " + dmRoom.getSenderId());
-    System.out.println("dmRoomgetReceiverId = " + dmRoom.getReceiverId());
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
@@ -100,8 +97,6 @@ public class DmServiceImpl implements DmService {
 
     return CursorPageResponseDto.<DmDto>builder().data(dmDtoList).nextCursor(nextCursor).size(dmDtoList.size()).totalElements(totalElements)
         .hasNext(hasNext).build();
-
-    //return dmRepository.findByDmRoomIdOrderByCreatedAtAsc(roomId).stream().map(DmDto::from).collect(Collectors.toList());
   }
 
   private Cursor decodeCursor(String base64) {

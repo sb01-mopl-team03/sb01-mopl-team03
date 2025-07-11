@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -109,11 +110,11 @@ class NotificationControllerTest {
   void testGetNotifications() throws Exception {
     User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
     CustomUserDetails customUserDetails = new CustomUserDetails(user);
-
+    UUID notificationId = UUID.randomUUID();
     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
         customUserDetails.getAuthorities());
 
-    NotificationDto dto = new NotificationDto(user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED, LocalDateTime.of(2025, 7, 1, 12, 0));
+    NotificationDto dto = new NotificationDto(notificationId, user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED, LocalDateTime.of(2025, 7, 1, 12, 0));
 
     List<NotificationDto> notifications = List.of(dto);
 
@@ -123,7 +124,8 @@ class NotificationControllerTest {
     when(notificationService.getNotifications(any(NotificationPagingDto.class), eq(user.getId()))).thenReturn(response);
 
     mockMvc.perform(get("/api/notifications").with(authentication(authToken)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-        .andExpect(jsonPath("$.data[0].content").value("새로운 알림입니다.")).andExpect(jsonPath("$.data[0].notificationType").value("DM_RECEIVED"))
+        .andExpect(jsonPath("$.data[0].content").value("새로운 알림입니다."))
+        .andExpect(jsonPath("$.data[0].notificationType").value("DM_RECEIVED"))
         .andExpect(jsonPath("$.data[0].createdAt").exists()).andExpect(jsonPath("$.data[0].receiverId").value(dto.getReceiverId().toString()));
 
     verify(notificationService).markAllAsRead(user.getId());
@@ -136,9 +138,9 @@ class NotificationControllerTest {
     List<NotificationDto> firstPageData = new ArrayList<>();
     List<NotificationDto> secondPageData = new ArrayList<>();
     LocalDateTime now = LocalDateTime.now();
-
+    UUID notificationId = UUID.randomUUID();
     for (int i = 0; i < 30; i++) {
-      NotificationDto notificationDto = new NotificationDto(receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED, now.minusSeconds(30 - i));
+      NotificationDto notificationDto = new NotificationDto(notificationId, receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED, now.minusSeconds(30 - i));
       if (i < 20) {
         firstPageData.add(notificationDto);
       } else {
@@ -183,4 +185,37 @@ class NotificationControllerTest {
     String json = objectMapper.writeValueAsString(cursor);
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
+
+  @Test
+  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
+  void deleteNotificationByUserId() throws Exception {
+    // given
+    User user = User.builder()
+        .id(UUID.randomUUID())
+        .email("testuser@example.com")
+        .password("password")
+        .role(Role.USER)
+        .build();
+
+    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+        customUserDetails,
+        null,
+        customUserDetails.getAuthorities()
+    );
+    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+    // when & then
+    mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .delete("/api/notifications/userId")
+                .with(authentication(authToken))
+                .with(csrf())
+        )
+        .andExpect(status().isNoContent());
+
+    verify(notificationService).deleteNotificationByUserId(user.getId());
+  }
+
+
 }
