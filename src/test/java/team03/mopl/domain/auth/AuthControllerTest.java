@@ -16,6 +16,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.common.config.SecurityConfig;
@@ -29,6 +31,7 @@ import team03.mopl.jwt.JwtService;
 import team03.mopl.jwt.TokenPair;
 
 @WebMvcTest(AuthController.class)
+@ActiveProfiles("test")
 @Import(SecurityConfig.class)
 class AuthControllerTest {
 
