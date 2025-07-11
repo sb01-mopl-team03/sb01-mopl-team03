@@ -11,7 +11,7 @@ mopl:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
 
 frontend:
-  redirect-uri: http://${AWS_ALB_DNS_UR}/oauth/callback
+  redirect-uri: http://${AWS_ALB_DNS_URL}/oauth/callback
 
 
 spring:
@@ -56,7 +56,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             # 로드 밸런서 DNS 주소로 변경
-            redirect-uri: "http://${AWS_ALB_DNS_UR}/api/oauth2/callback/google"
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/google"
             scope:
               - profile
               - email
@@ -65,7 +65,7 @@ spring:
             client-secret: ${KAKAO_CLIENT_SECRET}
             authorization-grant-type: authorization_code
             # 로드 밸런서 DNS 주소로 변경
-            redirect-uri: "http://${AWS_ALB_DNS_UR}/api/oauth2/callback/kakao"
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/kakao"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
