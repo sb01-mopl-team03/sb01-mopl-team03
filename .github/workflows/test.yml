@@ -57,8 +57,7 @@ jobs:
           JWT_ACCESS_TOKEN_EXPIRATION: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
           JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
 
-        run: ./gradlew test --tests "team03.mopl.domain.auth.AuthControllerTest" --stacktrace --info
-
+        run: ./gradlew test
       # codecov 확인
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
