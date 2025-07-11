@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.follow.AlreadyFollowingException;
 import team03.mopl.common.exception.follow.CantFollowSelfException;
 import team03.mopl.common.exception.follow.FollowNotFoundException;
@@ -29,6 +30,7 @@ public class FollowServiceImpl implements FollowService {
   private final NotificationService notificationService;
 
   @Override
+  @Transactional
   public void follow(UUID followerId, UUID followingId) {
     log.info("follow - 팔로우 시도: followerId={}, followingId={}", followerId, followingId);
     //팔로우 하는 사람
@@ -65,6 +67,7 @@ public class FollowServiceImpl implements FollowService {
   }
 
   @Override
+  @Transactional
   public void unfollow(UUID followerId, UUID followingId) {
     log.info("unfollow - 언팔로우 시도: followerId={}, followingId={}", followerId, followingId);
     User unFollower = userRepository.findById(followerId)

@@ -1,19 +1,27 @@
 package team03.mopl.domain.dm.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.dto.Cursor;
+import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.dm.DmNotFoundException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.domain.dm.dto.DmDto;
+import team03.mopl.domain.dm.dto.DmPagingDto;
 import team03.mopl.domain.dm.dto.SendDmDto;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRepository;
+import team03.mopl.domain.dm.repository.DmRepositoryCustom;
 import team03.mopl.domain.dm.repository.DmRoomRepository;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.entity.NotificationType;
@@ -23,9 +31,12 @@ import team03.mopl.domain.notification.service.NotificationService;
 @RequiredArgsConstructor
 @Slf4j
 public class DmServiceImpl implements DmService {
+
   private final DmRepository dmRepository;
   private final DmRoomRepository dmRoomRepository;
   private final NotificationService notificationService;
+  private final ObjectMapper objectMapper;
+  private final DmRepositoryCustom dmRepositoryCustom;
 
   @Override
   public DmDto sendDm(SendDmDto sendDmDto) {
@@ -35,12 +46,19 @@ public class DmServiceImpl implements DmService {
       return new DmRoomNotFoundException();
     });
 
-    Dm dm = new Dm(sendDmDto.getSenderId(),  sendDmDto.getContent());
+    Dm dm = new Dm(sendDmDto.getSenderId(), sendDmDto.getContent());
     dm.setDmRoom(dmRoom); // 연관관계 설정
 
     // 알림 전송 추가
-    UUID receiverId = dmRoom.getReceiverId();
-    notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED,  sendDmDto.getContent()));
+    if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
+      UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
+      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+    } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
+      UUID receiverId = dmRoom.getSenderId();
+      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+    } else {
+      System.out.println("에러 발생");
+    }
 
     Dm savedDm = dmRepository.save(dm);
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
@@ -49,10 +67,46 @@ public class DmServiceImpl implements DmService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<DmDto> getDmList(UUID roomId, UUID userId) {
+  public CursorPageResponseDto<DmDto> getDmList(UUID roomId, DmPagingDto dmPagingDto, UUID userId) {
     log.info("getDmList - DM 목록 조회: roomId={}, userId={}", roomId, userId);
-    readAll(roomId, userId); //dm 리스트를 가져온다는 건 모두 읽겠다는 뜻
-    return dmRepository.findByDmRoomIdOrderByCreatedAtAsc(roomId).stream().map(DmDto::from).collect(Collectors.toList());
+
+    String cursor = dmPagingDto.getCursor();
+    Cursor decodeCursor;
+    String mainCursorValue = null;
+    String subCursorValue = null;
+    if (cursor != null && !cursor.isEmpty()) {
+      decodeCursor = decodeCursor(cursor);
+      mainCursorValue = decodeCursor.lastValue();
+      subCursorValue = decodeCursor.lastId();
+    }
+    int size = dmPagingDto.getSize();
+
+    List<Dm> list = dmRepositoryCustom.findByCursor(roomId, size + 1, mainCursorValue, subCursorValue);
+    long totalElements = dmRepository.count();
+    boolean hasNext = list.size() > size; // 해당 DM이 마지막인지 확인
+
+    //21개
+    List<DmDto> dmDtoList = list.stream().map(DmDto::from).toList();
+
+    String nextCursor = null;
+    if (hasNext) {
+      //더 보낼게 있는 것들
+      nextCursor = dmDtoList.get(dmDtoList.size() - 1).getCreatedAt().toString(); //마지막 Dmdto
+      dmDtoList.subList(0, size); //20개가 넘치니 자름
+    }
+
+    return CursorPageResponseDto.<DmDto>builder().data(dmDtoList).nextCursor(nextCursor).size(dmDtoList.size()).totalElements(totalElements)
+        .hasNext(hasNext).build();
+  }
+
+  private Cursor decodeCursor(String base64) {
+    try {
+      String json = new String(Base64.getDecoder().decode(base64));
+      return objectMapper.readValue(json, Cursor.class);
+    } catch (Exception e) {
+      log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
+      throw new IllegalArgumentException("잘못된 커서 형식입니다.");
+    }
   }
 
   @Override
@@ -60,16 +114,16 @@ public class DmServiceImpl implements DmService {
   public void readAll(UUID roomId, UUID userId) {
     log.info("readAll - DM 모두 읽음 처리 시작: roomId={}, userId={}", roomId, userId);
 
-    DmRoom dmRoom = dmRoomRepository.findById(roomId)
-        .orElseThrow(() -> {
-          log.warn("readAll - 존재하지 않는 방: roomId={}", roomId);
-          return new DmRoomNotFoundException();
-        });
+    DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
+      log.warn("readAll - 존재하지 않는 방: roomId={}", roomId);
+      return new DmRoomNotFoundException();
+    });
     int count = 0;
     List<Dm> messages = dmRoom.getMessages();
     for (Dm dm : messages) {
       //각 dm의 읽은 사람 목록에 없다면 포함시킴
-      if (!dm.getReadUserIds().contains(userId)) {
+      Set<UUID> alreadyReadUsers = new HashSet<>(dm.getReadUserIds());
+      if (!alreadyReadUsers.contains(userId)) {
         dm.readDm(userId);
         count++;
       }

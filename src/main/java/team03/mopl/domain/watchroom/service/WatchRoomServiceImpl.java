@@ -110,7 +110,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     User user = userRepository.findByEmail(username).orElseThrow(UserNotFoundException::new);
 
     //방장이 아니라면 제어 권한 없음
-    if(!watchRoom.getOwner().equals(user.getId())) {
+    if(!watchRoom.getOwner().getId().equals(user.getId())) {
       throw new IllegalArgumentException("방장이 아님");
     }
 
