@@ -16,12 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.cors.CorsConfigurationSource;
 import team03.mopl.common.config.SecurityConfig;
+import team03.mopl.common.config.TestSecurityConfig;
 import team03.mopl.domain.oauth2.CustomOAuth2UserService;
 import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
 import team03.mopl.jwt.CustomUserDetails;
@@ -61,9 +59,6 @@ class AuthControllerTest {
 
   @MockitoBean
   private OAuth2SuccessHandler oAuth2SuccessHandler;
-
-  @MockitoBean
-  private CorsConfigurationSource corsConfigurationSource;
 
   @MockitoBean
   private CustomUserDetails customUserDetails;
