@@ -1,4 +1,30 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id:
+            client-secret:
+            redirect-uri:
+            scope:
+              - profile
+              - email
+          kakao:
+            client-name:
+            client-id:
+            authorization-grant-type:
+            redirect-uri:
+        provider:
+          google:
+            authorization-uri:
+            token-uri:
+            user-info-uri:
+          kakao:
+            user-name-attribute:
+            authorization-uri:
+            token-uri:
+            user-info-uri:
   datasource:
     url: jdbc:postgresql://localhost:5432/testdb
     username: testuser
