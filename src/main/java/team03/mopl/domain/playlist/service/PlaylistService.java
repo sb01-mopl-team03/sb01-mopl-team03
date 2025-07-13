@@ -8,13 +8,19 @@ import team03.mopl.domain.playlist.dto.PlaylistUpdateRequest;
 
 public interface PlaylistService {
 
-  PlaylistDto create(PlaylistCreateRequest request);
+  PlaylistDto create(PlaylistCreateRequest request, UUID userId);
+
+  PlaylistDto getById(UUID playlistId);
 
   List<PlaylistDto> getAllByUser(UUID userId);
 
   List<PlaylistDto> getAllByName(String name);
 
   PlaylistDto update(UUID playlistId, PlaylistUpdateRequest request, UUID userId);
+
+  void addContents(UUID playlistId, List<UUID> contentIds, UUID userId);
+
+  void deleteContents(UUID playlistId, List<UUID> contentsId, UUID userId);
 
   void delete(UUID playlistId, UUID userId);
 }

@@ -1,19 +1,19 @@
 package team03.mopl.domain.playlist.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import team03.mopl.common.exception.content.ContentNotFoundException;
-import team03.mopl.common.exception.playlist.PlaylistDeleteDeniedException;
+import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.exception.playlist.PlaylistContentAlreadyExistsException;
+import team03.mopl.common.exception.playlist.PlaylistContentEmptyException;
+import team03.mopl.common.exception.playlist.PlaylistContentRemoveEmptyException;
+import team03.mopl.common.exception.playlist.PlaylistDeniedException;
 import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
-import team03.mopl.common.exception.playlist.PlaylistUpdateDeniedException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.util.NormalizerUtil;
 import team03.mopl.domain.content.Content;
@@ -28,6 +28,7 @@ import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
 public class PlaylistServiceImpl implements PlaylistService {
@@ -37,21 +38,10 @@ public class PlaylistServiceImpl implements PlaylistService {
   private final ContentRepository contentRepository;
 
   @Override
-  public PlaylistDto create(PlaylistCreateRequest request) {
-    User user = userRepository.findById(request.userId())
+  @Transactional
+  public PlaylistDto create(PlaylistCreateRequest request, UUID userId) {
+    User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
-
-    List<Content> contents = contentRepository.findAllById(request.contentIds());
-    Set<UUID> existingContentIds = contents.stream()
-        .map(Content::getId)
-        .collect(Collectors.toSet());
-
-    for (UUID contentId : request.contentIds()) {
-      if (!existingContentIds.contains(contentId)) {
-        log.debug("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", contentId);
-        throw new ContentNotFoundException();
-      }
-    }
 
     Playlist playlist = Playlist.builder()
         .name(request.name())
@@ -59,29 +49,24 @@ public class PlaylistServiceImpl implements PlaylistService {
         .isPublic(request.isPublic())
         .build();
 
-    List<PlaylistContent> playlistContents = new ArrayList<>();
-    for (UUID contentId : request.contentIds()) {
-      Content content = contents.stream()
-          .filter(c -> c.getId().equals(contentId))
-          .findFirst()
-          .orElseThrow(ContentNotFoundException::new);
-
-      PlaylistContent playlistContent = PlaylistContent.builder()
-          .playlist(playlist)
-          .content(content)
-          .build();
-      playlistContents.add(playlistContent);
-    }
-
-    playlist.getPlaylistContents().addAll(playlistContents);
     Playlist savedPlaylist = playlistRepository.save(playlist);
+    log.info("create - 플레이리스트 저장: 플레이리스트 생성자 ID = {}, 플레이리트스 ID = {}", userId, playlist.getId());
     return PlaylistDto.from(savedPlaylist);
   }
 
   @Override
+  @Transactional
+  public PlaylistDto getById(UUID playlistId) {
+    Playlist playlist = playlistRepository.findById(playlistId)
+        .orElseThrow(PlaylistNotFoundException::new);
+    return PlaylistDto.from(playlist);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public List<PlaylistDto> getAllByUser(UUID userId) {
     if (!userRepository.existsById(userId)) {
-      log.debug("존재하지 않는 유저입니다. 유저 ID: ", userId);
+      log.debug("존재하지 않는 유저입니다. 유저 ID = {}", userId);
       throw new UserNotFoundException();
     }
 
@@ -91,11 +76,8 @@ public class PlaylistServiceImpl implements PlaylistService {
 
   // TODO: 검색 속도 리팩토링
   @Override
+  @Transactional(readOnly = true)
   public List<PlaylistDto> getAllByName(String name) {
-    if (name == null || name.trim().isEmpty()) {
-      return playlistRepository.findAll().stream().map(PlaylistDto::from).toList();
-    }
-
     // 검색어를 정규화
     String normalizedSearchName = NormalizerUtil.normalize(name);
 
@@ -118,16 +100,11 @@ public class PlaylistServiceImpl implements PlaylistService {
   public PlaylistDto update(UUID playlistId, PlaylistUpdateRequest request, UUID userId) {
     Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(PlaylistNotFoundException::new);
     if (!playlist.getUser().getId().equals(userId)) {
-      log.warn("플레이리스트 생성자만 수정할 수 있습니다. 플레이리스트 생성자 ID: ", playlist.getUser().getId());
-      throw new PlaylistUpdateDeniedException();
+      log.warn("플레이리스트에 권한이 없습니다. 플레이리스트 생성자 ID = {}", playlist.getUser().getId());
+      throw new PlaylistDeniedException();
     }
 
     playlist.update(request.name(), request.isPublic());
-
-    // 콘텐츠 업데이트
-    if (request.contentIds() != null) {
-      updatePlaylistContents(playlist, request.contentIds());
-    }
 
     Playlist savedPlaylist = playlistRepository.save(playlist);
     return PlaylistDto.from(savedPlaylist);
@@ -137,40 +114,92 @@ public class PlaylistServiceImpl implements PlaylistService {
   public void delete(UUID playlistId, UUID userId) {
     Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(PlaylistNotFoundException::new);
     if (!playlist.getUser().getId().equals(userId)) {
-      log.warn("플레이리스트 생성자만 삭제할 수 있습니다. 플레이리스트 생성자 ID: ", playlist.getUser().getId());
-      throw new PlaylistDeleteDeniedException();
+      log.warn("플레이리스트에 권한이 없습니다. 플레이리스트 생성자 ID = {}", playlist.getUser().getId());
+      throw new PlaylistDeniedException();
     }
     playlistRepository.deleteById(playlistId);
   }
 
-  private void updatePlaylistContents(Playlist playlist, List<UUID> newContentIds) {
-    // 새로운 콘텐츠들이 실제로 존재하는지 확인
-    List<Content> contents = contentRepository.findAllById(newContentIds);
-    Set<UUID> existingContentIds = contents.stream()
-        .map(Content::getId)
-        .collect(Collectors.toSet());
-
-    for (UUID contentId : newContentIds) {
-      if (!existingContentIds.contains(contentId)) {
-        log.debug("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", contentId);
-        throw new ContentNotFoundException();
-      }
+  @Override
+  @Transactional
+  public void addContents(UUID playlistId, List<UUID> contentIds, UUID userId) {
+    if (contentIds == null || contentIds.isEmpty()) {
+      throw new PlaylistContentEmptyException();
     }
 
-    // 기존 콘텐츠들 모두 삭제
-    playlist.getPlaylistContents().clear();
+    // 2. 플레이리스트 조회 (playlistContents도 함께 fetch)
+    Playlist playlist = playlistRepository.findByIdWithContents(playlistId)
+        .orElseThrow(PlaylistNotFoundException::new);
 
-    // 새로운 콘텐츠들 추가
-    Map<UUID, Content> contentMap = contents.stream()
-        .collect(Collectors.toMap(Content::getId, content -> content));
+    // 3. 권한 확인
+    if (!playlist.getUser().getId().equals(userId)) {
+      throw new PlaylistDeniedException();
+    }
 
-    for (UUID contentId : newContentIds) {
-      Content content = contentMap.get(contentId);
+    // 4. 컨텐츠들 존재 확인
+    List<Content> contents = contentRepository.findAllById(contentIds);
+    if (contents.isEmpty()) {
+      throw new PlaylistContentEmptyException();
+    }
+
+    // 5. 현재 플레이리스트에 이미 있는 컨텐츠 ID들 조회
+    Set<UUID> existingContentIds = playlist.getPlaylistContents().stream()
+        .map(pc -> pc.getContent().getId())
+        .collect(Collectors.toSet());
+
+    // 6. 중복되지 않은 컨텐츠들만 필터링
+    List<Content> newContents = contents.stream()
+        .filter(content -> !existingContentIds.contains(content.getId()))
+        .toList();
+
+    if (newContents.isEmpty()) {
+      throw new PlaylistContentAlreadyExistsException();
+    }
+
+    for (Content content : newContents) {
       PlaylistContent playlistContent = PlaylistContent.builder()
           .playlist(playlist)
           .content(content)
           .build();
+
       playlist.getPlaylistContents().add(playlistContent);
     }
+
+    // 8. Playlist 저장 (cascade로 PlaylistContent도 자동 저장)
+    playlistRepository.save(playlist);
+  }
+
+  @Override
+  @Transactional
+  public void deleteContents(UUID playlistId, List<UUID> contentIds, UUID userId) {
+    // 1. 입력 검증
+    if (contentIds == null || contentIds.isEmpty()) {
+      throw new PlaylistContentRemoveEmptyException();
+    }
+
+    // 2. 플레이리스트 조회 (playlistContents도 함께 fetch)
+    Playlist playlist = playlistRepository.findByIdWithContents(playlistId)
+        .orElseThrow(PlaylistNotFoundException::new);
+
+    // 3. 권한 확인
+    if (!playlist.getUser().getId().equals(userId)) {
+      throw new PlaylistDeniedException();
+    }
+
+    // 4. 제거할 PlaylistContent들 찾기
+    Set<UUID> contentIdsToRemove = new HashSet<>(contentIds);
+    List<PlaylistContent> contentsToRemove = playlist.getPlaylistContents().stream()
+        .filter(pc -> contentIdsToRemove.contains(pc.getContent().getId()))
+        .toList();
+
+    if (contentsToRemove.isEmpty()) {
+      throw new PlaylistContentRemoveEmptyException();
+    }
+
+    // 5. 플레이리스트에서 제거 (orphanRemoval = true로 자동 삭제)
+    playlist.getPlaylistContents().removeAll(contentsToRemove);
+
+    // 6. Playlist 저장 (orphanRemoval로 PlaylistContent 자동 삭제)
+    playlistRepository.save(playlist);
   }
 }
