@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.DuplicatedNameException;
@@ -66,6 +67,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional
   public UserResponse update(UUID userId, UserUpdateRequest request, MultipartFile profile) {
     User user= userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
