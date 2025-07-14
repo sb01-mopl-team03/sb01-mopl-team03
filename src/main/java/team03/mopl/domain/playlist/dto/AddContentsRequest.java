@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record AddContentsRequest (
     @NotNull(message = "음악 ID 목록은 필수입니다")
-    @Size(min = 1, message = "최소 1개의 음악 ID가 필요합니다")
+    @Size(min = 1, message = "최소 1개의 콘텐츠 ID가 필요합니다")
     List<UUID> contentIds
 ) {
 
