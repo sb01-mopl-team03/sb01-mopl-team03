@@ -2,6 +2,7 @@ package team03.mopl.domain.subscription;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,7 +19,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import team03.mopl.domain.playlist.Playlist;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.user.User;
 
 @Getter
@@ -27,6 +29,7 @@ import team03.mopl.domain.user.User;
     @UniqueConstraint(columnNames = {"subscriber_id", "playlist_id"})
 })
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Subscription {

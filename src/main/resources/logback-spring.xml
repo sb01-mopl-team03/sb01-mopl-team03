@@ -1,0 +1,59 @@
+<configuration>
+  <!-- 로그 경로 설정 -->
+  <property name="LOG_PATH" value=".logs"/>
+  <!-- 로그 패턴 -->
+  <!-- e,g, 2025-07-04 15:10:20.456 [INFO] [nio-8080-exec-1] UserService - create - 유저 생성 시작: userId=abc123, email=email@example.com... -->
+  <property name="LOG_PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{0} - %msg%n"/>
+
+  <!-- 콘솔 -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- 파일 -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_PATH}/app.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- 일자별 파일 분할 -->
+      <fileNamePattern>${LOG_PATH}/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <!--15일 보관 -->
+      <maxHistory>15</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- prod 프로파일 루트 로거 설정 -->
+  <SpringProfile name="prod">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </root>
+  </SpringProfile>
+
+  <!-- dev 프로파일 루트 로거 설정 -->
+  <SpringProfile name="dev">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </root>
+  </SpringProfile>
+
+  <!-- test 프로파일 루트 로거 설정 -->
+  <SpringProfile name="test">
+    <root level="DEBUG">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </root>
+  </SpringProfile>
+
+  <!--기본 루트 로거, 프로파일 미지정 시 해당 루트가 작동-->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
+
+</configuration>

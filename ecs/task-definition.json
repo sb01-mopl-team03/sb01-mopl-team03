@@ -1,0 +1,67 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:112555930244:task-definition/mopl-app-task:2",
+  "containerDefinitions": [
+    {
+      "name": "mopl-container",
+      "image": "public.ecr.aws/k5f2z7e1/mopl-app",
+      "cpu": 3072,
+      "memory": 2048,
+      "memoryReservation": 1024,
+      "portMappings": [
+        {
+          "name": "mopl-container-80-tcp",
+          "containerPort": 8080,
+          "hostPort": 80,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [],
+      "environmentFiles": [
+        {
+          "value": "arn:aws:s3:::mopl-03-bucket/mopl.env",
+          "type": "s3"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": [],
+      "systemControls": []
+    }
+  ],
+  "family": "mopl-app-task",
+  "executionRoleArn": "arn:aws:iam::112555930244:role/ecsTaskExecutionRole",
+  "networkMode": "bridge",
+  "revision": 2,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "ecs.capability.env-files.s3"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2"
+  ],
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "cpu": "3072",
+  "memory": "2048",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "registeredAt": "2025-07-09T13:25:00.041Z",
+  "registeredBy": "arn:aws:iam::112555930244:user/zerone",
+  "enableFaultInjection": false,
+  "tags": []
+}

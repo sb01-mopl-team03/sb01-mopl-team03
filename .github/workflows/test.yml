@@ -10,6 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: jwt
     # PostgreSQL 테스트용 서비스 컨테이너 설정
     services:
       postgres:
@@ -28,12 +29,12 @@ jobs:
     # Kafka, Redis 사용시 서비스 컨테이너 추가될 예정
 
     steps:
-      - name: Checkout code
+      - name: 코드 체크아웃
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Show latest commit
+      - name: 마지막 커밋 확인
         run: git log -1 --name-status
 
       - name: JDK setup
@@ -43,7 +44,7 @@ jobs:
           java-version: '17'
           cache: gradle
       
-      - name: gradlew 권한 부여
+      - name: gradlew 실행 권한 부여
         run: chmod +x gradlew
         
       - name: 테스트 수행
@@ -52,8 +53,11 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
           SPRING_DATASOURCE_USERNAME: testuser
           SPRING_DATASOURCE_PASSWORD: testpass
-        run: ./gradlew test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_TOKEN_EXPIRATION: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
+          JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
 
+        run: ./gradlew test
       # codecov 확인
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

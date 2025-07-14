@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import team03.mopl.domain.review.entity.Review;
 
-public record ReviewResponse(
+public record ReviewDto(
     UUID id,
     UUID authorId,
     String authorName,
@@ -15,8 +15,8 @@ public record ReviewResponse(
     BigDecimal rating
 ) {
 
-  public static ReviewResponse from(Review review) {
-    return new ReviewResponse(
+  public static ReviewDto from(Review review) {
+    return new ReviewDto(
         review.getId(),
         review.getUser().getId(),
         review.getUser().getName(),

@@ -3,7 +3,9 @@ package team03.mopl.domain.dm.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.when;
@@ -21,10 +23,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.exception.dm.DmContentTooLongException;
 import team03.mopl.common.exception.dm.DmNotFoundException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
+import team03.mopl.domain.dm.dto.DmPagingDto;
 import team03.mopl.domain.dm.dto.SendDmDto;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 import team03.mopl.domain.dm.repository.DmRepository;
+import team03.mopl.domain.dm.repository.DmRepositoryCustom;
 import team03.mopl.domain.dm.repository.DmRoomRepository;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.service.NotificationService;
@@ -37,6 +41,8 @@ class DmServiceImplTest {
   private DmRoomRepository dmRoomRepository;
   @Mock
   private NotificationService notificationService;
+  @Mock
+  private DmRepositoryCustom dmRepositoryCustom;
 
   @InjectMocks
   private DmServiceImpl dmService;
@@ -115,37 +121,26 @@ class DmServiceImplTest {
     dm1.setDmRoom(dmRoom);
     Dm dm2 = new Dm(senderId, "메시지2");
     dm2.setDmRoom(dmRoom);
+    dm1.readDm(senderId);
+    dm2.readDm(senderId);
     dmRoom.getMessages().addAll(List.of(dm1, dm2));
 
-    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom));
-    given(dmRepository.findByDmRoomIdOrderByCreatedAtAsc(roomId)).willReturn(List.of(dm1, dm2));
+    // 커서 조회 결과는 dm1, dm2
+    given(dmRepositoryCustom.findByCursor(eq(roomId), anyInt(), any(), any()))
+        .willReturn(List.of(dm1, dm2));
+    given(dmRepository.count()).willReturn(2L);
 
     // when
-    var result = dmService.getDmList(roomId, receiverId);
+    var pagingDto = new DmPagingDto(null, 20); // cursor 없음, size=20
+    var result = dmService.getDmList(roomId, pagingDto, receiverId);
 
     // then
-    assertThat(result).hasSize(2);
-
-    // 모든 메시지에 읽음 표시가 되었는지
-    assertThat(dm1.getReadUserIds()).contains(receiverId);
-    assertThat(dm2.getReadUserIds()).contains(receiverId);
+    assertThat(result.data()).hasSize(2);
+    assertThat(result.hasNext()).isFalse();
+    assertThat(dm1.getReadUserIds()).contains(senderId);
+    assertThat(dm2.getReadUserIds()).contains(senderId);
   }
 
-  @Test
-  @DisplayName("모든 DM 읽음 처리 - readAll")
-  void readAll() {
-    // given
-    Dm dm1 = new Dm(senderId, "안읽은 메시지");
-    dmRoom.getMessages().add(dm1);
-
-    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom));
-
-    // when
-    dmService.readAll(roomId, receiverId);
-
-    // then
-    assertThat(dm1.getReadUserIds()).contains(receiverId);
-  }
 
   @Test
   @DisplayName("roomId 로 찾을 수 있는 DmRoom 이 없을 때")

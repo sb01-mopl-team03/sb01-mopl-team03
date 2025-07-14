@@ -21,6 +21,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.domain.curation.service.CurationService;
+import team03.mopl.domain.playlist.service.PlaylistService;
+import team03.mopl.domain.review.service.ReviewService;
+import team03.mopl.domain.subscription.service.SubscriptionService;
 
 
 @WebMvcTest(UserController.class)
@@ -37,6 +41,18 @@ class UserControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @MockitoBean
+  private ReviewService reviewService;
+
+  @MockitoBean
+  private SubscriptionService subscriptionService;
+
+  @MockitoBean
+  private PlaylistService playlistService;
+
+  @MockitoBean
+  private CurationService curationService;
 
   @WithMockUser
   @Test

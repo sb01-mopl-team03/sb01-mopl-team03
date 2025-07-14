@@ -1,0 +1,101 @@
+mopl:
+  storage:
+    type: ${STORAGE_TYPE:local}
+    local:
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.mopl/storage}
+    s3:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+      region: ${AWS_S3_REGION}
+      bucket: ${AWS_S3_BUCKET}
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
+
+frontend:
+  redirect-uri: http://${AWS_ALB_DNS_URL}/oauth/callback
+
+
+spring:
+  application:
+    name: mopl
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        highlight_sql: false
+    open-in-view: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            # 로드 밸런서 DNS 주소로 변경
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/google"
+            scope:
+              - profile
+              - email
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            # 로드 밸런서 DNS 주소로 변경
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/kakao"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+auth:
+  temp-password-expiration: 30
+
+admin:
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
+
+sports:
+  baseurl: https://www.thesportsdb.com/api/v1/json
+tmdb:
+  baseurl: https://api.themoviedb.org/3
+  api_token: ${TMDB_API_TOKEN}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
