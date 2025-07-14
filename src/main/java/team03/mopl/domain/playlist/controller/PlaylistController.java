@@ -70,7 +70,7 @@ public class PlaylistController {
   }
 
   @GetMapping
-  public ResponseEntity<List<PlaylistDto>> getAllPlaylist() {
+  public ResponseEntity<List<PlaylistDto>> getAll() {
     List<PlaylistDto> playlistDtos = playlistService.getAll();
     return ResponseEntity.ok(playlistDtos);
   }
