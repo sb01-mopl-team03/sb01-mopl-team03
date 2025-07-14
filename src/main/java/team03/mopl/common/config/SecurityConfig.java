@@ -56,6 +56,7 @@ public class SecurityConfig {
             .requestMatchers("/api/dm/**").authenticated()
             .requestMatchers("/api/playlists/**").authenticated()
             .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/actuator/health").permitAll()
             .anyRequest().hasRole("USER")
         )
         .exceptionHandling(ex -> ex
