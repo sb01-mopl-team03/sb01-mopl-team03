@@ -5,8 +5,8 @@
       "name": "mopl-container",
       "image": "public.ecr.aws/k5f2z7e1/mopl-app",
       "cpu": 3072,
-      "memory": 4096,
-      "memoryReservation": 2048,
+      "memory": 2048,
+      "memoryReservation": 1024,
       "portMappings": [
         {
           "name": "mopl-container-80-tcp",
@@ -55,7 +55,7 @@
     "EC2"
   ],
   "cpu": "3072",
-  "memory": "4096",
+  "memory": "2048",
   "runtimePlatform": {
     "cpuArchitecture": "X86_64",
     "operatingSystemFamily": "LINUX"
