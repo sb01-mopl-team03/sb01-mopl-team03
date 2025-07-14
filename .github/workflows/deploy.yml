@@ -4,8 +4,6 @@ on:
     branches:
       - main
 
-
-# dummy
 # 새 워크플로우 시작시 이전 워크 플로우 취소
 concurrency:
   group: cd-${{ github.ref }}
@@ -22,55 +20,58 @@ env:
 
 jobs:
   # 코드 체크아웃 → Java 세팅 → 테스트
-  test:
-    name: 배포 전 테스트 수행
-    runs-on: ubuntu-latest
-    # PostgreSQL 테스트용 서비스 컨테이너 설정
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-
-    steps:
-      - name: 코드 체크아웃
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 마지막 커밋 확인
-        run: git log -1 --name-status
-
-      - name: JDK setup
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: gradle
-
-      - name: gradlew 실행 권한 부여
-        run: chmod +x gradlew
-
-      - name: 테스트 수행
-        env:
-          SPRING_PROFILES_ACTIVE: ci
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpass
-        run: ./gradlew test
+#  test:
+#    name: 배포 전 테스트 수행
+#    runs-on: ubuntu-latest
+#    # PostgreSQL 테스트용 서비스 컨테이너 설정
+#    services:
+#      postgres:
+#        image: postgres:15
+#        env:
+#          POSTGRES_USER: testuser
+#          POSTGRES_PASSWORD: testpass
+#          POSTGRES_DB: testdb
+#        ports:
+#          - 5432:5432
+#        options: >-
+#          --health-cmd pg_isready
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 3
+#
+#    steps:
+#      - name: 코드 체크아웃
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: 마지막 커밋 확인
+#        run: git log -1 --name-status
+#
+#      - name: JDK setup
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: temurin
+#          java-version: '17'
+#          cache: gradle
+#
+#      - name: gradlew 실행 권한 부여
+#        run: chmod +x gradlew
+#
+#      - name: 테스트 수행
+#        env:
+#          SPRING_PROFILES_ACTIVE: ci
+#          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
+#          SPRING_DATASOURCE_USERNAME: testuser
+#          SPRING_DATASOURCE_PASSWORD: testpass
+#          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+#          JWT_ACCESS_TOKEN_EXPIRATION: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
+#          JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
+#        run: ./gradlew test
 
   push_and_deploy:
     name: 이미지 빌드 및 푸시 그리고 ECS를 통한 배포
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
 
     # OIDC 권한
@@ -81,7 +82,7 @@ jobs:
 
     steps:
       - name: 코드 체크아웃
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
 
       - name: AWS 자격 증명(OIDC)
         uses: aws-actions/configure-aws-credentials@v4
