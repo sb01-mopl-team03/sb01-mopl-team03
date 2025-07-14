@@ -11,12 +11,10 @@ public record PlaylistCreateRequest(
     @Size(max = 100, message = "플레이리스트 이름은 100자 이하여야 합니다")
     String name,
 
-    @NotNull(message = "플레이리스트 생성자는 필수입니다")
-    UUID userId,
+    @Size(max = 500, message = "설명은 500자 이하여야 합니다")
+    String description,
 
-    boolean isPublic,
-
-    List<UUID> contentIds
+    boolean isPublic
 ) {
 
 }

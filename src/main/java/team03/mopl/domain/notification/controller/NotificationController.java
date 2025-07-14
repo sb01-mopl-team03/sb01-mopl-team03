@@ -1,7 +1,8 @@
 package team03.mopl.domain.notification.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import java.util.List;
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,21 +39,96 @@ public class NotificationController {
    */
   @GetMapping("/subscribe")
   public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails user,
-      @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId) {
-    UUID userId = user.getId();
-    log.debug("알림 SSE 구독 요청: userId={}, lastEventId={}", userId, lastEventId);
+      @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
+      HttpServletResponse response) {
 
-    // 1. 연결된 사실을 알림으로 저장
-    NotificationDto notificationDto = new NotificationDto(userId, NotificationType.CONNECTED, "SSE 연결 완료");
-    UUID connectedNotificationId = notificationService.sendNotification(notificationDto);
+    // SSE를 위한 응답 헤더 설정
+    response.setHeader("Cache-Control", "no-cache");
+    response.setHeader("Connection", "keep-alive");
+    response.setHeader("Content-Type", "text/event-stream");
+    response.setHeader("Access-Control-Expose-Headers", "Cache-Control, Connection, Content-Type");
 
-    // 2. SSEEmitter 구독
-    SseEmitter emitter = emitterService.subscribe(userId, lastEventId);
+    log.info("=== SSE 구독 요청 시작 ===");
+    log.info("User 정보: {}", user);
+    log.info("Last-Event-ID: {}", lastEventId);
 
-    // 3. 구독 직후, CONNECTED 알림 전송
-    emitterService.sendInitNotification(emitter, connectedNotificationId, notificationDto);
+    SseEmitter emitter = null;
 
-    return emitter;
+    try {
+      // 1. 사용자 인증 확인
+      if (user == null) {
+        log.error("인증되지 않은 사용자의 SSE 구독 시도");
+        emitter = new SseEmitter();
+        emitter.completeWithError(new RuntimeException("Unauthorized: 인증이 필요합니다"));
+        return emitter;
+      }
+
+      UUID userId = user.getId();
+      log.info("알림 SSE 구독 요청: userId={}, lastEventId={}", userId, lastEventId);
+
+      // 2. SSEEmitter 구독 (먼저 생성)
+      log.debug("SSE Emitter 구독 중...");
+      emitter = emitterService.subscribe(userId, lastEventId);
+
+      // 3. 에러 핸들러 설정 (Broken pipe 에러 처리)
+      emitter.onCompletion(() -> {
+        log.info("SSE 연결이 정상적으로 완료되었습니다: userId={}", userId);
+      });
+
+      emitter.onTimeout(() -> {
+        log.info("SSE 연결이 타임아웃되었습니다: userId={}", userId);
+        emitterService.deleteById(userId); // emitter 정리
+      });
+
+      emitter.onError((ex) -> {
+        if (ex instanceof IOException && ex.getMessage().contains("Broken pipe")) {
+          log.debug("클라이언트가 연결을 끊었습니다: userId={}", userId);
+        } else {
+          log.error("SSE 연결 오류: userId={}, error={}", userId, ex.getMessage());
+        }
+        emitterService.deleteById(userId); // emitter 정리
+      });
+
+      log.debug("SSE Emitter 구독 완료");
+
+      // 4. 연결된 사실을 알림으로 저장
+      log.debug("CONNECTED 알림 생성 중...");
+      NotificationDto notificationDto = new NotificationDto(userId, NotificationType.CONNECTED, "SSE 연결 완료");
+      UUID connectedNotificationId = notificationService.sendNotification(notificationDto);
+      log.debug("CONNECTED 알림 생성 완료: notificationId={}", connectedNotificationId);
+
+      // 5. 구독 직후, CONNECTED 알림 전송
+      log.debug("초기 알림 전송 중...");
+      emitterService.sendInitNotification(emitter, connectedNotificationId, notificationDto);
+      log.info("SSE 구독 완료: userId={}", userId);
+
+      return emitter;
+
+    } catch (Exception e) {
+      log.error("SSE 구독 중 예외 발생: userId={}, error={}",
+          user != null ? user.getId() : "null", e.getMessage(), e);
+
+      // 이미 생성된 emitter가 있다면 에러로 완료
+      if (emitter != null) {
+        try {
+          emitter.completeWithError(e);
+        } catch (Exception completeError) {
+          log.error("Emitter 에러 완료 중 예외 발생: {}", completeError.getMessage());
+        }
+        return emitter;
+      }
+
+      // emitter가 없다면 새로 생성해서 에러 반환
+      try {
+        SseEmitter errorEmitter = new SseEmitter();
+        errorEmitter.completeWithError(e);
+        return errorEmitter;
+      } catch (Exception createError) {
+        log.error("에러 Emitter 생성 중 예외 발생: {}", createError.getMessage());
+        // 최후의 수단으로 빈 emitter 반환
+        return new SseEmitter();
+      }
+    }
   }
 
   /**
@@ -70,12 +146,14 @@ public class NotificationController {
     log.info("알림 읽음 처리 완료: userId={}, 알림 수={}", userId, list.size());
     return ResponseEntity.ok(list);
   }
+
   @DeleteMapping("/{notificationId}")
   public ResponseEntity<Void> deleteNotification(@PathVariable("notificationId") UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
     notificationService.deleteNotification(notificationId);
     return ResponseEntity.noContent().build();
   }
-  @DeleteMapping("/userId")
+
+  @DeleteMapping
   public ResponseEntity<Void> deleteNotificationByUserId(@AuthenticationPrincipal CustomUserDetails user) {
     UUID authenticatedUserId = user.getId();
     notificationService.deleteNotificationByUserId(authenticatedUserId);
