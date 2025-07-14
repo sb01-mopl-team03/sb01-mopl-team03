@@ -30,7 +30,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private final PlaylistRepository playlistRepository;
 
   @Override
-  @Transactional(readOnly = true)
+  @Transactional
   public SubscriptionDto subscribe(UUID userId, UUID playlistId) {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
