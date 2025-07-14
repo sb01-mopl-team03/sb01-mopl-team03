@@ -69,11 +69,11 @@ public class PlaylistController {
     return ResponseEntity.ok(playlistDtos);
   }
 
-  @GetMapping
-  public ResponseEntity<List<PlaylistDto>> getAll() {
-    List<PlaylistDto> playlistDtos = playlistService.getAll();
-    return ResponseEntity.ok(playlistDtos);
-  }
+//  @GetMapping
+//  public ResponseEntity<List<PlaylistDto>> getAll() {
+//    List<PlaylistDto> playlistDtos = playlistService.getAll();
+//    return ResponseEntity.ok(playlistDtos);
+//  }
 
   @GetMapping("/{playlistId}")
   public ResponseEntity<PlaylistDto> get(@PathVariable UUID playlistId) {
