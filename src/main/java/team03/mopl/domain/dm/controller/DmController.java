@@ -28,7 +28,11 @@ public class DmController {
   private final DmService dmService;
 
   @GetMapping("/{roomId}")
-  public ResponseEntity<CursorPageResponseDto<DmDto>> getDm(@PathVariable("roomId") UUID roomId, @Valid @ModelAttribute DmPagingDto dmPagingDto, @AuthenticationPrincipal CustomUserDetails userDetails) {
+  public ResponseEntity<CursorPageResponseDto<DmDto>> getDm(
+      @PathVariable("roomId") UUID roomId,
+      @Valid @ModelAttribute DmPagingDto dmPagingDto,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+
     dmService.readAll(roomId, userDetails.getId()); //dm 리스트를 가져온다는 건 모두 읽겠다는 뜻
     return ResponseEntity.ok(dmService.getDmList(roomId, dmPagingDto, userDetails.getId()));
   }

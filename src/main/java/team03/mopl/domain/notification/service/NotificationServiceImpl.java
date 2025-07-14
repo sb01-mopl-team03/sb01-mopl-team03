@@ -110,6 +110,7 @@ public class NotificationServiceImpl implements NotificationService{
     notificationRepository.deleteById(notificationId);
     log.info("deleteNotification - 알림 삭제 완료: notificationId={}", notificationId);
   }
+
   @Override
   @Transactional
   public void deleteNotificationByUserId(UUID authenticatedUserId) {

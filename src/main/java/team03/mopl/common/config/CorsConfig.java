@@ -23,6 +23,17 @@ public class CorsConfig {
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
 
+    // SSE를 위한 추가 노출 헤더 설정
+    configuration.setExposedHeaders(Arrays.asList(
+        "Authorization",
+        "Content-Type",
+        "Cache-Control",
+        "Connection",
+        "Last-Event-ID",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Credentials"
+    ));
+
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
