@@ -63,6 +63,13 @@ public class PlaylistServiceImpl implements PlaylistService {
   }
 
   @Override
+  @Transactional
+  public List<PlaylistDto> getAll() {
+    List<Playlist> playlists = playlistRepository.findAll();
+    return playlists.stream().map(PlaylistDto::from).toList();
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public List<PlaylistDto> getAllByUser(UUID userId) {
     if (!userRepository.existsById(userId)) {
@@ -77,9 +84,9 @@ public class PlaylistServiceImpl implements PlaylistService {
   // TODO: 검색 속도 리팩토링
   @Override
   @Transactional(readOnly = true)
-  public List<PlaylistDto> getAllByName(String name) {
+  public List<PlaylistDto> getAllByKeyword(String keyword) {
     // 검색어를 정규화
-    String normalizedSearchName = NormalizerUtil.normalize(name);
+    String normalizedSearchName = NormalizerUtil.normalize(keyword);
 
     // 모든 플레이리스트를 가져와서 이름으로 필터링
     List<Playlist> allPlaylists = playlistRepository.findAll();

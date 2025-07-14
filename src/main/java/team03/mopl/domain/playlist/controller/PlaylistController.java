@@ -53,10 +53,10 @@ public class PlaylistController {
   }
 
   @GetMapping("/search")
-  public ResponseEntity<List<PlaylistDto>> getPlaylistsByName(
-      @RequestParam(required = true) String name) {
+  public ResponseEntity<List<PlaylistDto>> getPlaylistsByKeyword(
+      @RequestParam(required = true) String keyword) {
 
-    List<PlaylistDto> playlistDtos = playlistService.getAllByName(name);
+    List<PlaylistDto> playlistDtos = playlistService.getAllByKeyword(keyword);
     return ResponseEntity.ok(playlistDtos);
   }
 
@@ -66,6 +66,12 @@ public class PlaylistController {
 
     UUID userId = userDetails.getId();
     List<PlaylistDto> playlistDtos = playlistService.getAllByUser(userId);
+    return ResponseEntity.ok(playlistDtos);
+  }
+
+  @GetMapping
+  public ResponseEntity<List<PlaylistDto>> getAllPlaylist() {
+    List<PlaylistDto> playlistDtos = playlistService.getAll();
     return ResponseEntity.ok(playlistDtos);
   }
 
