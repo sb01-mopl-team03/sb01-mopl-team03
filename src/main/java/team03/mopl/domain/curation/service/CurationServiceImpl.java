@@ -307,38 +307,6 @@ public class CurationServiceImpl implements CurationService {
     );
   }
 
-//  // 형태소 기반 유사도 계산
-//  private double calculateMorphemeSimilarity(String keyword, String text) {
-//    if (komoran == null) {
-//      return calculateBasicWordSimilarity(keyword, text);
-//    }
-//
-//    try {
-//      List<String> keywordMorphemes = extractMeaningfulMorphemes(keyword);
-//      List<String> textMorphemes = extractMeaningfulMorphemes(text);
-//
-//      if (keywordMorphemes.isEmpty() || textMorphemes.isEmpty()) {
-//        return 0.0;
-//      }
-//
-//      // Jaccard 유사도 계산
-//      Set<String> keywordSet = new HashSet<>(keywordMorphemes);
-//      Set<String> textSet = new HashSet<>(textMorphemes);
-//
-//      Set<String> intersection = new HashSet<>(keywordSet);
-//      intersection.retainAll(textSet);
-//
-//      Set<String> union = new HashSet<>(keywordSet);
-//      union.addAll(textSet);
-//
-//      return union.isEmpty() ? 0.0 : (double) intersection.size() / union.size();
-//
-//    } catch (Exception e) {
-//      log.warn("형태소 분석 실패: {}", e.getMessage());
-//      return calculateBasicWordSimilarity(keyword, text);
-//    }
-//  }
-
   // 의미있는 형태소 추출
   private List<String> extractMeaningfulMorphemes(String text) {
     if (komoran == null || text == null || text.trim().isEmpty()) {

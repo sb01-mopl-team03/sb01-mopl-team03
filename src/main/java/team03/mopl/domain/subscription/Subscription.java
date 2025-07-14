@@ -29,6 +29,7 @@ import team03.mopl.domain.user.User;
     @UniqueConstraint(columnNames = {"subscriber_id", "playlist_id"})
 })
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)

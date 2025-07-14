@@ -57,7 +57,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  @Transactional(readOnly = true)
+  @Transactional
   public void unsubscribe(UUID subscriptionId, UUID userId) {
 
     Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(

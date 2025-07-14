@@ -12,9 +12,11 @@ public interface PlaylistService {
 
   PlaylistDto getById(UUID playlistId);
 
+  List<PlaylistDto> getAll();
+
   List<PlaylistDto> getAllByUser(UUID userId);
 
-  List<PlaylistDto> getAllByName(String name);
+  List<PlaylistDto> getAllByKeyword(String keyword);
 
   PlaylistDto update(UUID playlistId, PlaylistUpdateRequest request, UUID userId);
 
