@@ -32,7 +32,6 @@ import team03.mopl.domain.user.User;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@EntityListeners(AuditingEntityListener.class)
 public class Subscription {
 
   @Id
