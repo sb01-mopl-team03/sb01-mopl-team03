@@ -483,6 +483,7 @@ public class CurationServiceImpl implements CurationService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
         .orElseThrow(KeywordNotFoundException::new);
