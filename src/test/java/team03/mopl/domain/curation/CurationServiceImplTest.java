@@ -389,6 +389,7 @@ class CurationServiceImplTest {
           authorName,
           "좋은 영화",
           "재미있어요",
+          LocalDateTime.now(),
           BigDecimal.valueOf(5)
       );
 
@@ -398,6 +399,7 @@ class CurationServiceImplTest {
           authorName,
           "괜찮은 영화",
           "보통이에요",
+          LocalDateTime.now(),
           BigDecimal.valueOf(3)
       );
 
@@ -463,6 +465,7 @@ class CurationServiceImplTest {
           authorName,
           "평점 없는 리뷰",
           "평점을 주지 않았어요",
+          LocalDateTime.now(),
           null
       );
 
@@ -472,6 +475,7 @@ class CurationServiceImplTest {
           authorName,
           "일반 리뷰",
           "좋아요",
+          LocalDateTime.now(),
           BigDecimal.valueOf(4)
       );
 
