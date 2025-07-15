@@ -18,16 +18,16 @@ COMMENT ON COLUMN "users"."role" IS 'ENUM';
 -- 콘텐츠 테이블
 CREATE TABLE "contents"
 (
-    "id"               UUID PRIMARY KEY        NOT NULL,
-    "title"            VARCHAR(255)            NOT NULL,
+    "id"               UUID PRIMARY KEY                  NOT NULL,
+    "title"            VARCHAR(255)                      NOT NULL,
     "title_normalized" VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
-    "data_id"          varchar(255)            NULL,
-    "description"      TEXT                    NULL,
-    "content_type"     VARCHAR(50)             NOT NULL,
-    "release_date"     TIMESTAMP               NOT NULL,
-    "avg_rating"       DECIMAL(3, 2)           NULL CHECK (avg_rating >= 0.0 AND avg_rating <= 5.0),
-    "created_at"       TIMESTAMP DEFAULT now() NOT NULL,
-    "url"              TEXT                    NULL
+    "data_id"          varchar(255)                      NULL,
+    "description"      TEXT                              NULL,
+    "content_type"     VARCHAR(50)                       NOT NULL,
+    "release_date"     TIMESTAMP                         NOT NULL,
+    "avg_rating"       DECIMAL(3, 2)                     NULL CHECK (avg_rating >= 0.0 AND avg_rating <= 5.0),
+    "created_at"       TIMESTAMP DEFAULT now()           NOT NULL,
+    "url"              TEXT                              NULL
 );
 COMMENT ON COLUMN "contents"."content_type" IS 'ENUM';
 CREATE INDEX idx_content_title ON contents (title);
@@ -67,7 +67,7 @@ CREATE TABLE "reviews"
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("user_id", "content_id"),
-    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ,
+    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
@@ -91,7 +91,7 @@ CREATE TABLE "playlist_contents"
     "content_id"  UUID                    NOT NULL,
     "created_at"  TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("playlist_id", "content_id"),
-    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE ,
+    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
 
@@ -103,7 +103,7 @@ CREATE TABLE "subscriptions"
     "subscriber_id" UUID                    NOT NULL,
     "created_at"    TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("playlist_id", "subscriber_id"),
-    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE ,
+    FOREIGN KEY ("playlist_id") REFERENCES "playlists" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("subscriber_id") REFERENCES "users" ("id")
 );
 
@@ -121,10 +121,11 @@ CREATE TABLE "follows"
 CREATE TABLE "watch_rooms"
 (
     "id"                     UUID PRIMARY KEY               NOT NULL,
+    "title"                  VARCHAR(255)                   NOT NULL,
     "content_id"             UUID                           NOT NULL,
     "owner_id"               UUID                           NOT NULL,
     "created_at"             TIMESTAMP        DEFAULT now() NOT NULL,
-    "play_time"           DOUBLE PRECISION DEFAULT 0.0   NOT NULL,
+    "play_time"              DOUBLE PRECISION DEFAULT 0.0   NOT NULL,
     "is_playing"             BOOLEAN          DEFAULT FALSE NOT NULL,
     "video_state_updated_at" TIMESTAMP        DEFAULT now() NOT NULL,
     FOREIGN KEY ("owner_id") REFERENCES "users" ("id"),

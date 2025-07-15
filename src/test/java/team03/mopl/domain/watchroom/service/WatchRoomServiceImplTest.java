@@ -103,6 +103,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .content(content)
           .owner(user)
           .build();
@@ -140,7 +141,6 @@ class WatchRoomServiceImplTest {
 
       verify(watchRoomRepository, never()).save(any(WatchRoom.class));
     }
-
   }
 
   @Nested
@@ -154,6 +154,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoom1Id = UUID.randomUUID();
       WatchRoom watchRoom1 = WatchRoom.builder()
           .id(chatRoom1Id)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -169,6 +170,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoom2Id = UUID.randomUUID();
       WatchRoom watchRoom2 = WatchRoom.builder()
           .id(chatRoom2Id)
+          .title("테스트용 시청방2")
           .owner(user2)
           .content(content)
           .build();
@@ -205,6 +207,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -272,6 +275,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -320,6 +324,7 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -360,6 +365,7 @@ class WatchRoomServiceImplTest {
       UUID watchRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(watchRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -409,8 +415,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
-
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
@@ -448,8 +454,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
-
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(false)
@@ -487,8 +493,8 @@ class WatchRoomServiceImplTest {
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
+          .title("테스트용 시청방")
           .owner(user)
-
           .content(content)
           .videoStateUpdatedAt(LocalDateTime.now())
           .isPlaying(true)
@@ -544,6 +550,7 @@ class WatchRoomServiceImplTest {
       UUID watchRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(watchRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
@@ -587,6 +594,7 @@ class WatchRoomServiceImplTest {
       UUID watchRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(watchRoomId)
+          .title("테스트용 시청방")
           .owner(user)
           .content(content)
           .build();
