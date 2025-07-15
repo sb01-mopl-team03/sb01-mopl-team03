@@ -23,4 +23,7 @@ public class TmdbItemDto {
 
   @JsonProperty("first_air_date")
   private String firstAirDate;
+
+  @JsonProperty("poster_path")
+  private String posterPath;
 }
