@@ -34,7 +34,7 @@ class JwtProviderTest {
   static class Config {
     @Bean
     public JwtBlacklist jwtBlacklist() {
-      return new JwtBlacklist();
+      return new MemoryJwtBlacklist();
     }
 
     @Bean
