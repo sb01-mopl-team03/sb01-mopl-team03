@@ -185,9 +185,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     List<ParticipantDto> participantList = participants.stream()
         .map(participant -> new ParticipantDto(
             participant.getUser().getName(),
-            null,
-            //todo - 프로필 필드 추가 시 변경
-            //participant.getUser().getProfile(),
+            participant.getUser().getProfileImage(),
             participant.getUser().getId().equals(watchRoom.getOwner()))).toList();
 
     return ParticipantsInfoDto.builder()
