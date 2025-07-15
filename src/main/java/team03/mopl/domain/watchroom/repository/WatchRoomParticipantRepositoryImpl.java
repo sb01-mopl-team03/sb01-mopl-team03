@@ -3,6 +3,8 @@ package team03.mopl.domain.watchroom.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
@@ -31,5 +33,24 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         .join(qWatchRoom.content, qContent).fetchJoin()
         .groupBy(qWatchRoom.id, qContent.id)
         .fetch();
+  }
+
+  @Override
+  public Optional<WatchRoomContentWithHeadcountDto> getWatchRoomContentWithHeadcountDto(
+      UUID watchRoomId) {
+
+    WatchRoomContentWithHeadcountDto result = queryFactory
+        .select(Projections.constructor(WatchRoomContentWithHeadcountDto.class,
+            qWatchRoom,
+            qWatchRoom.content,
+            qWatchRoomParticipant.countDistinct()))
+        .from(qWatchRoom)
+        .leftJoin(qWatchRoomParticipant).on(qWatchRoomParticipant.watchRoom.eq(qWatchRoom))
+        .join(qWatchRoom.content, qContent).fetchJoin()
+        .where(qWatchRoom.id.eq(watchRoomId))
+        .groupBy(qWatchRoom.id)
+        .fetchOne();
+
+    return Optional.ofNullable(result);
   }
 }

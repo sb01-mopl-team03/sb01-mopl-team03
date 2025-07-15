@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.ParticipantDto;
@@ -72,12 +73,11 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   @Override
   @Transactional(readOnly = true)
-  public WatchRoomDto getById(UUID id) {
-    //todo - 개선
-    WatchRoom watchRoom = watchRoomRepository.findById(id).orElseThrow(
-        WatchRoomRoomNotFoundException::new);
-    watchRoomParticipantRepository.countByWatchRoomId(watchRoom.getId());
-    return WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1);
+  public WatchRoomDto getById(UUID watchRoomId) {
+    WatchRoomContentWithHeadcountDto watchRoomContentWithHeadcountDto
+        = watchRoomParticipantRepository.getWatchRoomContentWithHeadcountDto(watchRoomId)
+        .orElseThrow(WatchRoomRoomNotFoundException::new);
+    return WatchRoomDto.from(watchRoomContentWithHeadcountDto);
   }
 
   @Override
@@ -158,6 +158,18 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     watchRoomParticipantRepository.findByUserAndWatchRoom(user, watchRoom)
         .ifPresent(watchRoomParticipantRepository::delete);
+
+    watchRoomParticipantRepository.findFirstByWatchRoom(watchRoom).ifPresentOrElse(
+        // 남아있는 사람이 있다면 참여자 중 한명에게 방장 넘김
+        watchRoomParticipant -> {
+          User newOwner = watchRoomParticipant.getUser();
+          watchRoom.changeOwner(newOwner);
+        },
+        // 남아있는 사람이 아무도 없으면 시청방 삭제
+        () -> {
+          watchRoomRepository.delete(watchRoom);
+        }
+    );
   }
 
   private WatchRoomInfoDto getWatchRoomInfoDtoWithNewUser(WatchRoom watchRoom, User user) {
@@ -179,6 +191,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   }
 
   // 참여자 목록 조회
+  // todo - 리팩토링
   private ParticipantsInfoDto getParticipantsInfoDto(WatchRoom watchRoom) {
     List<WatchRoomParticipant> participants = watchRoomParticipantRepository.findByWatchRoom(watchRoom);
 
