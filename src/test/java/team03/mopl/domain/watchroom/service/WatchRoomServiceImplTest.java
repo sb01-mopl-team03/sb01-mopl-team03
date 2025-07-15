@@ -60,7 +60,7 @@ class WatchRoomServiceImplTest {
   private WatchRoomParticipantRepository watchRoomParticipantRepository;
 
   @InjectMocks
-  private WatchRoomServiceImpl chatRoomService;
+  private WatchRoomServiceImpl watchRoomService;
 
   private UUID contentId;
   private Content content;
@@ -88,7 +88,7 @@ class WatchRoomServiceImplTest {
   }
 
   @Nested
-  @DisplayName("채팅방 생성 테스트")
+  @DisplayName("채팅방 생성")
   class createWatchRoom {
 
     @Test
@@ -114,7 +114,7 @@ class WatchRoomServiceImplTest {
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      WatchRoomDto watchRoomDto = chatRoomService.create(request);
+      WatchRoomDto watchRoomDto = watchRoomService.create(request);
 
       //then
       assertEquals(expected.contentTitle(), watchRoomDto.contentTitle());
@@ -136,7 +136,7 @@ class WatchRoomServiceImplTest {
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
       //when & then
-      assertThrows(ContentNotFoundException.class, () -> chatRoomService.create(request));
+      assertThrows(ContentNotFoundException.class, () -> watchRoomService.create(request));
 
       verify(watchRoomRepository, never()).save(any(WatchRoom.class));
     }
@@ -144,7 +144,7 @@ class WatchRoomServiceImplTest {
   }
 
   @Nested
-  @DisplayName("채팅방 전체 조회 테스트")
+  @DisplayName("채팅방 전체 조회")
   class getAllWatchRoom {
 
     @Test
@@ -183,23 +183,19 @@ class WatchRoomServiceImplTest {
           .map(chatRoom -> WatchRoomDto.fromWatchRoomWithHeadcount(chatRoom, 1L))
           .toList();
 
-      when(watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDto()).thenReturn(queryResult);
+      when(watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDto())
+          .thenReturn(queryResult);
+
       //when
-      List<WatchRoomDto> watchRoomDtos = chatRoomService.getAll();
+      List<WatchRoomDto> watchRoomDtos = watchRoomService.getAll();
 
       //then
       assertEquals(expected.size(), watchRoomDtos.size());
     }
-
-    @Test
-    @DisplayName("실패")
-    void fails() {
-      //조회 실패 케이스가 있을까? (페이지네이션 제외)
-    }
   }
 
   @Nested
-  @DisplayName("채팅방 개별 조회 테스트")
+  @DisplayName("채팅방 개별 조회")
   class getWatchRoomById {
 
     @Test
@@ -213,13 +209,16 @@ class WatchRoomServiceImplTest {
           .content(content)
           .build();
 
+      WatchRoomContentWithHeadcountDto queryResult
+          = new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L);
+
       WatchRoomDto expected = WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1L);
 
-      when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
-      when(watchRoomParticipantRepository.countByWatchRoomId(chatRoomId)).thenReturn(1L);
+      when(watchRoomParticipantRepository.getWatchRoomContentWithHeadcountDto(chatRoomId))
+          .thenReturn(Optional.of(queryResult));
 
       //when
-      WatchRoomDto watchRoomDto = chatRoomService.getById(chatRoomId);
+      WatchRoomDto watchRoomDto = watchRoomService.getById(chatRoomId);
 
       //then
       assertEquals(expected.id(), watchRoomDto.id());
@@ -230,16 +229,15 @@ class WatchRoomServiceImplTest {
     }
 
     @Test
-    @DisplayName("실패")
+    @DisplayName("존재하지 않는 시청방")
     void failsWhenWatchRoomNotFound() {
       UUID randomId = UUID.randomUUID();
 
-      when(watchRoomRepository.findById(randomId)).thenReturn(Optional.empty());
+      when(watchRoomParticipantRepository.getWatchRoomContentWithHeadcountDto(randomId))
+          .thenReturn(Optional.empty());
 
       //when & then
-      assertThrows(WatchRoomRoomNotFoundException.class, () -> chatRoomService.getById(randomId));
-
-      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(randomId);
+      assertThrows(WatchRoomRoomNotFoundException.class, () -> watchRoomService.getById(randomId));
     }
   }
 
@@ -262,14 +260,14 @@ class WatchRoomServiceImplTest {
 
       List<User> users = List.of(participant, user);
 
-      List<ParticipantDto> participantDtos = users.stream().map(user -> {
+      List<ParticipantDto> participantDtos = users.stream()
+          .map(user -> {
             return ParticipantDto.builder()
                 .username(user.getName())
                 .profile(null)
                 .isOwner(user.getId() == userId)
                 .build();
-          }
-      ).toList();
+          }).toList();
 
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
@@ -281,8 +279,7 @@ class WatchRoomServiceImplTest {
       List<WatchRoomParticipant> watchRoomParticipant = users.stream().map(
           user -> {
             return WatchRoomParticipant.builder().user(user).watchRoom(watchRoom).build();
-          }
-      ).toList();
+          }).toList();
 
       ParticipantsInfoDto participantsInfoDto = new ParticipantsInfoDto(participantDtos,
           participantDtos.size());
@@ -295,22 +292,23 @@ class WatchRoomServiceImplTest {
 
       when(userRepository.findByEmail(participant.getEmail())).thenReturn(Optional.of(participant));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
-      when(watchRoomParticipantRepository.existsWatchRoomParticipantByWatchRoomAndUser(watchRoom,
-          participant))
+      when(watchRoomParticipantRepository
+          .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, participant))
           .thenReturn(false);
-      when(watchRoomParticipantRepository.findByWatchRoom(watchRoom)).thenReturn(watchRoomParticipant);
+      when(watchRoomParticipantRepository.findByWatchRoom(watchRoom))
+          .thenReturn(watchRoomParticipant);
 
       //when
-      WatchRoomInfoDto watchRoomInfoDto = chatRoomService.joinWatchRoomAndGetInfo(chatRoomId,
-          participant.getEmail());
+      WatchRoomInfoDto watchRoomInfoDto = watchRoomService
+          .joinWatchRoomAndGetInfo(chatRoomId, participant.getEmail());
 
-      //todo - verify로 확인하기
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.contentTitle(), watchRoomInfoDto.contentTitle());
       assertEquals(expected.participantsInfoDto().participantsCount(),
           watchRoomInfoDto.participantsInfoDto().participantsCount());
 
-      verify(watchRoomParticipantRepository, times(1)).save(any(WatchRoomParticipant.class));
+      verify(watchRoomParticipantRepository, times(1))
+          .save(any(WatchRoomParticipant.class));
     }
 
     @Test
@@ -328,10 +326,9 @@ class WatchRoomServiceImplTest {
 
       //when & then
       assertThrows(UserNotFoundException.class,
-          () -> chatRoomService.joinWatchRoomAndGetInfo(chatRoomId, randomEmail));
+          () -> watchRoomService.joinWatchRoomAndGetInfo(chatRoomId, randomEmail));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
-      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(chatRoomId);
     }
 
     @Test
@@ -344,43 +341,67 @@ class WatchRoomServiceImplTest {
 
       when(userRepository.findByEmail(participantEmail)).thenReturn(Optional.of(user));
       when(watchRoomRepository.findById(randomId)).thenReturn(Optional.empty());
-      //todo - 로직 고민
-      //chatRoomRepository 에서 채널 있는지 검사 -> chatRoomParticipantRepository 로 이미 참여한 유저인지 검사
-      // vs chatRoomParticipantRepository 로 채널 있는지 검사 -> 같은 걸로 이미 참여한 유저인지 검사
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class,
-          () -> chatRoomService.joinWatchRoomAndGetInfo(randomId,participantEmail));
+          () -> watchRoomService.joinWatchRoomAndGetInfo(randomId, participantEmail));
 
       verify(watchRoomParticipantRepository, never()).save(any(WatchRoomParticipant.class));
-      verify(watchRoomParticipantRepository, never()).countByWatchRoomId(randomId);
     }
   }
 
   @Nested
   @DisplayName("시청방 유저 목록 조회")
-  class getParticipants{
+  class getParticipants {
 
     @Test
     @DisplayName("성공")
     void success() {
+      UUID watchRoomId = UUID.randomUUID();
+      WatchRoom watchRoom = WatchRoom.builder()
+          .id(watchRoomId)
+          .owner(user)
+          .content(content)
+          .build();
 
+      WatchRoomParticipant watchRoomParticipantOwner = WatchRoomParticipant.builder()
+          .user(user)
+          .watchRoom(watchRoom)
+          .build();
+
+      List<WatchRoomParticipant> watchRoomParticipants = List.of(watchRoomParticipantOwner);
+
+      when(watchRoomRepository.findById(watchRoomId)).thenReturn(Optional.of(watchRoom));
+      when(watchRoomParticipantRepository.findByWatchRoom(watchRoom))
+          .thenReturn(watchRoomParticipants);
+
+      // when
+      ParticipantsInfoDto participants = watchRoomService.getParticipants(watchRoomId);
+
+      // then
+      assertNotNull(participants);
+      assertEquals(1, participants.participantsCount());
     }
-  }
 
-  @Nested
-  @DisplayName("시청방 상세 정보 조회")
-  class getWatchRoomInfo {
     @Test
-    @DisplayName("성공")
-    void success() {
+    @DisplayName("존재하지 않는 시청방")
+    void failureWhenWatchRoomNotFound() {
+      //given
+      UUID randomUUID = UUID.randomUUID();
 
+      when(watchRoomRepository.findById(randomUUID)).thenReturn(Optional.empty());
+
+      // when & then
+      assertThrows(WatchRoomRoomNotFoundException.class,  ()-> watchRoomService.getParticipants(randomUUID));
+
+      verify(watchRoomParticipantRepository, never()).findByWatchRoom(any(WatchRoom.class));
     }
   }
 
   @Nested
   @DisplayName("시청방 비디오 제어")
-  class updateVideoStatus{
+  class updateVideoStatus {
+
     @Test
     @DisplayName("일시 정지 성공")
     void successPause() {
@@ -409,7 +430,8 @@ class WatchRoomServiceImplTest {
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
+      VideoSyncDto videoSyncDto = watchRoomService.updateVideoStatus(chatRoomId, request,
+          user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());
@@ -447,7 +469,8 @@ class WatchRoomServiceImplTest {
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
+      VideoSyncDto videoSyncDto = watchRoomService
+          .updateVideoStatus(chatRoomId, request, user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());
@@ -485,7 +508,8 @@ class WatchRoomServiceImplTest {
       when(watchRoomRepository.save(any(WatchRoom.class))).thenReturn(watchRoom);
 
       //when
-      VideoSyncDto videoSyncDto = chatRoomService.updateVideoStatus(chatRoomId, request, user.getEmail());
+      VideoSyncDto videoSyncDto = watchRoomService.updateVideoStatus(chatRoomId, request,
+          user.getEmail());
 
       //then
       assertEquals(expected.videoControlAction(), videoSyncDto.videoControlAction());
@@ -499,26 +523,121 @@ class WatchRoomServiceImplTest {
     @Test
     @DisplayName("지원하지 않는 비디오 제어")
     void failureWhenNotSupportedVideoControlAction() {
-
+      //todo
     }
 
     @Test
     @DisplayName("콘텐츠 길이 초과")
-    void failureWhenCurrentTimeExceedContentLength(){
-
+    void failureWhenCurrentTimeExceedContentLength() {
+      //todo
     }
-
-
-
   }
+
   @Nested
   @DisplayName("시청방 나가기")
-  class leave{
+  class leave {
+
     @Test
-    @DisplayName("성공")
-    void success() {
+    @DisplayName("방장이 나가면 방장 권한은 다른 참여자에게 넘어감")
+    void successWhenOwnerLeave() {
+      // given
+      UUID watchRoomId = UUID.randomUUID();
+      WatchRoom watchRoom = WatchRoom.builder()
+          .id(watchRoomId)
+          .owner(user)
+          .content(content)
+          .build();
+
+      UUID participantId = UUID.randomUUID();
+      User participant = User.builder()
+          .id(participantId)
+          .email("participant@test.com")
+          .name("participant")
+          .build();
+
+      WatchRoomParticipant watchRoomParticipantOwner = WatchRoomParticipant.builder()
+          .user(user)
+          .watchRoom(watchRoom)
+          .build();
+
+      WatchRoomParticipant watchRoomParticipant = WatchRoomParticipant.builder()
+          .user(participant)
+          .watchRoom(watchRoom)
+          .build();
+
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+      when(watchRoomRepository.findById(watchRoomId)).thenReturn(Optional.of(watchRoom));
+      when(watchRoomParticipantRepository.findByUserAndWatchRoom(user, watchRoom))
+          .thenReturn(Optional.of(watchRoomParticipantOwner));
+      when(watchRoomParticipantRepository.findFirstByWatchRoom(watchRoom))
+          .thenReturn(Optional.of(watchRoomParticipant));
+
+      // when
+      watchRoomService.leave(watchRoomId, user.getEmail());
+
+      // then
+      assertEquals(watchRoomId, watchRoom.getId());
+      assertEquals(participant.getEmail(), watchRoom.getOwner().getEmail());
+    }
+
+    @Test
+    @DisplayName("모든 참여자가 나가면 방이 삭제됨")
+    void successWhenOwnerIsTheLastOne() {
+      // given
+      UUID watchRoomId = UUID.randomUUID();
+      WatchRoom watchRoom = WatchRoom.builder()
+          .id(watchRoomId)
+          .owner(user)
+          .content(content)
+          .build();
+
+      WatchRoomParticipant watchRoomParticipantOwner = WatchRoomParticipant.builder()
+          .user(user)
+          .watchRoom(watchRoom)
+          .build();
+
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+      when(watchRoomRepository.findById(watchRoomId)).thenReturn(Optional.of(watchRoom));
+      when(watchRoomParticipantRepository.findByUserAndWatchRoom(user, watchRoom))
+          .thenReturn(Optional.of(watchRoomParticipantOwner));
+      when(watchRoomParticipantRepository.findFirstByWatchRoom(watchRoom))
+          .thenReturn(Optional.empty());
+
+      // when
+      watchRoomService.leave(watchRoomId, user.getEmail());
+
+      // then
+      verify(watchRoomRepository, times(1)).delete(watchRoom);
+    }
+
+    @Test
+    @DisplayName("해당 이메일을 가진 유저가 없음")
+    void failureWhenUserEmailNotFound() {
+      // given
+      String randomEmail = "notFound@test.com";
+
+      UUID watchRoomId = UUID.randomUUID();
+
+      when(userRepository.findByEmail(randomEmail)).thenReturn(Optional.empty());
+
+      //when & then
+      assertThrows(UserNotFoundException.class,
+          () -> watchRoomService.leave(watchRoomId, randomEmail));
 
     }
 
+    @Test
+    @DisplayName("해당 ID를 가진 시청방이 없음")
+    void failureWhenIdNotFound() {
+      //given
+      UUID randomUUID = UUID.randomUUID();
+
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+      when(watchRoomRepository.findById(randomUUID)).thenReturn(Optional.empty());
+
+      // when & then
+      assertThrows(WatchRoomRoomNotFoundException.class,
+          () -> watchRoomService.leave(randomUUID, user.getEmail()));
+    }
   }
 }
