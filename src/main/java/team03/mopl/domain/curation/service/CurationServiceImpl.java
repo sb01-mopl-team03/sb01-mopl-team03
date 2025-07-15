@@ -572,6 +572,7 @@ public class CurationServiceImpl implements CurationService {
   // 배치 큐레이션 (새 콘텐츠에 대해 기존 키워드 매칭)
   @Override
   @Transactional
+  // TODO: batch 처리
   public void batchCurationForNewContents(List<Content> newContents) {
     List<Keyword> allKeywords = keywordRepository.findAll();
 
