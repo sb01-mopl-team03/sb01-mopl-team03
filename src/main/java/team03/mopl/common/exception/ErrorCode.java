@@ -8,7 +8,10 @@ public enum ErrorCode {
 
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "존재하지 않는 사용자입니다."),
   DUPLICATED_EMAIL(HttpStatus.CONFLICT, "USER_002", "이미 사용중인 이메일입니다"),
-  DUPLICATED_NAME(HttpStatus.CONFLICT, "USER_003", "이미 사용 중인 사용자명입니다."),
+
+  INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "AUTH_001", "비밀번호가 일치하지 않습니다."),
+  LOCKED_USER(HttpStatus.FORBIDDEN, "AUTH_002", "잠긴 계정입니다."),
+  TEMP_PASSWORD_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH_003", "임시 비밀번호가 만료되었습니다."),
 
   //Content
   CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONTENT_001", "존재하지 않는 콘텐츠입니다."),
