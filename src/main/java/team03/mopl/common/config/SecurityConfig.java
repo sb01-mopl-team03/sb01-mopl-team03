@@ -52,7 +52,11 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/auth/temp-password").permitAll()
             .requestMatchers("/profile/**").permitAll()
             .requestMatchers("/ws/**").permitAll() // WebSocket 핸드쉐이크 허용
+            .requestMatchers("/api/notifications/**").authenticated()
+            .requestMatchers("/api/dm/**").authenticated()
+            .requestMatchers("/api/playlists/**").authenticated()
             .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/actuator/health").permitAll()
             .anyRequest().hasRole("USER")
         )
         .exceptionHandling(ex -> ex

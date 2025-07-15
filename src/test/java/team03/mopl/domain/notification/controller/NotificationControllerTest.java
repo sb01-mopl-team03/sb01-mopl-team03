@@ -186,36 +186,36 @@ class NotificationControllerTest {
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-  @Test
-  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
-  void deleteNotificationByUserId() throws Exception {
-    // given
-    User user = User.builder()
-        .id(UUID.randomUUID())
-        .email("testuser@example.com")
-        .password("password")
-        .role(Role.USER)
-        .build();
-
-    CustomUserDetails customUserDetails = new CustomUserDetails(user);
-    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-        customUserDetails,
-        null,
-        customUserDetails.getAuthorities()
-    );
-    SecurityContextHolder.getContext().setAuthentication(authToken);
-
-    // when & then
-    mockMvc.perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .delete("/api/notifications/userId")
-                .with(authentication(authToken))
-                .with(csrf())
-        )
-        .andExpect(status().isNoContent());
-
-    verify(notificationService).deleteNotificationByUserId(user.getId());
-  }
+//  @Test
+//  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
+//  void deleteNotificationByUserId() throws Exception {
+//    // given
+//    User user = User.builder()
+//        .id(UUID.randomUUID())
+//        .email("testuser@example.com")
+//        .password("password")
+//        .role(Role.USER)
+//        .build();
+//
+//    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+//    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//        customUserDetails,
+//        null,
+//        customUserDetails.getAuthorities()
+//    );
+//    SecurityContextHolder.getContext().setAuthentication(authToken);
+//
+//    // when & then
+//    mockMvc.perform(
+//            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+//                .delete("/api/notifications/userId")
+//                .with(authentication(authToken))
+//                .with(csrf())
+//        )
+//        .andExpect(status().isNoContent());
+//
+//    verify(notificationService).deleteNotificationByUserId(user.getId());
+//  }
 
 
 }

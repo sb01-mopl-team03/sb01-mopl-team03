@@ -44,8 +44,11 @@ public enum ErrorCode {
   SUBSCRIPTION_DELETE_DENIED(HttpStatus.FORBIDDEN, "SUBSCRIPTION_004", "구독자만 구독을 취소할 수 있습니다."),
 
   PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_001", "존재하지 않는 플레이리스트입니다."),
-  PLAYLIST_DELETE_DENIED(HttpStatus.FORBIDDEN, "PLAYLIST_002", "본인의 플레이리스트만 삭제할 수 있습니다."),
-  PLAYLIST_UPDATE_DENIED(HttpStatus.FORBIDDEN, "PLAYLIST_003", "본인의 플레이리스트만 수정할 수 있습니다.");
+  PLAYLIST_DENIED(HttpStatus.FORBIDDEN, "PLAYLIST_002", "플레이리스트에 권한이 없습니다."),
+  PLAYLIST_CONTENT_EMPTY(HttpStatus.NO_CONTENT, "PLAYLIST_003", "추가할 컨텐츠 ID 목록이 비어있습니다"),
+  PLAYLIST_CONTENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "PLAYLIST_004", "모든 컨텐츠가 이미 플레이리스트에 존재합니다"),
+  PLAYLIST_CONTENT_REMOVE_EMPTY(HttpStatus.BAD_REQUEST, "PLAYLIST_005", "제거할 컨텐츠 ID 목록이 비어있습니다"),
+  PLAYLIST_CONTENT_NOT_FOUND_FOR_REMOVE(HttpStatus.NOT_FOUND, "PLAYLIST_006", "플레이리스트에서 제거할 컨텐츠를 찾을 수 없습니다");
 
   private HttpStatus status;
   // 추적하기 쉽도록하는 필드

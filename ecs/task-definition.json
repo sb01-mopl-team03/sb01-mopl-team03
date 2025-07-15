@@ -4,9 +4,9 @@
     {
       "name": "mopl-container",
       "image": "public.ecr.aws/k5f2z7e1/mopl-app",
-      "cpu": 256,
-      "memory": 512,
-      "memoryReservation": 256,
+      "cpu": 3072,
+      "memory": 2048,
+      "memoryReservation": 1024,
       "portMappings": [
         {
           "name": "mopl-container-80-tcp",
@@ -26,6 +26,16 @@
       ],
       "mountPoints": [],
       "volumesFrom": [],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/actuator/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 120
+      },
       "ulimits": [],
       "systemControls": []
     }
@@ -54,8 +64,8 @@
   "requiresCompatibilities": [
     "EC2"
   ],
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "3072",
+  "memory": "2048",
   "runtimePlatform": {
     "cpuArchitecture": "X86_64",
     "operatingSystemFamily": "LINUX"

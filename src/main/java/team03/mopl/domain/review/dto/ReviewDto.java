@@ -1,6 +1,7 @@
 package team03.mopl.domain.review.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import team03.mopl.domain.review.entity.Review;
 
@@ -10,6 +11,7 @@ public record ReviewDto(
     String authorName,
     String title,
     String comment,
+    LocalDateTime createdAt,
     BigDecimal rating
 ) {
 
@@ -20,6 +22,7 @@ public record ReviewDto(
         review.getUser().getName(),
         review.getTitle(),
         review.getComment(),
+        review.getCreatedAt(),
         review.getRating());
   }
 }
