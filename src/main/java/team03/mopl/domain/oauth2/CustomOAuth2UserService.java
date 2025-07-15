@@ -3,6 +3,7 @@ package team03.mopl.domain.oauth2;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -14,25 +15,32 @@ import team03.mopl.jwt.CustomUserDetails;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
   private final UserService userService;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException{
+    log.info("loadUser - OAuth2 로그인 처리 시작");
+
     OAuth2User oAuth2User = super.loadUser(request);
     String registrationId = request.getClientRegistration().getRegistrationId();
+    log.debug("provider: {}", registrationId);
 
     String email = extractEmail(oAuth2User, registrationId);
     String name = extractName(oAuth2User, registrationId);
+    log.debug("추출된 사용자 정보: email={}, name={}", email, name);
 
     User user = userService.loginOrRegisterOAuth(email, name);
 
+    log.info("loadUser - OAuth2 로그인 처리 완료");
     return new CustomUserDetails(user,oAuth2User.getAttributes());
   }
 
   private String extractName(OAuth2User user, String provider) {
     Map<String, Object> attributes = user.getAttributes();
+    log.info("extractName - provider: {}", provider);
     if ("google".equals(provider)) {
       return (String) attributes.get("name");
     }else if ("kakao".equals(provider)) {
@@ -44,6 +52,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
   private String extractEmail(OAuth2User user, String provider) {
     Map<String, Object> attributes = user.getAttributes();
+    log.info("extractEmail - provider: {}", provider);
+
     if ("google".equals(provider)) {
       return (String) attributes.get("email");
     } else if ("kakao".equals(provider)) {
