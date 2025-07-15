@@ -24,7 +24,7 @@ public class TmdbJobScheduler {
     this.tmdbJob = tmdbJob;
   }
 
-  @Scheduled(fixedRate = 1000 * 60 * 60 * 48) // 48시간 마다 실행
+    @Scheduled(cron = "0 0 5 ? * FRI")
   public void runTmdbJob() {
     JobParameters jobParameters = new JobParametersBuilder()
         .addLong("timestamp", System.currentTimeMillis())

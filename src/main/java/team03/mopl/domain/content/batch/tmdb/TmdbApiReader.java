@@ -196,12 +196,12 @@ public class TmdbApiReader implements ItemStreamReader<TmdbItemDto> {
 
     } else if ("tv".equals(videoType)) {
       LocalDate today = LocalDate.now();
-      LocalDate yesterday = today.minusDays(1);
+      LocalDate weekAgo  = today.minusDays(7);
 
       return UriComponentsBuilder
           .fromUriString(baseurl)
           .path("/discover/tv")
-          .queryParam("air_date.gte", yesterday)
+          .queryParam("air_date.gte", weekAgo)
           .queryParam("air_date.lte", today)
           .queryParam("include_adult", "false")
           .queryParam("include_null_first_air_dates", "false")
