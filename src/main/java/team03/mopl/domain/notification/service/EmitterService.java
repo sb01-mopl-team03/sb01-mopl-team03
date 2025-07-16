@@ -3,11 +3,13 @@ package team03.mopl.domain.notification.service;
 import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.domain.notification.dto.NotificationDto;
@@ -22,6 +24,7 @@ public class EmitterService {
 
   private final EmitterRepository emitterRepository;
   private final ScheduledExecutorService heartbeatExecutor = Executors.newScheduledThreadPool(5);
+  private final ThreadPoolTaskExecutor notificationExecutor;
 
   public SseEmitter subscribe(UUID userId, String lastNotificationId) {
     // 기존 연결 정리 먼저 수행
@@ -117,46 +120,62 @@ public class EmitterService {
     }
   }
 
+  public CompletableFuture<Void> sendNotificationToMember(UUID userId, Notification notification) {
+    return sendNotificationWithRetry(userId, notification, 1);
+  }
+
   // 유저 ID 와 관련된 모든 emitter에게 알림 보냄 (개선된 버전)
-  public void sendNotificationToMember(UUID userId, Notification notification) {
-    log.info("SSE 알림 전송 시도: userId={}, type={}", userId, notification.getType());
+  public CompletableFuture<Void> sendNotificationWithRetry(UUID userId, Notification notification, int attempt) {
+    return CompletableFuture.runAsync(() -> {
+          log.info("SSE 알림 전송 시도: userId={}, type={}", userId, notification.getType());
 
-    var emitters = emitterRepository.findAllEmittersByUserIdPrefix(String.valueOf(userId));
-    int successCount = 0;
-    int failCount = 0;
+          var emitters = emitterRepository.findAllEmittersByUserIdPrefix(String.valueOf(userId));
+          int successCount = 0;
+          int failCount = 0;
 
-    for (var entry : emitters.entrySet()) {
-      String emitterId = entry.getKey();
-      SseEmitter emitter = entry.getValue();
+          for (var entry : emitters.entrySet()) {
+            String emitterId = entry.getKey();
+            SseEmitter emitter = entry.getValue();
 
-      try {
-        // 연결 상태 확인을 위한 간단한 테스트
-        if (isEmitterAlive(emitter)) {
-          String notificationCacheId = makeNotificationCacheId(emitterId, notification.getId(), userId);
-          NotificationDto notificationDto = NotificationDto.from(notification);
+            try {
+              // 연결 상태 확인을 위한 간단한 테스트
+              if (isEmitterAlive(emitter)) {
+                String notificationCacheId = makeNotificationCacheId(emitterId, notification.getId(), userId);
+                NotificationDto notificationDto = NotificationDto.from(notification);
 
-          // 캐시에 일시저장
-          emitterRepository.saveNotificationCache(notificationCacheId, notification);
+                // 캐시에 일시저장
+                emitterRepository.saveNotificationCache(notificationCacheId, notification);
 
-          emitter.send(SseEmitter.event()
-              .id(notificationCacheId)
-              .name(notification.getType().getNotificationName())
-              .data(notificationDto));
+                emitter.send(SseEmitter.event().id(notificationCacheId).name(notification.getType().getNotificationName()).data(notificationDto));
 
-          successCount++;
-        } else {
-          log.warn("연결이 끊어진 Emitter 발견: emitterId={}", emitterId);
-          safeDeleteEmitter(emitterId);
-          failCount++;
-        }
-      } catch (Exception e) {
-        log.warn("SSE 알림 전송 실패: emitterId={}, 에러={}", emitterId, e.getMessage());
-        safeDeleteEmitter(emitterId);
-        failCount++;
-      }
-    }
+                successCount++;
+              } else {
+                log.warn("연결이 끊어진 Emitter 발견: emitterId={}", emitterId);
+                safeDeleteEmitter(emitterId);
+                failCount++;
+              }
+            } catch (Exception e) {
+              log.warn("SSE 알림 전송 실패: emitterId={}, 에러={}", emitterId, e.getMessage());
+              safeDeleteEmitter(emitterId);
+              failCount++;
+            }
+          }
 
-    log.info("알림 전송 완료: userId={}, 성공={}, 실패={}", userId, successCount, failCount);
+          log.info("알림 전송 완료: userId={}, 성공={}, 실패={}", userId, successCount, failCount);
+        }, notificationExecutor).orTimeout(2, TimeUnit.SECONDS) // 타임아웃 설정
+        .exceptionally(ex -> {
+          if (attempt < 3) {
+            try {
+              Thread.sleep(200);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+            sendNotificationWithRetry(userId, notification, attempt + 1);
+          } else {
+            log.error("최종 실패: userId={}, 에러={}", userId, ex.getMessage());
+          }
+          return null;
+        });
   }
 
   /**
@@ -213,10 +232,7 @@ public class EmitterService {
 
   public void sendInitNotification(SseEmitter emitter, UUID notificationId, NotificationDto notificationDto) {
     try {
-      emitter.send(SseEmitter.event()
-          .id(notificationId.toString())
-          .name(NotificationType.CONNECTED.getNotificationName())
-          .data(notificationDto));
+      emitter.send(SseEmitter.event().id(notificationId.toString()).name(NotificationType.CONNECTED.getNotificationName()).data(notificationDto));
       log.info("초기 연결 알림 전송 완료: notificationId={}", notificationId);
     } catch (Exception e) {
       log.warn("초기 연결 알림 전송 실패: 에러={}", e.getMessage());
