@@ -37,7 +37,7 @@ import team03.mopl.domain.watchroom.service.WatchRoomService;
         OAuth2ClientAutoConfiguration.class,
         OAuth2ClientWebSecurityAutoConfiguration.class,
         OAuth2ResourceServerAutoConfiguration.class})
-@DisplayName("채팅방 기능 컨트롤러 단위 테스트")
+@DisplayName("시청방 기능 컨트롤러 단위 테스트")
 class WatchRoomControllerTest {
 
   @Autowired
@@ -50,7 +50,7 @@ class WatchRoomControllerTest {
   private WatchRoomService watchRoomService;
 
   @Nested
-  @DisplayName("채팅방 생성 요청")
+  @DisplayName("시청방 생성 요청")
   class createWatchRoom {
 
     @Test
@@ -61,11 +61,12 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
       UUID contentId = UUID.randomUUID();
+      String title = "실시간 시청방 테스트용 이름";
 
-      WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId);
+      WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId, title);
       String requestBody = objectMapper.writeValueAsString(request);
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트용 콘텐츠 제목", ownerId, "유저1",
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, title ,"테스트용 콘텐츠 제목", ownerId, "유저1",
           LocalDateTime.now(), 1L);
 
       when(watchRoomService.create(request)).thenReturn(responseDto);
@@ -88,7 +89,7 @@ class WatchRoomControllerTest {
   }
 
   @Nested
-  @DisplayName("채팅방 전체 조회 요청")
+  @DisplayName("시청방 전체 조회 요청")
   class getWatchRooms {
 
     @Test
@@ -97,11 +98,11 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "인터스텔라", ownerId, "유저1",
+      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "아빠가유령임","인터스텔라", ownerId, "유저1",
           LocalDateTime.now(), 1L);
-      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "장고", ownerId, "유저1",
+      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "명작","장고", ownerId, "유저1",
           LocalDateTime.now(), 2L);
-      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "오징어게임5", ownerId, "유저1",
+      WatchRoomDto responseDto3 = new WatchRoomDto(roomId,"456번참가자" ,"오징어게임5", ownerId, "유저1",
           LocalDateTime.now(), 3L);
 
       List<WatchRoomDto> responseDtos = List.of(responseDto1, responseDto2, responseDto3);
@@ -118,7 +119,7 @@ class WatchRoomControllerTest {
   }
 
   @Nested
-  @DisplayName("채팅방 단일 조회")
+  @DisplayName("시청방 단일 조회")
   class getWatchRoom {
 
     @Test
@@ -127,7 +128,7 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트 콘텐츠 제목", ownerId, "유저1",
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트시청방이름","테스트 콘텐츠 제목", ownerId, "유저1",
           LocalDateTime.now(), 1L);
 
       when(watchRoomService.getById(roomId)).thenReturn(responseDto);
@@ -144,7 +145,7 @@ class WatchRoomControllerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 채팅방 ID")
+    @DisplayName("존재하지 않는 시청방 ID")
     void fails() throws Exception {
       UUID randomId = UUID.randomUUID();
 
