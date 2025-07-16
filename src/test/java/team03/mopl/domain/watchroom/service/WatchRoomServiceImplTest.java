@@ -223,11 +223,10 @@ class WatchRoomServiceImplTest {
           .thenReturn(queryResult);
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(0, result.data().size());
-
     }
 
     @Test
@@ -251,7 +250,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(2, result.data().size());
@@ -278,7 +277,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(1, result.data().size());
@@ -311,7 +310,7 @@ class WatchRoomServiceImplTest {
         .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(2, result.data().size());
@@ -359,7 +358,7 @@ class WatchRoomServiceImplTest {
         .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(1, result.data().size());
@@ -404,7 +403,7 @@ class WatchRoomServiceImplTest {
         .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(2, result.data().size());
@@ -442,7 +441,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when
-      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
+      CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(2, result.data().size());

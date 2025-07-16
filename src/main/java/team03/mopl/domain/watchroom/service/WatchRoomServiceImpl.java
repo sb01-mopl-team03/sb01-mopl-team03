@@ -72,16 +72,9 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   }
 
 
-  @Override
-  @Transactional(readOnly = true)
-  public List<WatchRoomDto> getAll() {
-    return watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDto()
-        .stream()
-        .map(WatchRoomDto::from).toList();
-  }
 
   @Override
-  public CursorPageResponseDto<WatchRoomDto> getAllPaginated(WatchRoomSearchDto request) {
+  public CursorPageResponseDto<WatchRoomDto> getAll(WatchRoomSearchDto request) {
     Cursor cursor = decodeCursor(request.getCursor());
 
     WatchRoomSearchInternalDto watchRoomSearchInternalDto =

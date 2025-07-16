@@ -1,7 +1,6 @@
 package team03.mopl.domain.watchroom.controller;
 
 
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -27,16 +26,10 @@ public class WatchRoomController {
 
   private final WatchRoomService watchRoomService;
 
-  //will be deprecated
   @GetMapping
-  public ResponseEntity<List<WatchRoomDto>> getChatRooms() {
-    return ResponseEntity.ok(watchRoomService.getAll());
-  }
-
-  @GetMapping("/getAll")
   public ResponseEntity<CursorPageResponseDto<WatchRoomDto>> getAllWatchRooms(
       @ParameterObject @ModelAttribute WatchRoomSearchDto request){
-    return ResponseEntity.ok(watchRoomService.getAllPaginated(request));
+    return ResponseEntity.ok(watchRoomService.getAll(request));
   }
 
   @GetMapping("/{roomId}")

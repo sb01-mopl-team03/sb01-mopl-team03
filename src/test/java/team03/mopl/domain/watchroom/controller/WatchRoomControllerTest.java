@@ -1,6 +1,6 @@
 package team03.mopl.domain.watchroom.controller;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,8 +25,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
 
@@ -89,7 +91,7 @@ class WatchRoomControllerTest {
   }
 
   @Nested
-  @DisplayName("시청방 전체 조회 요청")
+  @DisplayName("시청방 페이지네이션 조회 요청")
   class getWatchRooms {
 
     @Test
@@ -105,16 +107,24 @@ class WatchRoomControllerTest {
       WatchRoomDto responseDto3 = new WatchRoomDto(roomId,"456번참가자" ,"오징어게임5", ownerId, "유저1",
           LocalDateTime.now(), 3L);
 
-      List<WatchRoomDto> responseDtos = List.of(responseDto1, responseDto2, responseDto3);
+      List<WatchRoomDto> watchRoomDtos = List.of(responseDto1, responseDto2, responseDto3);
+      CursorPageResponseDto<WatchRoomDto> responseDtos =
+          CursorPageResponseDto.<WatchRoomDto>builder()
+              .data(watchRoomDtos)
+              .size(20)
+              .nextCursor(null)
+              .hasNext(false)
+              .totalElements(watchRoomDtos.size())
+              .build();
 
-      when(watchRoomService.getAll()).thenReturn(responseDtos);
+      when(watchRoomService.getAll(any(WatchRoomSearchDto.class))).thenReturn(responseDtos);
 
       //when & then
       mockMvc.perform(get("/api/rooms")
               .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-          .andExpect(jsonPath("$", hasSize(3)));
+          .andExpect(jsonPath("$.totalElements").value(3));
     }
   }
 
