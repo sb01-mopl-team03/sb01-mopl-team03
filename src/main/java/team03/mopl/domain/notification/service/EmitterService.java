@@ -25,6 +25,8 @@ public class EmitterService {
   private final EmitterRepository emitterRepository;
   private final ScheduledExecutorService heartbeatExecutor = Executors.newScheduledThreadPool(5);
   private final ThreadPoolTaskExecutor notificationExecutor;
+  private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
+
 
   public SseEmitter subscribe(UUID userId, String lastNotificationId) {
     // 기존 연결 정리 먼저 수행
@@ -165,12 +167,12 @@ public class EmitterService {
         }, notificationExecutor).orTimeout(2, TimeUnit.SECONDS) // 타임아웃 설정
         .exceptionally(ex -> {
           if (attempt < 3) {
-            try {
-              Thread.sleep(200);
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-            sendNotificationWithRetry(userId, notification, attempt + 1);
+            log.warn("알림 전송 실패 - 재시도 예정: attempt={}, userId={}, error={}", attempt, userId, ex.getMessage());
+
+            retryScheduler.schedule(() -> {
+              sendNotificationWithRetry(userId, notification, attempt + 1);
+            }, 200, TimeUnit.MILLISECONDS);
+
           } else {
             log.error("최종 실패: userId={}, 에러={}", userId, ex.getMessage());
           }
