@@ -69,7 +69,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         .where(whereClause)
         .groupBy(qWatchRoom.id, qContent.id)
         .orderBy(orderSpecifier)
-        .limit(request.getSize())
+        .limit(request.getSize() + 1)
         .fetch();
   }
 
@@ -176,9 +176,10 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
 
   //정렬 조건 생성
   private OrderSpecifier<?>[] getOrderSpecifier(String sortBy, String direction) {
-    boolean isDesc = direction.equalsIgnoreCase("desc");
+    boolean isDesc = direction == null || direction.equalsIgnoreCase("desc");
+    String lowerSortBy = sortBy == null? "participantscount" : sortBy.toLowerCase();
 
-    OrderSpecifier<?> primarySort = switch (sortBy.toLowerCase()) {
+    OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
       case "title" -> isDesc ? qWatchRoom.title.desc() : qWatchRoom.title.asc();
       case "participantscount" -> isDesc ? qWatchRoomParticipant.countDistinct().desc()

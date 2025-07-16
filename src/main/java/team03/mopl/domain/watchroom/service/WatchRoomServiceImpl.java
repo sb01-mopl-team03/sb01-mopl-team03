@@ -93,7 +93,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         .stream().map(WatchRoomDto::from).toList());
 
     // 다음 페이지 있는지 검사
-    boolean hasNext = result.size() > request.getSize();
+    boolean hasNext = result.size() > watchRoomSearchInternalDto.getSize();
 
     // 비어있지 않고, 다음 게 있다면 결과의 마지막을 삭제
     if (!result.isEmpty() && hasNext) {
@@ -117,6 +117,10 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   // 커서 디코더
   private Cursor decodeCursor(String encodedCursor) {
+    if (encodedCursor == null) {
+      return new Cursor(null, null);
+    }
+
     try {
       byte[] decodedBytes = Base64.getUrlDecoder().decode(encodedCursor);
       String decodedJson = new String(decodedBytes, StandardCharsets.UTF_8);
@@ -141,7 +145,9 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   }
 
   private String extractLastValue(WatchRoomDto lastItem, String sortBy) {
-    return switch (sortBy.toLowerCase()) {
+    String lowerSortBy = sortBy == null? "participantscount" : sortBy.toLowerCase();
+
+    return switch (lowerSortBy) {
       case "createdat" -> lastItem.createdAt().toString();
       case "title" -> lastItem.title();
       case "participantscount" -> String.valueOf(lastItem.headCount());

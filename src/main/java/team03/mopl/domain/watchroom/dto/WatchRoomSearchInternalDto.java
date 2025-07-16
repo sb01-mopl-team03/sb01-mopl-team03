@@ -26,7 +26,7 @@ public class WatchRoomSearchInternalDto {
         .direction(watchRoomSearchDto.getDirection())
         .cursor(cursor)
         .sortBy(watchRoomSearchDto.getSortBy())
-        .size(watchRoomSearchDto.getSize() + 1)
+        .size(watchRoomSearchDto.getSize() == null ? 20 : watchRoomSearchDto.getSize())
         .build();
   }
 }
