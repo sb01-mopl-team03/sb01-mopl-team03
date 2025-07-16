@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.WatchRoomApi;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
@@ -21,20 +22,23 @@ import team03.mopl.jwt.CustomUserDetails;
 @RestController
 @RequestMapping("/api/rooms")
 @RequiredArgsConstructor
-public class WatchRoomController {
+public class WatchRoomController implements WatchRoomApi {
 
   private final WatchRoomService watchRoomService;
 
+  @Override
   @GetMapping
   public ResponseEntity<List<WatchRoomDto>> getChatRooms() {
     return ResponseEntity.ok(watchRoomService.getAll());
   }
 
+  @Override
   @GetMapping("/{roomId}")
   public ResponseEntity<WatchRoomDto> getChatRoom(@PathVariable("roomId") String roomId) {
     return ResponseEntity.ok(watchRoomService.getById(UUID.fromString(roomId)));
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<WatchRoomDto> createChatRoom(@RequestBody WatchRoomCreateRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(watchRoomService.create(request));
