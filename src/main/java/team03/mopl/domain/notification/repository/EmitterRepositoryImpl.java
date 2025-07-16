@@ -5,12 +5,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.domain.notification.entity.Notification;
 
 @Repository
 @NoArgsConstructor
+@Slf4j
 public class EmitterRepositoryImpl implements EmitterRepository {
 
   /**
@@ -135,11 +137,9 @@ public class EmitterRepositoryImpl implements EmitterRepository {
    */
   @Override
   public void deleteNotificationCachesByNotificationIdPrefix(UUID notificationId) {
-    notificationCache.forEach((key, notification) -> {
-      if(key.startsWith(String.valueOf(notificationId))){
-        notificationCache.remove(key);
-      }
-    });
+    String prefix = String.valueOf(notificationId);
+    notificationCache.entrySet().removeIf(entry -> entry.getKey().startsWith(prefix));
+    log.debug("Notification 캐시 삭제: notificationId = {}", notificationId);
   }
   /**
    *
@@ -148,10 +148,7 @@ public class EmitterRepositoryImpl implements EmitterRepository {
    */
   @Override
   public void deleteAllNotificationCachesByUserIdPrefix(String userId) {
-    notificationCache.forEach((key, notification) -> {
-      if(key.contains(userId)){
-        notificationCache.remove(key);
-      }
-    });
+    notificationCache.entrySet().removeIf(entry -> entry.getKey().contains(userId));
+    log.debug("사용자 모든 Notification 캐시 삭제: userId = {}", userId);
   }
 }
