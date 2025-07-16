@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
@@ -268,22 +266,22 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(9.5)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4.5)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(7)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(2)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(8.5)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(3.5)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(9)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(7.5)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(2.5)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-16T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(8)).build()
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(3)).build()
       );
       contentRepository.saveAll(contents);
 
@@ -304,8 +302,8 @@ class ContentRepositoryImplTest {
       assertThat(results.size()).isEqualTo(6);
       assertThat(results)
           .extracting(content -> content.getAvgRating())
-          .containsExactly(BigDecimal.valueOf(9.5), BigDecimal.valueOf(9), BigDecimal.valueOf(8.5),
-              BigDecimal.valueOf(8), BigDecimal.valueOf(7.5), BigDecimal.valueOf(7));
+          .containsExactly(BigDecimal.valueOf(4.5), BigDecimal.valueOf(4), BigDecimal.valueOf(3.5),
+              BigDecimal.valueOf(3), BigDecimal.valueOf(2.5), BigDecimal.valueOf(2));
     }
 
     @Test
@@ -501,14 +499,14 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(7)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(3)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(9)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(5)).build(),
           //
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(8)).build()
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build()
       );
       contentRepository.saveAll(contents);
 
@@ -531,7 +529,7 @@ class ContentRepositoryImplTest {
       assertThat(firstPageresults.size()).isEqualTo(2);
       assertThat(firstPageresults)
           .extracting(Content::getAvgRating)
-          .containsExactly(BigDecimal.valueOf(9), BigDecimal.valueOf(8));
+          .containsExactly(BigDecimal.valueOf(5), BigDecimal.valueOf(4));
 
       // 두번째 페이지
       // given
@@ -549,7 +547,7 @@ class ContentRepositoryImplTest {
       assertThat(secondPageResults.size()).isEqualTo(1);
       assertThat(secondPageResults)
           .extracting(Content::getAvgRating)
-          .containsExactly(BigDecimal.valueOf(7));
+          .containsExactly(BigDecimal.valueOf(3));
     }
 
     @Test
@@ -559,14 +557,14 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(8)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(9)).build(),
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(5)).build(),
           //
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(8)).build()
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build()
       );
       contentRepository.saveAll(contents);
 
@@ -599,8 +597,8 @@ class ContentRepositoryImplTest {
       //
       System.out.println("First page last ID   : " + lastContentFirstPage.getId());
       System.out.println("Second page first ID : " + secondPageResults.get(0).getId());
-      assertThat(lastContentFirstPage.getAvgRating()).isEqualTo(BigDecimal.valueOf(8));
-      assertThat(secondPageResults.get(0).getAvgRating()).isEqualTo(BigDecimal.valueOf(8));
+      assertThat(lastContentFirstPage.getAvgRating()).isEqualTo(BigDecimal.valueOf(4));
+      assertThat(secondPageResults.get(0).getAvgRating()).isEqualTo(BigDecimal.valueOf(4));
       assertThat(secondPageResults.get(0).getId().toString())
           .isLessThan(lastContentFirstPage.getId().toString());
     }
