@@ -2,12 +2,14 @@ package team03.mopl.domain.watchroom.service;
 
 import java.util.List;
 import java.util.UUID;
+import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.participant.ParticipantsInfoDto;
 import team03.mopl.domain.watchroom.dto.video.VideoControlRequest;
 import team03.mopl.domain.watchroom.dto.video.VideoSyncDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomInfoDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
 
 public interface WatchRoomService {
 
@@ -16,6 +18,9 @@ public interface WatchRoomService {
 
   //채팅방 전체 조회
   List<WatchRoomDto> getAll();
+
+  //채팅방 전체 조회(페이지네이션)
+  CursorPageResponseDto<WatchRoomDto> getAllPaginated(WatchRoomSearchDto request);
 
   //채팅방 단일 조회
   WatchRoomDto getById(UUID id);
