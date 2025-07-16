@@ -290,6 +290,7 @@ class WatchRoomServiceImplTest {
     void successWhenLastPage() throws JsonProcessingException {
       // given
       WatchRoomSearchDto request = WatchRoomSearchDto.builder()
+          .searchKeyword("테스트")
           .size(2)
           .direction("DESC")
           .build();
@@ -306,7 +307,8 @@ class WatchRoomServiceImplTest {
       when(objectMapper.writeValueAsString(any(Cursor.class)))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
-      when(watchRoomRepository.count()).thenReturn(2L);
+      when(watchRoomParticipantRepository
+        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
@@ -353,7 +355,8 @@ class WatchRoomServiceImplTest {
       when(objectMapper.writeValueAsString(any(Cursor.class)))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
-      when(watchRoomRepository.count()).thenReturn(2L);
+      when(watchRoomParticipantRepository
+        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
@@ -397,7 +400,8 @@ class WatchRoomServiceImplTest {
       when(objectMapper.writeValueAsString(any(Cursor.class)))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
-      when(watchRoomRepository.count()).thenReturn(2L);
+      when(watchRoomParticipantRepository
+        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAllPaginated(request);
@@ -431,7 +435,8 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-      when(watchRoomRepository.count()).thenReturn(2L);
+      when(watchRoomParticipantRepository
+        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       when(objectMapper.writeValueAsString(any(Cursor.class)))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");

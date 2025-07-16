@@ -11,6 +11,8 @@ public interface WatchRoomParticipantRepositoryCustom {
   //will be deprecated
   List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDto();
 
+  Long countWatchRoomContentWithHeadcountDto(String searchKeyword);
+
   List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDtoPaginated(
       WatchRoomSearchInternalDto request);
 

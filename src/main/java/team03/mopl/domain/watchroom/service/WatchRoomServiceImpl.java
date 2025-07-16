@@ -104,7 +104,8 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     WatchRoomDto nextCursor =result.isEmpty()? null : result.get(result.size() - 1);
 
     //총 개수
-    long totalElements = watchRoomRepository.count();
+    long totalElements = watchRoomParticipantRepository
+        .countWatchRoomContentWithHeadcountDto(request.getSearchKeyword());
 
     return CursorPageResponseDto.<WatchRoomDto>builder()
         .data(result)

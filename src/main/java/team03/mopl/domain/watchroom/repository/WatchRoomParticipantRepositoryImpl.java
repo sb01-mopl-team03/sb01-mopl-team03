@@ -42,6 +42,21 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   }
 
   @Override
+  public Long countWatchRoomContentWithHeadcountDto(String searchKeyword) {
+    BooleanBuilder whereClause = new BooleanBuilder();
+
+    applySearchKeywordCondition(whereClause, searchKeyword);
+
+    return queryFactory
+        .select(qWatchRoom.id.countDistinct())
+        .from(qWatchRoom)
+        .leftJoin(qWatchRoomParticipant).on(qWatchRoomParticipant.watchRoom.eq(qWatchRoom))
+        .join(qWatchRoom.content, qContent)
+        .where(whereClause)
+        .fetchOne();
+  }
+
+  @Override
   public List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDtoPaginated(
       WatchRoomSearchInternalDto request) {
 
