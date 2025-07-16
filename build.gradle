@@ -128,6 +128,7 @@ afterEvaluate {
                     '**/*$*.class',      // Lombok이 생성한 내부 클래스
                     '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
                     '**/team03/mopl/domain/**/dto/**', // DTO 클래스
+                    '**/team03/mopl/domain/**/batch/**', // 배치
                     '**/S3Service.class' // s3 서비스
             ])
         })
