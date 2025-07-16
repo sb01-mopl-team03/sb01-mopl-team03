@@ -3,7 +3,7 @@ package team03.mopl.domain.watchroom.handler;
 import java.util.concurrent.BlockingQueue;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
 import java.lang.reflect.Type;
 
 //채팅 메세지용 STOMP Frame Handler

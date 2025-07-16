@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.UUID;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
-import team03.mopl.domain.watchroom.dto.ParticipantsInfoDto;
-import team03.mopl.domain.watchroom.dto.VideoControlRequest;
-import team03.mopl.domain.watchroom.dto.VideoSyncDto;
+import team03.mopl.domain.watchroom.dto.participant.ParticipantsInfoDto;
+import team03.mopl.domain.watchroom.dto.video.VideoControlRequest;
+import team03.mopl.domain.watchroom.dto.video.VideoSyncDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomInfoDto;
 
 public interface WatchRoomService {
