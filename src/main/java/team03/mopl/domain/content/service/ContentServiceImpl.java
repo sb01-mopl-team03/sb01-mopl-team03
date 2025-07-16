@@ -182,8 +182,10 @@ public class ContentServiceImpl implements ContentService {
     String lastValue;
     if (sortBy.equalsIgnoreCase("RELEASE_AT")) {
       lastValue = contentDto.releaseDate().toString();
-    } else {
+    } else if(sortBy.equalsIgnoreCase("TITLE")) {
       lastValue = contentDto.titleNormalized();
+    } else { // AVG_RATING
+      lastValue = contentDto.avgRating().toString();
     }
 
     Cursor cursor = new Cursor(lastValue, lastId);

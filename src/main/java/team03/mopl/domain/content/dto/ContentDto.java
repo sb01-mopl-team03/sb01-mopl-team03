@@ -1,5 +1,6 @@
 package team03.mopl.domain.content.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import team03.mopl.domain.content.Content;
@@ -14,7 +15,8 @@ public record ContentDto (
     ContentType contentType,
     LocalDateTime releaseDate,
     String youtubeUrl,
-    String thumbnailUrl
+    String thumbnailUrl,
+    BigDecimal avgRating
 ){
   public static ContentDto from(Content content){
     return new ContentDto(
@@ -26,7 +28,8 @@ public record ContentDto (
         content.getContentType(),
         content.getReleaseDate(),
         content.getYoutubeUrl(),
-        content.getThumbnailUrl()
+        content.getThumbnailUrl(),
+        content.getAvgRating()
     );
   }
 }
