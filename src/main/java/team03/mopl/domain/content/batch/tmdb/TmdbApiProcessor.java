@@ -30,7 +30,7 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
   public Content process(TmdbItemDto item) throws Exception {
 
     if (contentRepository.existsByDataId(item.getId())) {
-      log.info("이미 존재하는 Content 입니다. item.getId()={}", item.getId());
+      log.debug("이미 존재하는 Content: item.getId()={}", item.getId());
       return null;
     }
 
@@ -92,10 +92,21 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
        // log.info("videoUrl={}", videoUrl);
     }
 
+    if (videoUrl.isEmpty()){
+      log.debug("YouTube URL 부재: item.getId()={}", item.getId());
+      return null;
+    }
+
     // 9. title 문자열 정규화
     String titleNormalized = NormalizerUtil.normalize(title);
 
-    // 10. Content 객체 생성및 반환
+    // 10. thumbnail URL 생성: 전체 경로, 원본 이미지
+    String thumbnailUrl = "";
+    if(item.getPosterPath() != null){
+      thumbnailUrl = "https://image.tmdb.org/t/p/original" + item.getPosterPath();
+    }
+
+    // 11. Content 객체 생성및 반환
     Content content = Content.builder()
         .title(title)
         .titleNormalized(titleNormalized)
@@ -103,7 +114,8 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
         .description(item.getOverview())
         .contentType(contentType)
         .releaseDate(releaseDate)
-        .url(videoUrl)
+        .youtubeUrl(videoUrl)
+        .thumbnailUrl(thumbnailUrl)
         .build();
 
     return content;

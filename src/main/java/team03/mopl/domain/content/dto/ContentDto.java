@@ -13,7 +13,8 @@ public record ContentDto (
     String description,
     ContentType contentType,
     LocalDateTime releaseDate,
-    String url // nullable
+    String youtubeUrl,
+    String thumbnailUrl
 ){
   public static ContentDto from(Content content){
     return new ContentDto(
@@ -24,7 +25,8 @@ public record ContentDto (
         content.getDescription(),
         content.getContentType(),
         content.getReleaseDate(),
-        content.getUrl()
+        content.getYoutubeUrl(),
+        content.getThumbnailUrl()
     );
   }
 }

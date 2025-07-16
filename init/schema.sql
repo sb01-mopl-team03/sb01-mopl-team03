@@ -18,8 +18,8 @@ COMMENT ON COLUMN "users"."role" IS 'ENUM';
 -- 콘텐츠 테이블
 CREATE TABLE "contents"
 (
-    "id"               UUID PRIMARY KEY                  NOT NULL,
-    "title"            VARCHAR(255)                      NOT NULL,
+    "id"               UUID PRIMARY KEY        NOT NULL,
+    "title"            VARCHAR(255)            NOT NULL,
     "title_normalized" VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
     "data_id"          varchar(255)                      NULL,
     "description"      TEXT                              NULL,
@@ -27,7 +27,8 @@ CREATE TABLE "contents"
     "release_date"     TIMESTAMP                         NOT NULL,
     "avg_rating"       DECIMAL(3, 2)                     NULL CHECK (avg_rating >= 0.0 AND avg_rating <= 5.0),
     "created_at"       TIMESTAMP DEFAULT now()           NOT NULL,
-    "url"              TEXT                              NULL
+    "youtube_url"      TEXT                              NOT NULL,
+    "thumbnail_url"    TEXT                              NULL
 );
 COMMENT ON COLUMN "contents"."content_type" IS 'ENUM';
 CREATE INDEX idx_content_title ON contents (title);

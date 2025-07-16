@@ -2,6 +2,7 @@ package team03.mopl.domain.admin;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.user.UserNotFoundException;
@@ -15,6 +16,7 @@ import team03.mopl.jwt.JwtSessionRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminService {
 
   private final UserRepository userRepository;
@@ -23,52 +25,70 @@ public class AdminService {
 
   @Transactional
   public UserResponse changeRole(UUID userId, Role newRole) {
-    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    log.info("changeRole - 권한 변경 시작: userId={}, newRole={}", userId, newRole);
 
-    User updated=user.toBuilder()
+    User user = userRepository.findById(userId).orElseThrow(() -> {
+      log.warn("존재하지 않는 사용자: userId={}", userId);
+      return new UserNotFoundException();
+    });
+
+    User updated = user.toBuilder()
         .role(newRole)
         .build();
 
     userRepository.save(updated);
 
-    jwtService.invalidateSessionByRefreshToken(
-        jwtSessionRepository.findFirstByUserId(userId)
-            .map(JwtSession::getRefreshToken)
-            .orElse(null),
-        true
-    );
+    String refreshToken = jwtSessionRepository.findFirstByUserId(userId)
+        .map(JwtSession::getRefreshToken)
+        .orElse(null);
+
+    jwtService.invalidateSessionByRefreshToken(refreshToken, true);
+    log.info("changeRole - 권한 변경 완료: userId={}, newRole={}", userId, newRole);
+
     return UserResponse.from(updated);
   }
 
   @Transactional
   public UserResponse lockUser(UUID userId) {
-    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    log.info("lockUser - 계정 잠금 시작: userId={}", userId);
 
-    User updated=user.toBuilder()
+    User user = userRepository.findById(userId).orElseThrow(() -> {
+      log.warn("존재하지 않는 사용자: userId={}", userId);
+      return new UserNotFoundException();
+    });
+
+    User updated = user.toBuilder()
         .isLocked(true)
         .build();
 
     userRepository.save(updated);
-    jwtService.invalidateSessionByRefreshToken(
-        jwtSessionRepository.findFirstByUserId(userId)
-            .map(JwtSession::getRefreshToken)
-            .orElse(null),
-        true
-    );
+
+    String refreshToken = jwtSessionRepository.findFirstByUserId(userId)
+        .map(JwtSession::getRefreshToken)
+        .orElse(null);
+
+    jwtService.invalidateSessionByRefreshToken(refreshToken, true);
+    log.info("lockUser - 계정 잠금 완료 및 세션 무효화: userId={}", userId);
 
     return UserResponse.from(updated);
   }
 
   @Transactional
   public UserResponse unlockUser(UUID userId) {
-    User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    log.info("unlockUser - 계정 잠금 해제 시작: userId={}", userId);
 
-    User updated=user.toBuilder()
+    User user = userRepository.findById(userId).orElseThrow(() -> {
+      log.warn("존재하지 않는 사용자: userId={}", userId);
+      return new UserNotFoundException();
+    });
+
+    User updated = user.toBuilder()
         .isLocked(false)
         .build();
 
     userRepository.save(updated);
 
+    log.info("unlockUser - 계정 잠금 해제 완료: userId={}", userId);
     return UserResponse.from(updated);
   }
 

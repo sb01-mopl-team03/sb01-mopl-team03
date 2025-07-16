@@ -65,13 +65,16 @@ class ContentRepositoryImplTest {
         List<Content> contents = List.of(
             Content.builder().title("제목필터링테스트1-검색됨").titleNormalized("제목필터링테스트1-검색됨")
                 .releaseDate(LocalDateTime.parse("2025-06-25T10:00"))
-                .contentType(ContentType.MOVIE).build(),
+                .contentType(ContentType.MOVIE)
+                .youtubeUrl("").build(),
             Content.builder().title("제목필터링테스트2-검색됨").titleNormalized("제목필터링테스트2-검색됨")
                 .releaseDate(LocalDateTime.parse("2019-07-09T10:00"))
-                .contentType(ContentType.MOVIE).build(),
+                .contentType(ContentType.MOVIE)
+                .youtubeUrl("").build(),
             Content.builder().title("제목필터링테스트3-안됨").titleNormalized("제목필터링테스트3-안됨")
                 .releaseDate(LocalDateTime.parse("2019-07-09T10:00"))
-                .contentType(ContentType.MOVIE).build()
+                .contentType(ContentType.MOVIE)
+                .youtubeUrl("").build()
         );
         contentRepository.saveAll(contents);
 
@@ -100,13 +103,15 @@ class ContentRepositoryImplTest {
         List<Content> contents = List.of(
             Content.builder().title("컨텐츠타입필터링1").titleNormalized("컨텐츠타입필터링1")
                 .releaseDate(LocalDateTime.parse("2025-06-25T10:00"))
-                .contentType(ContentType.MOVIE).build(),
+                .contentType(ContentType.MOVIE)
+                .youtubeUrl("").build(),
             Content.builder().title("컨텐츠타입필터링2").titleNormalized("컨텐츠타입필터링2")
                 .releaseDate(LocalDateTime.parse("2019-07-09T10:00"))
-                .contentType(ContentType.MOVIE).build(),
+                .contentType(ContentType.MOVIE)
+                .youtubeUrl("").build(),
             Content.builder().title("컨텐츠타입필터링3").titleNormalized("컨텐츠타입필터링3")
                 .releaseDate(LocalDateTime.parse("2019-07-09T10:00")).contentType(ContentType.TV)
-                .build()
+                .youtubeUrl("").build()
         );
         contentRepository.saveAll(contents);
 
@@ -135,7 +140,7 @@ class ContentRepositoryImplTest {
         List<Content> contents = List.of(
             Content.builder().title("존재하는데이터").titleNormalized("존재하는데이터")
                 .releaseDate(LocalDateTime.parse("2025-06-25T10:00"))
-                .contentType(ContentType.MOVIE).build()
+                .contentType(ContentType.MOVIE).youtubeUrl("").build()
         );
         contentRepository.saveAll(contents);
 
@@ -169,22 +174,22 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("1").titleNormalized("1")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("2").titleNormalized("2")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("A").titleNormalized("A")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("B").titleNormalized("B")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("가").titleNormalized("가")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("나").titleNormalized("나")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build()
+              .youtubeUrl("").build()
       );
       contentRepository.saveAll(contents);
 
@@ -215,22 +220,22 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-06-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-05-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-04-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-03-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-02-07T10:00")).contentType(ContentType.MOVIE)
-              .build()
+              .youtubeUrl("").build()
       );
       contentRepository.saveAll(contents);
 
@@ -262,22 +267,22 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("1").titleNormalized("1")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("2").titleNormalized("2")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("A").titleNormalized("A")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("B").titleNormalized("B")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("가").titleNormalized("가")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("나").titleNormalized("나")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build()
+              .youtubeUrl("").build()
       );
       contentRepository.saveAll(contents);
 
@@ -331,14 +336,14 @@ class ContentRepositoryImplTest {
       List<Content> contents = List.of(
           Content.builder().title("Ç").titleNormalized("C")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           Content.builder().title("B-").titleNormalized("B")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build(),
+              .youtubeUrl("").build(),
           //
           Content.builder().title("A").titleNormalized("A")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .build()
+              .youtubeUrl("").build()
       );
       contentRepository.saveAll(contents);
 
@@ -352,7 +357,8 @@ class ContentRepositoryImplTest {
       int size = 2;
 
       // when
-      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType, sortBy,
+      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
           direction, cursor, cursorId, size);
 
       // then
@@ -364,12 +370,13 @@ class ContentRepositoryImplTest {
 
       // 두번째 페이지
       // given
-      Content lastContentFirstPage = firstPageresults.get(size-1);
+      Content lastContentFirstPage = firstPageresults.get(size - 1);
       String nextCursor = lastContentFirstPage.getTitleNormalized();
       UUID nextCursorId = lastContentFirstPage.getId();
 
       // when
-      List<Content> secondPageResults = contentRepository.findContentsWithCursor(title, contentType, sortBy,
+      List<Content> secondPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
           direction, nextCursor, nextCursorId, size);
 
       // then
