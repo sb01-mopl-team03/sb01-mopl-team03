@@ -9,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -121,5 +122,20 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
             .or(content.avgRating.eq(bigDecimalCursor).and(content.id.gt(cursorId)));
       }
     }
+  }
+
+  public long countContentsWithFilter(String title, String contentType){
+    BooleanExpression titleExpression =
+        title != null && !title.isEmpty() ? content.title.containsIgnoreCase(title) : null;
+
+    BooleanExpression contentTypeExpression =
+        contentType != null && !contentType.isEmpty() ?
+            content.contentType.stringValue().equalsIgnoreCase(contentType) : null;
+
+    return Optional.ofNullable(queryFactory
+        .select(content.count())
+        .from(content)
+        .where(titleExpression, contentTypeExpression)
+        .fetchOne()).orElse(0L);
   }
 }
