@@ -6,14 +6,22 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 import jakarta.annotation.PostConstruct;
+import java.util.concurrent.CompletableFuture;
 import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
 import kr.co.shineware.nlp.komoran.core.Komoran;
 import kr.co.shineware.nlp.komoran.model.KomoranResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team03.mopl.common.dto.Cursor;
+import team03.mopl.common.dto.CursorPageResponseDto;
+import team03.mopl.common.exception.InvalidCursorFormatException;
+import team03.mopl.common.exception.InvalidPageSizeException;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.curation.ContentRatingUpdateException;
+import team03.mopl.common.exception.curation.InvalidScoreRangeException;
 import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
@@ -21,6 +29,7 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
@@ -205,13 +214,12 @@ public class CurationServiceImpl implements CurationService {
     }
   }
 
-  // 사용자 키워드 등록
+  // 키워드 등록
   @Override
   @Transactional
   public KeywordDto registerKeyword(UUID userId, String keywordText) {
     User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
     String normalizedKeyword = normalizeMultilingualText(keywordText);
-    String language = detectLanguage(keywordText);
 
     Keyword keyword = Keyword.builder()
         .user(user)
@@ -219,46 +227,228 @@ public class CurationServiceImpl implements CurationService {
         .build();
     keyword = keywordRepository.save(keyword);
 
-    List<ContentDto> recommendations = curateContentForKeyword(keyword);
+    // 비동기로 점수 계산 시작
+    calculateScoresAsync(keyword);
 
-    log.info("registerKeyword - 키워드 등록: '{}' -> '{}' [{}] (매칭된 콘텐츠: {}개)",
-        keywordText, normalizedKeyword, language, recommendations.size());
+    log.info("registerKeyword - 키워드 등록 완료: '{}' -> '{}', ID: {}",
+        keywordText, normalizedKeyword, keyword.getId());
+
     return KeywordDto.from(keyword);
   }
 
-  // AI 기반 키워드별 콘텐츠 큐레이션
+  // 메인 추천 조회 메서드
   @Override
-  @Transactional
-  public List<ContentDto> curateContentForKeyword(Keyword keyword) {
-    String keywordText = keyword.getKeyword();
-    List<Content> recommendations = new ArrayList<>();
-    List<Content> allContents = contentRepository.findAll();
+  @Transactional(readOnly = true)
+  public CursorPageResponseDto<ContentDto> getRecommendationsByKeyword(
+      UUID keywordId,
+      UUID userId,
+      CursorPageRequest request
+  ) {
+    // 입력 검증 추가
+    validatePageRequest(request);
 
-    for (Content content : allContents) {
-      double aiScore = calculateAdvancedMatchingScore(keywordText, content);
-      double threshold = getLanguageBasedThreshold(keywordText);
+    // 키워드 권한 확인
+    Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
+        .orElseThrow(KeywordNotFoundException::new);
 
-      if (aiScore > threshold) {
-        recommendations.add(content);
-        KeywordContent keywordContent = new KeywordContent(keyword, content);
-        keywordContentRepository.save(keywordContent);
+    // 점수가 계산되어 있는지 확인
+    if (!keywordContentRepository.existsByKeywordId(keywordId)) {
+      return handleMissingScores(keyword, request);
+    }
+
+    // 커서 파싱 (예외 처리 개선)
+    Double cursorScore = null;
+    String cursorContentId = null;
+    if (request.cursor() != null && !request.cursor().isEmpty()) {
+      try {
+        Cursor cursor = parseCursor(request.cursor());
+        cursorScore = Double.parseDouble(cursor.lastValue());
+        cursorContentId = cursor.lastId();
+      } catch (Exception e) {
+        log.warn("잘못된 커서 형식: {}", request.cursor());
+        throw new InvalidCursorFormatException();
       }
     }
 
-    recommendations.sort((c1, c2) -> {
-      double score1 = calculateAdvancedMatchingScore(keywordText, c1);
-      double score2 = calculateAdvancedMatchingScore(keywordText, c2);
-      return Double.compare(score2, score1);
-    });
+    // 데이터베이스에서 직접 페이징된 결과 조회
+    List<KeywordContent> keywordContents = keywordContentRepository
+        .findByKeywordIdWithPagination(
+            keywordId,
+            cursorScore,
+            cursorContentId,
+            request.size() + 1
+        );
 
-    return recommendations.stream().map(ContentDto::from).toList();
+    // 응답 생성
+    return buildCursorResponse(keywordContents, request.size(), keywordId);
+  }
+
+  private CursorPageResponseDto<ContentDto> buildCursorResponse(
+      List<KeywordContent> keywordContents,
+      int requestSize,
+      UUID keywordId
+  ) {
+    // hasNext 판단 및 실제 데이터 추출
+    boolean hasNext = keywordContents.size() > requestSize;
+    List<KeywordContent> pageKeywordContents = hasNext ?
+        keywordContents.subList(0, requestSize) : keywordContents;
+
+    // 다음 커서 생성
+    String nextCursor = null;
+    if (hasNext && !pageKeywordContents.isEmpty()) {
+      KeywordContent lastContent = pageKeywordContents.get(pageKeywordContents.size() - 1);
+      nextCursor = createCursor(lastContent.getScore(), lastContent.getContent().getId().toString());
+    }
+
+    // ContentDto 리스트 생성
+    List<ContentDto> contentDtos = pageKeywordContents.stream()
+        .map(kc -> ContentDto.from(kc.getContent()))
+        .toList();
+
+    // 총 개수 조회 (캐싱 고려)
+    long totalElements = keywordContentRepository.countByKeywordId(keywordId);
+
+    return CursorPageResponseDto.<ContentDto>builder()
+        .data(contentDtos)
+        .nextCursor(nextCursor)
+        .size(contentDtos.size())
+        .totalElements(totalElements)
+        .hasNext(hasNext)
+        .build();
+  }
+
+  private void validatePageRequest(CursorPageRequest request) {
+    if (request.size() <= 0 || request.size() > 50) {
+      throw new InvalidPageSizeException();
+    }
+  }
+
+  // 비동기 점수 계산
+  @Async("scoreCalculationExecutor")
+  @Transactional
+  public CompletableFuture<Void> calculateScoresAsync(Keyword keyword) {
+    try {
+      log.info("calculateScoreAsync- 키워드: '{}'", keyword.getKeyword());
+
+      // 기존 KeywordContent 삭제
+      keywordContentRepository.deleteByKeywordId(keyword.getId());
+
+      double threshold = getLanguageBasedThreshold(keyword.getKeyword());
+      int batchSize = 1000;
+      int offset = 0;
+      int totalProcessed = 0;
+      int totalSaved = 0;
+
+      while (true) {
+        List<Content> contentBatch = contentRepository.findAllWithPagination(offset, batchSize);
+
+        if (contentBatch.isEmpty()) {
+          break;
+        }
+
+        // 배치 처리 성능 개선
+        List<KeywordContent> keywordContents = processBatch(keyword, contentBatch, threshold);
+
+        if (!keywordContents.isEmpty()) {
+          keywordContentRepository.saveAll(keywordContents);
+          totalSaved += keywordContents.size();
+        }
+
+        totalProcessed += contentBatch.size();
+        offset += batchSize;
+
+        // 진행 상황 로깅
+        if (totalProcessed % 5000 == 0) {
+          log.info("calculateScoresAsync 진행 - 키워드: '{}', 처리: {}, 저장: {}",
+              keyword.getKeyword(), totalProcessed, totalSaved);
+        }
+      }
+
+      log.info("calculateScoresAsync 완료 - 키워드: '{}', 총 처리: {}, 총 저장: {}",
+          keyword.getKeyword(), totalProcessed, totalSaved);
+
+      return CompletableFuture.completedFuture(null);
+
+    } catch (Exception e) {
+      log.warn("점수 계산 실패 - 키워드: '{}'", keyword.getKeyword(), e);
+      // 실패 시 키워드 상태 업데이트 등 추가 처리 가능
+      return CompletableFuture.failedFuture(e);
+    }
+  }
+
+  private List<KeywordContent> processBatch(Keyword keyword, List<Content> contentBatch, double threshold) {
+    return contentBatch.parallelStream() // 병렬 처리로 성능 향상
+        .map(content -> {
+          double score = calculateAdvancedMatchingScore(keyword.getKeyword(), content);
+          return KeywordContent.builder()
+              .keyword(keyword)
+              .content(content)
+              .score(score)
+              .build();
+        })
+        .filter(kc -> kc.getScore() > threshold)
+        .toList();
+  }
+
+  // 점수가 없을 때 처리
+  private CursorPageResponseDto<ContentDto> handleMissingScores(
+      Keyword keyword,
+      CursorPageRequest request
+  ) {
+    log.warn("점수 계산이 완료되지 않음 - 키워드 ID: {}", keyword.getId());
+
+    // 빈 결과 반환 또는 제한된 실시간 계산
+    return CursorPageResponseDto.<ContentDto>builder()
+        .data(List.of())
+        .nextCursor(null)
+        .size(0)
+        .totalElements(0)
+        .hasNext(false)
+        .build();
+  }
+
+  // 커서 파싱
+  private Cursor parseCursor(String cursorString) {
+    try {
+      if (cursorString == null || cursorString.trim().isEmpty()) {
+        return null;
+      }
+
+      String decoded = new String(Base64.getDecoder().decode(cursorString));
+      String[] parts = decoded.split(":");
+
+      if (parts.length != 2) {
+        throw new InvalidCursorFormatException();
+      }
+
+      // 점수가 유효한 double인지 확인
+      double score = Double.parseDouble(parts[0]);
+      if (score < 0 || score > 1) {
+        throw new InvalidScoreRangeException();
+      }
+
+      // UUID 형식 확인
+      UUID.fromString(parts[1]);
+
+      return new Cursor(parts[0], parts[1]);
+    } catch (InvalidCursorFormatException | InvalidScoreRangeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  // 커서 생성
+  private String createCursor(double score, String contentId) {
+    String cursorData = score + ":" + contentId;
+    return Base64.getEncoder().encodeToString(cursorData.getBytes());
   }
 
   // 개선된 AI 매칭 점수 계산
   private double calculateAdvancedMatchingScore(String keyword, Content content) {
     double totalScore = 0.0;
 
-    // 1. 제목 매칭 (가중치 증가)
+    // 1. 제목 매칭 (가중치 최적화)
     double titleScore = calculateAdvancedTextSimilarity(keyword, content.getTitle()) * 0.5;
 
     // 2. 설명 매칭
@@ -483,25 +673,6 @@ public class CurationServiceImpl implements CurationService {
   }
 
   @Override
-  @Transactional(readOnly = true)
-  public List<ContentDto> getRecommendationsByKeyword(UUID keywordId, UUID userId) {
-    Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
-        .orElseThrow(KeywordNotFoundException::new);
-
-    List<KeywordContent> keywordContents = keywordContentRepository.findByKeywordId(keywordId);
-
-    return keywordContents.stream()
-        .map(KeywordContent::getContent)
-        .sorted((c1, c2) -> {
-          double score1 = calculateAdvancedMatchingScore(keyword.getKeyword(), c1);
-          double score2 = calculateAdvancedMatchingScore(keyword.getKeyword(), c2);
-          return Double.compare(score2, score1);
-        })
-        .map(ContentDto::from)
-        .toList();
-  }
-
-  @Override
   @Transactional
   public List<KeywordDto> getKeywordsByUser(UUID userId) {
     User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
@@ -513,25 +684,46 @@ public class CurationServiceImpl implements CurationService {
   @Override
   @Transactional
   public void batchCurationForNewContents(List<Content> newContents) {
+    if (newContents.isEmpty()) {
+      log.info("batchCurationForNewContents - 신규 콘텐츠가 없어 배치 큐레이션을 건너뜁니다.");
+      return;
+    }
+
     List<Keyword> allKeywords = keywordRepository.findAll();
+
+    if (allKeywords.isEmpty()) {
+      log.info("batchCurationForNewContents - 등록된 키워드가 없어 배치 큐레이션을 건너뜁니다.");
+      return;
+    }
+
+    int totalProcessed = 0;
+    int totalSaved = 0;
 
     for (Content content : newContents) {
       for (Keyword keyword : allKeywords) {
         double score = calculateAdvancedMatchingScore(keyword.getKeyword(), content);
+        double threshold = getLanguageBasedThreshold(keyword.getKeyword());
 
-        if (score > 0.25) { // 임계값 조정
+        if (score > threshold) {
           boolean exists = keywordContentRepository.existsByKeywordIdAndContentId(
               keyword.getId(), content.getId());
 
           if (!exists) {
-            KeywordContent keywordContent = new KeywordContent(keyword, content);
+            KeywordContent keywordContent = KeywordContent.builder()
+                .keyword(keyword)
+                .content(content)
+                .score(score)
+                .build();
             keywordContentRepository.save(keywordContent);
+            totalSaved++;
           }
         }
+        totalProcessed++;
       }
     }
 
-    log.info("신규 콘텐츠 {}개에 대한 배치 큐레이션 완료", newContents.size());
+    log.info("batchCurationForNewContents - 신규 콘텐츠 {}개에 대한 배치 큐레이션 완료 - 처리: {}, 저장: {}",
+        newContents.size(), totalProcessed, totalSaved);
   }
 
   @Override
@@ -545,9 +737,13 @@ public class CurationServiceImpl implements CurationService {
       content.setAvgRating(avgRating);
       contentRepository.save(content);
 
-      log.info("콘텐츠 평점 업데이트: {} -> {}", content.getTitle(), content.getAvgRating());
+      log.info("updateContentRating - 콘텐츠 평점 업데이트 완료: {} -> {}", content.getTitle(), avgRating);
+    } catch (ContentNotFoundException e) {
+      log.warn("콘텐츠를 찾을 수 없음: {}", contentId);
+      throw e;
     } catch (Exception e) {
-      log.warn("평점 업데이트 실패: contentId={}, error={}", contentId, e.getMessage());
+      log.warn("평점 업데이트 실패: contentId={}", contentId, e);
+      throw new ContentRatingUpdateException();
     }
   }
 
@@ -568,7 +764,7 @@ public class CurationServiceImpl implements CurationService {
       return BigDecimal.valueOf(averageRating).setScale(2, RoundingMode.HALF_UP);
     } catch (Exception e) {
       log.warn("평균 평점 계산 실패: contentId={}, error={}", content.getId(), e.getMessage());
-      return null;
+      throw e;
     }
   }
 
