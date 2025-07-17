@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import team03.mopl.domain.content.service.ContentService;
-import team03.mopl.domain.review.entity.ReviewEvent;
 
 @Component
 @RequiredArgsConstructor

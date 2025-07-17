@@ -1,4 +1,4 @@
-package team03.mopl.domain.review.entity;
+package team03.mopl.domain.review.event;
 
 import java.util.UUID;
 

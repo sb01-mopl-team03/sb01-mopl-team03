@@ -17,7 +17,7 @@ import team03.mopl.domain.review.dto.ReviewCreateRequest;
 import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.dto.ReviewUpdateRequest;
 import team03.mopl.domain.review.entity.Review;
-import team03.mopl.domain.review.entity.ReviewEvent;
+import team03.mopl.domain.review.event.ReviewEvent;
 import team03.mopl.domain.review.repository.ReviewRepository;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
