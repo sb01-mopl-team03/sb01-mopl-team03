@@ -11,18 +11,18 @@ VALUES ('550e8400-e29b-41d4-a716-446655440001', 'admin@example.com', 'admin', '$
        ('550e8400-e29b-41d4-a716-446655440005', 'alice@example.com', 'alice_brown', '$2b$10$hash5',
         'USER', true, false);
 
--- 콘텐츠 테스트 데이터
-INSERT INTO "contents" ("id", "title", "description", "content_type", "release_date", "url")
-VALUES ('650e8400-e29b-41d4-a716-446655440001', '인터스텔라', '우주를 배경으로 한 SF 영화', 'MOVIE',
-        '2014-11-07 00:00:00', 'https://example.com/interstellar'),
-       ('650e8400-e29b-41d4-a716-446655440002', '기생충', '봉준호 감독의 아카데미상 수상작', 'MOVIE',
-        '2019-05-30 00:00:00', 'https://example.com/parasite'),
-       ('650e8400-e29b-41d4-a716-446655440003', '브레이킹 배드 시즌 1', '화학 교사가 마약 제조업자가 되는 이야기',
-        'DRAMA', '2008-01-20 00:00:00', 'https://example.com/breaking-bad-s1'),
-       ('650e8400-e29b-41d4-a716-446655440004', '스트레인저 씽스 시즌 4', '80년대 배경의 초자연적 스릴러', 'DRAMA',
-        '2022-05-27 00:00:00', 'https://example.com/stranger-things-s4'),
-       ('650e8400-e29b-41d4-a716-446655440005', '블랙 미러: 밴더스내치', '인터랙티브 SF 영화', 'MOVIE',
-        '2018-12-28 00:00:00', 'https://example.com/bandersnatch');
+-- 콘텐츠 테스트 데이터 (스키마에 맞게 필드 추가/수정)
+INSERT INTO "contents" ("id", "title", "title_normalized", "data_id", "description", "content_type", "release_date", "youtube_url", "thumbnail_url", "avg_rating")
+VALUES ('650e8400-e29b-41d4-a716-446655440001', '인터스텔라', '인터스텔라', 'interstellar_2014', '우주를 배경으로 한 SF 영화', 'MOVIE',
+        '2014-11-07 00:00:00', 'https://www.youtube.com/watch?v=zSWdZVtXT7E', 'https://example.com/thumbnails/interstellar.jpg', 4.5),
+       ('650e8400-e29b-41d4-a716-446655440002', '기생충', '기생충', 'parasite_2019', '봉준호 감독의 아카데미상 수상작', 'MOVIE',
+        '2019-05-30 00:00:00', 'https://www.youtube.com/watch?v=5xH0HfJHsaY', 'https://example.com/thumbnails/parasite.jpg', 4.6),
+       ('650e8400-e29b-41d4-a716-446655440003', '브레이킹 배드 시즌 1', '브레이킹 배드 시즌 1', 'breaking_bad_s1', '화학 교사가 마약 제조업자가 되는 이야기',
+        'TV', '2008-01-20 00:00:00', 'https://www.youtube.com/watch?v=HhesaQXLuRY', 'https://example.com/thumbnails/breaking_bad.jpg', 4.8),
+       ('650e8400-e29b-41d4-a716-446655440004', '스트레인저 씽스 시즌 4', '스트레인저 씽스 시즌 4', 'stranger_things_s4', '80년대 배경의 초자연적 스릴러', 'TV',
+        '2022-05-27 00:00:00', 'https://www.youtube.com/watch?v=b9EkMc79ZSU', 'https://example.com/thumbnails/stranger_things.jpg', 4.3),
+       ('650e8400-e29b-41d4-a716-446655440005', '블랙 미러: 밴더스내치', '블랙 미러: 밴더스내치', 'bandersnatch_2018', '인터랙티브 SF 영화', 'MOVIE',
+        '2018-12-28 00:00:00', 'https://www.youtube.com/watch?v=VNw9DAwp2Kk', 'https://example.com/thumbnails/bandersnatch.jpg', 3.9);
 
 -- 키워드 테스트 데이터
 INSERT INTO "keywords" ("id", "user_id", "keyword")
@@ -110,21 +110,21 @@ VALUES ('d50e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-4466554
        ('d50e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003',
         '550e8400-e29b-41d4-a716-446655440004');
 
--- 채팅방 테스트 데이터
-INSERT INTO "chat_rooms" ("id", "content_id", "owner_id")
-VALUES ('e50e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440001',
-        '550e8400-e29b-41d4-a716-446655440002'),
-       ('e50e8400-e29b-41d4-a716-446655440002', '650e8400-e29b-41d4-a716-446655440002',
-        '550e8400-e29b-41d4-a716-446655440003'),
-       ('e50e8400-e29b-41d4-a716-446655440003', '650e8400-e29b-41d4-a716-446655440003',
-        '550e8400-e29b-41d4-a716-446655440004'),
-       ('e50e8400-e29b-41d4-a716-446655440004', '650e8400-e29b-41d4-a716-446655440004',
-        '550e8400-e29b-41d4-a716-446655440001'),
-       ('e50e8400-e29b-41d4-a716-446655440005', '650e8400-e29b-41d4-a716-446655440005',
-        '550e8400-e29b-41d4-a716-446655440002');
+-- 시청방 테스트 데이터 (chat_rooms → watch_rooms로 변경)
+INSERT INTO "watch_rooms" ("id", "title", "content_id", "owner_id", "play_time", "is_playing")
+VALUES ('e50e8400-e29b-41d4-a716-446655440001', '인터스텔라 함께보기', '650e8400-e29b-41d4-a716-446655440001',
+        '550e8400-e29b-41d4-a716-446655440002', 1234.5, true),
+       ('e50e8400-e29b-41d4-a716-446655440002', '기생충 토론방', '650e8400-e29b-41d4-a716-446655440002',
+        '550e8400-e29b-41d4-a716-446655440003', 0.0, false),
+       ('e50e8400-e29b-41d4-a716-446655440003', '브베배 마라톤', '650e8400-e29b-41d4-a716-446655440003',
+        '550e8400-e29b-41d4-a716-446655440004', 567.8, false),
+       ('e50e8400-e29b-41d4-a716-446655440004', '스트레인저 씽스 시청회', '650e8400-e29b-41d4-a716-446655440004',
+        '550e8400-e29b-41d4-a716-446655440001', 2100.3, true),
+       ('e50e8400-e29b-41d4-a716-446655440005', '블랙미러 체험방', '650e8400-e29b-41d4-a716-446655440005',
+        '550e8400-e29b-41d4-a716-446655440002', 890.2, false);
 
--- 채팅방 참가자 테스트 데이터
-INSERT INTO "chat_room_participants" ("id", "user_id", "room_id")
+-- 시청방 참가자 테스트 데이터 (chat_room_participants → watch_room_participants로 변경)
+INSERT INTO "watch_room_participants" ("id", "user_id", "room_id")
 VALUES ('f50e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002',
         'e50e8400-e29b-41d4-a716-446655440001'),
        ('f50e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440003',
@@ -136,8 +136,8 @@ VALUES ('f50e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-4466554
        ('f50e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440004',
         'e50e8400-e29b-41d4-a716-446655440003');
 
--- 채팅 메시지 테스트 데이터
-INSERT INTO "chat_messages" ("id", "room_id", "sender_id", "content")
+-- 시청방 메시지 테스트 데이터 (chat_messages → watch_room_messages로 변경)
+INSERT INTO "watch_room_messages" ("id", "room_id", "sender_id", "content")
 VALUES ('110e8400-e29b-41d4-a716-446655440001', 'e50e8400-e29b-41d4-a716-446655440001',
         '550e8400-e29b-41d4-a716-446655440002', '인터스텔라 정말 감동적이네요!'),
        ('110e8400-e29b-41d4-a716-446655440002', 'e50e8400-e29b-41d4-a716-446655440001',
@@ -175,6 +175,14 @@ VALUES ('130e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-4466554
        ('130e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440001',
         '120e8400-e29b-41d4-a716-446655440005', '새로운 기능 업데이트 공지입니다', true);
 
+-- DM 읽음 상태 테스트 데이터 (새로 추가된 테이블)
+INSERT INTO "dm_read_users" ("dm_id", "user_id")
+VALUES ('130e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002'),
+       ('130e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440003'),
+       ('130e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440003'),
+       ('130e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440001'),
+       ('130e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440002');
+
 -- 알림 테스트 데이터
 INSERT INTO "notifications" ("id", "receiver_id", "type", "content", "is_read")
 VALUES ('140e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', 'FOLLOW',
@@ -186,7 +194,7 @@ VALUES ('140e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-4466554
        ('140e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440001', 'DM',
         'bob_wilson님이 메시지를 보냈습니다', true),
        ('140e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003',
-        'CHAT_INVITE', '새로운 채팅방에 초대되었습니다', false);
+        'WATCH_ROOM_INVITE', '새로운 시청방에 초대되었습니다', false);
 
 -- JWT 세션 테스트 데이터
 INSERT INTO "jwt_sessions" ("id", "user_id", "access_token", "refresh_token", "expires_at",
@@ -203,12 +211,3 @@ VALUES ('150e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-4466554
        ('150e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440001',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', 'refresh_token_admin_111222333',
         '2025-08-01 12:00:00', true);
-
--- 임시 비밀번호 테스트 데이터
-INSERT INTO "temporary_passwords" ("id", "user_id", "temp_password", "expired_at", "is_used")
-VALUES ('160e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440005',
-        '$2b$10$temp_hash_alice', '2025-06-28 23:59:59', false),
-       ('160e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440004',
-        '$2b$10$temp_hash_bob', '2025-06-26 23:59:59', true),
-       ('160e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440003',
-        '$2b$10$temp_hash_jane', '2025-06-25 23:59:59', true);
