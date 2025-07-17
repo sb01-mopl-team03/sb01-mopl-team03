@@ -29,15 +29,16 @@ public record WatchRoomDto(
     );
   }
 
-  public static WatchRoomDto from(WatchRoomContentWithHeadcountDto watchRoomContentWithHeadcountDto) {
+  public static WatchRoomDto from(
+      WatchRoomContentWithParticipantCountDto watchRoomContentWithParticipantCountDto) {
     return new WatchRoomDto(
-        watchRoomContentWithHeadcountDto.getWatchRoom().getId(),
-        watchRoomContentWithHeadcountDto.getWatchRoom().getTitle(),
-        watchRoomContentWithHeadcountDto.getContent().getTitle(),
-        watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getId(),
-        watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getName(),
-        watchRoomContentWithHeadcountDto.getWatchRoom().getCreatedAt(),
-        watchRoomContentWithHeadcountDto.getHeadCount()
+        watchRoomContentWithParticipantCountDto.getWatchRoom().getId(),
+        watchRoomContentWithParticipantCountDto.getWatchRoom().getTitle(),
+        watchRoomContentWithParticipantCountDto.getContent().getTitle(),
+        watchRoomContentWithParticipantCountDto.getWatchRoom().getOwner().getId(),
+        watchRoomContentWithParticipantCountDto.getWatchRoom().getOwner().getName(),
+        watchRoomContentWithParticipantCountDto.getWatchRoom().getCreatedAt(),
+        watchRoomContentWithParticipantCountDto.getParticipantCount()
     );
   }
 

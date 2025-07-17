@@ -12,7 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import team03.mopl.common.dto.Cursor;
-import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomSearchInternalDto;
 import team03.mopl.domain.watchroom.entity.QWatchRoom;
 import team03.mopl.domain.watchroom.entity.QWatchRoomParticipant;
@@ -26,20 +26,6 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   private final QWatchRoom qWatchRoom = QWatchRoom.watchRoom;
   private final QContent qContent = QContent.content;
   private final QWatchRoomParticipant qWatchRoomParticipant = QWatchRoomParticipant.watchRoomParticipant;
-
-  @Override
-  public List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDto() {
-    return queryFactory
-        .select(Projections.constructor(WatchRoomContentWithHeadcountDto.class,
-            qWatchRoom,
-            qWatchRoom.content,
-            qWatchRoomParticipant.countDistinct()))
-        .from(qWatchRoomParticipant)
-        .join(qWatchRoomParticipant.watchRoom, qWatchRoom)
-        .join(qWatchRoom.content, qContent).fetchJoin()
-        .groupBy(qWatchRoom.id, qContent.id)
-        .fetch();
-  }
 
   @Override
   public Long countWatchRoomContentWithHeadcountDto(String searchKeyword) {
@@ -57,7 +43,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   }
 
   @Override
-  public List<WatchRoomContentWithHeadcountDto> getAllWatchRoomContentWithHeadcountDtoPaginated(
+  public List<WatchRoomContentWithParticipantCountDto> getAllWatchRoomContentWithHeadcountDtoPaginated(
       WatchRoomSearchInternalDto request) {
 
     BooleanBuilder whereClause = new BooleanBuilder();
@@ -74,7 +60,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         request.getDirection());
 
     return queryFactory
-        .select(Projections.constructor(WatchRoomContentWithHeadcountDto.class,
+        .select(Projections.constructor(WatchRoomContentWithParticipantCountDto.class,
             qWatchRoom,
             qWatchRoom.content,
             qWatchRoomParticipant.countDistinct()))
@@ -125,9 +111,9 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
       case "title":  //시청방 이름
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
         break;
-      case "participantscount":  //시청자 수
-        Long cursorParticipantsCount = Long.parseLong(cursor.lastValue());
-        applyParticipantsCountCursor(whereClause, cursorParticipantsCount, UUID.fromString(cursor.lastId()), isDesc);
+      case "participantcount":  //시청자 수
+        Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
+        applyParticipantCountCursor(whereClause, cursorParticipantCount, UUID.fromString(cursor.lastId()), isDesc);
         break;
       default:
         throw new IllegalArgumentException("지원하지 않는 정렬 조건: " + sortBy);
@@ -135,20 +121,20 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   }
 
   // 참여자수 커서 적용
-  private void applyParticipantsCountCursor(BooleanBuilder whereClause,
-      Long cursorParticipantsCount, UUID lastId, boolean isDesc) {
+  private void applyParticipantCountCursor(BooleanBuilder whereClause,
+      Long cursorParticipantCount, UUID lastId, boolean isDesc) {
 
     if (isDesc) {
       whereClause.and(
-          qWatchRoomParticipant.countDistinct().lt(cursorParticipantsCount)
-              .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantsCount)
+          qWatchRoomParticipant.countDistinct().lt(cursorParticipantCount)
+              .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
                   .and(qWatchRoom.id.lt(lastId)))
       );
       return;
     }
     whereClause.and(
-        qWatchRoomParticipant.countDistinct().gt(cursorParticipantsCount)
-            .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantsCount)
+        qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
+            .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
                 .and(qWatchRoom.id.gt(lastId)))
     );
 
@@ -192,12 +178,12 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   //정렬 조건 생성
   private OrderSpecifier<?>[] getOrderSpecifier(String sortBy, String direction) {
     boolean isDesc = direction == null || direction.equalsIgnoreCase("desc");
-    String lowerSortBy = sortBy == null? "participantscount" : sortBy.toLowerCase();
+    String lowerSortBy = sortBy == null? "participantcount" : sortBy.toLowerCase();
 
     OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
       case "title" -> isDesc ? qWatchRoom.title.desc() : qWatchRoom.title.asc();
-      case "participantscount" -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
+      case "participantcount" -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
           : qWatchRoomParticipant.countDistinct().asc();
       default -> throw new IllegalArgumentException("Unsupported sort field: " + sortBy);
     };
@@ -209,11 +195,11 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
 
 
   @Override
-  public Optional<WatchRoomContentWithHeadcountDto> getWatchRoomContentWithHeadcountDto(
+  public Optional<WatchRoomContentWithParticipantCountDto> getWatchRoomContentWithHeadcountDto(
       UUID watchRoomId) {
 
-    WatchRoomContentWithHeadcountDto result = queryFactory
-        .select(Projections.constructor(WatchRoomContentWithHeadcountDto.class,
+    WatchRoomContentWithParticipantCountDto result = queryFactory
+        .select(Projections.constructor(WatchRoomContentWithParticipantCountDto.class,
             qWatchRoom,
             qWatchRoom.content,
             qWatchRoomParticipant.countDistinct()))

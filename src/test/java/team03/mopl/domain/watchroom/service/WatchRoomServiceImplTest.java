@@ -30,7 +30,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
-import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.participant.ParticipantDto;
@@ -216,7 +216,7 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = List.of();
+      List<WatchRoomContentWithParticipantCountDto> queryResult = List.of();
 
       when(watchRoomParticipantRepository
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
@@ -238,8 +238,8 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = watchRooms.stream()
-          .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+      List<WatchRoomContentWithParticipantCountDto> queryResult = watchRooms.stream()
+          .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
       when(watchRoomParticipantRepository
@@ -265,8 +265,8 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = watchRooms.stream()
-          .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+      List<WatchRoomContentWithParticipantCountDto> queryResult = watchRooms.stream()
+          .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
       when(watchRoomParticipantRepository
@@ -294,9 +294,9 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = new java.util.ArrayList<>(
+      List<WatchRoomContentWithParticipantCountDto> queryResult = new java.util.ArrayList<>(
           watchRooms.stream()
-              .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+              .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
               .toList());
 
       when(watchRoomParticipantRepository
@@ -337,9 +337,9 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = watchRooms.stream()
+      List<WatchRoomContentWithParticipantCountDto> queryResult = watchRooms.stream()
           .limit(2) // size(1) + 1개
-          .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+          .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
       when(watchRoomParticipantRepository
@@ -387,8 +387,8 @@ class WatchRoomServiceImplTest {
           .direction("DESC")
           .build();
 
-      List<WatchRoomContentWithHeadcountDto> queryResult = watchRooms.stream()
-          .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+      List<WatchRoomContentWithParticipantCountDto> queryResult = watchRooms.stream()
+          .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
       when(watchRoomParticipantRepository
@@ -419,8 +419,8 @@ class WatchRoomServiceImplTest {
     @DisplayName("커서 null 조회")
     void successWithNullCursor() throws JsonProcessingException {
       //given
-      List<WatchRoomContentWithHeadcountDto> queryResult = watchRooms.stream()
-          .map(watchRoom -> new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L))
+      List<WatchRoomContentWithParticipantCountDto> queryResult = watchRooms.stream()
+          .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
       WatchRoomSearchDto request = WatchRoomSearchDto.builder()
@@ -465,8 +465,8 @@ class WatchRoomServiceImplTest {
           .content(content)
           .build();
 
-      WatchRoomContentWithHeadcountDto queryResult
-          = new WatchRoomContentWithHeadcountDto(watchRoom, content, 1L);
+      WatchRoomContentWithParticipantCountDto queryResult
+          = new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L);
 
       WatchRoomDto expected = WatchRoomDto.fromWatchRoomWithHeadcount(watchRoom, 1L);
 
@@ -561,8 +561,8 @@ class WatchRoomServiceImplTest {
 
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.contentTitle(), watchRoomInfoDto.contentTitle());
-      assertEquals(expected.participantsInfoDto().participantsCount(),
-          watchRoomInfoDto.participantsInfoDto().participantsCount());
+      assertEquals(expected.participantsInfoDto().participantCount(),
+          watchRoomInfoDto.participantsInfoDto().participantCount());
 
       verify(watchRoomParticipantRepository, times(1))
           .save(any(WatchRoomParticipant.class));
@@ -639,7 +639,7 @@ class WatchRoomServiceImplTest {
 
       // then
       assertNotNull(participants);
-      assertEquals(1, participants.participantsCount());
+      assertEquals(1, participants.participantCount());
     }
 
     @Test

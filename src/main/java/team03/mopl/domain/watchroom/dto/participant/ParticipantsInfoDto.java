@@ -7,7 +7,7 @@ import lombok.Builder;
 public record ParticipantsInfoDto(
 
     List<ParticipantDto> participantDtoList,
-    int participantsCount
+    int participantCount
 
 ) {
 
