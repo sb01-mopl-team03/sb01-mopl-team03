@@ -253,7 +253,7 @@ public class CurationServiceImpl implements CurationService {
 
     // 점수가 계산되어 있는지 확인
     if (!keywordContentRepository.existsByKeywordId(keywordId)) {
-      return handleMissingScores(keyword, request);
+      return handleMissingScores(keyword);
     }
 
     // 커서 파싱 (예외 처리 개선)
@@ -392,8 +392,7 @@ public class CurationServiceImpl implements CurationService {
 
   // 점수가 없을 때 처리
   private CursorPageResponseDto<ContentDto> handleMissingScores(
-      Keyword keyword,
-      CursorPageRequest request
+      Keyword keyword
   ) {
     log.warn("점수 계산이 완료되지 않음 - 키워드 ID: {}", keyword.getId());
 

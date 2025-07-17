@@ -23,12 +23,6 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
         """, nativeQuery = true)
   List<Content> findAllWithPagination(@Param("offset") int offset, @Param("limit") int limit);
 
-  @Query("SELECT COUNT(c) FROM Content c WHERE " +
-      "(:title IS NULL OR c.titleNormalized LIKE %:title%) AND " +
-      "(:contentType IS NULL OR c.contentType = :contentType)")
-  long countByTitleAndContentType(@Param("title") String title,
-      @Param("contentType") String contentType);
-
   // 최근 TMDB 콘텐츠 조회 (예: 최근 1시간 내)
   @Query("SELECT c FROM Content c WHERE c.createdAt >= :since AND c.contentType IN ('MOVIE', 'TV')")
   List<Content> findRecentTmdbContents(@Param("since") LocalDateTime since);
@@ -44,13 +38,6 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
   default List<Content> findRecentSportsContents() {
     return findRecentSportsContents(LocalDateTime.now().minusHours(1));
   }
-
-  // 큐레이션 상태 확인용 메서드들
-  @Query("SELECT COUNT(DISTINCT c.id) FROM Content c JOIN KeywordContent kc ON c.id = kc.content.id")
-  long countCuratedContents();
-
-  @Query("SELECT k.keyword, COUNT(kc), AVG(kc.score) FROM KeywordContent kc JOIN kc.keyword k GROUP BY k.keyword")
-  List<Object[]> getKeywordContentStats();
 
   @Query("SELECT c FROM Content c WHERE c.createdAt >= :since")
   List<Content> findRecentContents(@Param("since") LocalDateTime since);
