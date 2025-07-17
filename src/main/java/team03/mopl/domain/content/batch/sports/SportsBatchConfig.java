@@ -31,14 +31,6 @@ public class SportsBatchConfig {
   private String baseUrl;
 
   @Bean
-  public Job sportsJob() {
-    return new JobBuilder("sportCurationJob", jobRepository)
-        .start(sportsStep())
-        .listener(curationJobListener)
-        .build();
-  }
-
-  @Bean
   public Step initialSportsStep(){
     return new StepBuilder("initialSportsStep", jobRepository)
         .<SportsItemDto, Content>chunk(20, transactionManager)

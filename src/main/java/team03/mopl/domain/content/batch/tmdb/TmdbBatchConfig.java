@@ -27,20 +27,13 @@ public class TmdbBatchConfig {
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
   private final ItemWriter<Content> itemWriter;
-  private final CurationJobListener curationJobListener;
 
   @Value("${tmdb.baseurl}")
   private String baseurl;
   @Value("${tmdb.api_token}")
   private String apiToken;
 
-  @Bean
-  public Job tmdbJob() {
-    return new JobBuilder("tmdbCurationJob", jobRepository)
-        .start(tmdbStep())
-        .listener(curationJobListener)
-        .build();
-  }
+
 
   @Bean
   public Step initialTmdbStep(){

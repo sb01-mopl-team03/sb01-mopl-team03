@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,7 +27,7 @@ public class EmitterService {
   private final EmitterRepository emitterRepository;
   private final EmitterCacheRepository emitterCacheRepository;
   private final ScheduledExecutorService heartbeatExecutor = Executors.newScheduledThreadPool(5);
-  private final ThreadPoolTaskExecutor notificationExecutor;
+  private final TaskExecutor notificationExecutor;
   private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
 
 
