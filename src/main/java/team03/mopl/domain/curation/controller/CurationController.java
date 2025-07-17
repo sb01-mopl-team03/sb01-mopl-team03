@@ -3,6 +3,7 @@ package team03.mopl.domain.curation.controller;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,7 +38,7 @@ public class CurationController {
   @GetMapping("/{keywordId}/contents")
   public ResponseEntity<CursorPageResponseDto<ContentDto>> getRecommendations(
       @PathVariable UUID keywordId,
-      @ModelAttribute CursorPageRequest request,
+      @ParameterObject @ModelAttribute CursorPageRequest request,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     UUID userId = userDetails.getId();
