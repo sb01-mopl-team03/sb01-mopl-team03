@@ -32,7 +32,7 @@ public class ContentSearchRequest {
   private String contentType = "MOVIE";
 
   @Parameter
-  @AllowedValues(enumClass = SortBy.class, message = "sortBy는 TITLE, RELEASE_AT 중 하나여야 합니다.")
+  @AllowedValues(enumClass = SortBy.class, message = "sortBy는 TITLE, RELEASE_AT, AVG_RATING 중 하나여야 합니다.")
   private String sortBy = "TITLE";
 
   @Parameter

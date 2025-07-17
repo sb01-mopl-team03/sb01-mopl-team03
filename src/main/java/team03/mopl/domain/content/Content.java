@@ -63,8 +63,9 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
+  @Builder.Default
   @Column(name = "avg_rating", precision = 3, scale = 2)
-  private BigDecimal avgRating;
+  private BigDecimal avgRating = BigDecimal.ZERO;
 
   @Column(name = "youtube_url", nullable = false)
   private String youtubeUrl;
