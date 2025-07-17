@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
+import team03.mopl.jwt.CustomUserDetails;
 
 @Tag(name = "Follow API", description = "팔로우 기능 관련 API")
 @RequestMapping("/api/follows")
@@ -28,7 +30,7 @@ public interface FollowApi {
       @ApiResponse(responseCode = "500", description = "서버 오류")
   })
   @PostMapping("/follow")
-  ResponseEntity<Void> follow(@RequestBody FollowRequest request);
+  ResponseEntity<Void> follow(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody FollowRequest request);
 
   @Operation(summary = "언팔로우", description = "사용자가 팔로우를 취소합니다.")
   @ApiResponses({
@@ -37,7 +39,7 @@ public interface FollowApi {
       @ApiResponse(responseCode = "500", description = "서버 오류")
   })
   @DeleteMapping("/unfollow")
-  ResponseEntity<Void> unfollow(@RequestBody FollowRequest request);
+  ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody FollowRequest request);
 
   @Operation(summary = "팔로잉 목록 조회", description = "지정한 사용자가 팔로우하고 있는 사용자 목록을 조회합니다.")
   @ApiResponse(responseCode = "200", description = "조회 성공",

@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
+import team03.mopl.domain.user.Role;
+import team03.mopl.domain.user.User;
+import team03.mopl.jwt.CustomUserDetails;
 
 @WebMvcTest(FollowController.class)
 class FollowControllerTest {
@@ -45,15 +49,23 @@ class FollowControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "USER")
   void testFollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
-
+    User follower = User.builder()
+        .id(followerId)
+        .email("test@example.com")
+        .name("tester")
+        .password("encoded_password")
+        .role(Role.USER) // 또는 Role.ADMIN
+        .build();
+    CustomUserDetails principal = new CustomUserDetails(follower);
     FollowRequest request = new FollowRequest(followerId, followingId);
 
     mockMvc.perform(post("/api/follows/follow")
             .with(csrf())
-            .with(user("testuser").roles("USER"))
+            .with(user(principal))
             .contentType(MediaType.APPLICATION_JSON)
             .content(new ObjectMapper().writeValueAsString(request)))
         .andExpect(status().isOk());
@@ -66,12 +78,19 @@ class FollowControllerTest {
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
-
+    User follower = User.builder()
+        .id(followerId)
+        .email("test@example.com")
+        .name("tester")
+        .password("encoded_password")
+        .role(Role.USER) // 또는 Role.ADMIN
+        .build();
+    CustomUserDetails principal = new CustomUserDetails(follower);
     FollowRequest request = new FollowRequest(followerId, followingId);
 
     mockMvc.perform(delete("/api/follows/unfollow")
             .with(csrf())
-            .with(user("testuser").roles("USER"))
+            .with(user(principal))
             .contentType(MediaType.APPLICATION_JSON)
             .content(new ObjectMapper().writeValueAsString(request)))
         .andExpect(status().isOk());

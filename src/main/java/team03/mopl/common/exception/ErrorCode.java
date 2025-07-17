@@ -36,6 +36,7 @@ public enum ErrorCode {
   FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "FOLLOW_001", "존재하지 않는 팔로우입니다."),
   ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_002", "이미 팔로우하고 있습니다."),
   CANNOT_FOLLOW_SELF(HttpStatus.BAD_REQUEST, "FOLLOW_003", "자기 자신을 팔로우하고 있습니다."),
+  BAD_REQUEST_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_004", "로그인된 사람과 팔로우하는 사람이 다릅니다"),
 
   //Notification,
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다."),
