@@ -56,6 +56,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         ContentNotFoundException::new);
 
     WatchRoom watchRoom = WatchRoom.builder()
+        .title(request.title())
         .owner(owner)
         .content(content)
         .build();
