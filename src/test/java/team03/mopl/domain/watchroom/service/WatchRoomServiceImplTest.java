@@ -30,6 +30,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
@@ -543,7 +544,7 @@ class WatchRoomServiceImplTest {
 
       WatchRoomInfoDto expected = WatchRoomInfoDto.builder()
           .id(chatRoomId)
-          .contentTitle(watchRoom.getContent().getTitle())
+          .content(ContentDto.from(content))
           .participantsInfoDto(participantsInfoDto)
           .build();
 
@@ -560,7 +561,7 @@ class WatchRoomServiceImplTest {
           .joinWatchRoomAndGetInfo(chatRoomId, participant.getEmail());
 
       assertEquals(expected.id(), watchRoomInfoDto.id());
-      assertEquals(expected.contentTitle(), watchRoomInfoDto.contentTitle());
+      assertEquals(expected.content().title(), watchRoomInfoDto.content().title());
       assertEquals(expected.participantsInfoDto().participantCount(),
           watchRoomInfoDto.participantsInfoDto().participantCount());
 
