@@ -18,8 +18,8 @@ COMMENT ON COLUMN "users"."role" IS 'ENUM';
 -- 콘텐츠 테이블
 CREATE TABLE "contents"
 (
-    "id"               UUID PRIMARY KEY        NOT NULL,
-    "title"            VARCHAR(255)            NOT NULL,
+    "id"               UUID PRIMARY KEY                  NOT NULL,
+    "title"            VARCHAR(255)                      NOT NULL,
     "title_normalized" VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
     "data_id"          varchar(255)                      NULL,
     "description"      TEXT                              NULL,
