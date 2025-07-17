@@ -12,6 +12,8 @@ public record WatchRoomDto(
     @Schema(description = "실시간 같이 보기  ID", example = "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d")
     UUID id,
 
+    String title,
+  
     @Schema(description = "컨텐츠 제목", example = "기생충")
     String contentTitle,
 
@@ -32,6 +34,7 @@ public record WatchRoomDto(
   public static WatchRoomDto fromWatchRoomWithHeadcount(WatchRoom watchRoom, long headcount ) {
     return new WatchRoomDto(
         watchRoom.getId(),
+        watchRoom.getTitle(),
         watchRoom.getContent().getTitle(),
         watchRoom.getOwner().getId(),
         watchRoom.getOwner().getName(),
@@ -43,6 +46,7 @@ public record WatchRoomDto(
   public static WatchRoomDto from(WatchRoomContentWithHeadcountDto watchRoomContentWithHeadcountDto) {
     return new WatchRoomDto(
         watchRoomContentWithHeadcountDto.getWatchRoom().getId(),
+        watchRoomContentWithHeadcountDto.getWatchRoom().getTitle(),
         watchRoomContentWithHeadcountDto.getContent().getTitle(),
         watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getId(),
         watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getName(),

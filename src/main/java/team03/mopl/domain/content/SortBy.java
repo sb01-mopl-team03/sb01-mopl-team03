@@ -2,5 +2,6 @@ package team03.mopl.domain.content;
 
 public enum SortBy {
   TITLE,
-  RELEASE_AT
+  RELEASE_AT,
+  AVG_RATING
 }

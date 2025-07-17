@@ -50,11 +50,15 @@ CREATE TABLE "keyword_contents"
     "id"         UUID PRIMARY KEY        NOT NULL,
     "keyword_id" UUID                    NOT NULL,
     "content_id" UUID                    NOT NULL,
+    "score"      DECIMAL                 NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
+    "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("keyword_id", "content_id"),
     FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
+CREATE INDEX idx_keyword_score ON keyword_contents(keyword_id, score DESC, content_id);
+CREATE INDEX idx_content_updated ON keyword_contents(content_id, updated_at);
 
 -- 리뷰 테이블
 CREATE TABLE "reviews"
@@ -122,6 +126,7 @@ CREATE TABLE "follows"
 CREATE TABLE "watch_rooms"
 (
     "id"                     UUID PRIMARY KEY               NOT NULL,
+    "title"                  VARCHAR(255)                   NOT NULL,
     "content_id"             UUID                           NOT NULL,
     "owner_id"               UUID                           NOT NULL,
     "created_at"             TIMESTAMP        DEFAULT now() NOT NULL,

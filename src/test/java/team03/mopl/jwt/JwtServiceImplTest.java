@@ -2,6 +2,7 @@ package team03.mopl.jwt;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,12 +67,16 @@ class JwtServiceImplTest {
         .email("delete@example.com")
         .role(Role.USER)
         .build();
+    JwtSession mockSession = mock(JwtSession.class);
+    when(mockSession.getAccessToken()).thenReturn("access-token");
+    when(jwtSessionRepository.findByUser(user)).thenReturn(Optional.of(mockSession));
 
     // when
     jwtService.delete(user);
 
     // then
-    verify(jwtSessionRepository).deleteByUser(user);
+    verify(jwtSessionRepository).findByUser(user);
+    verify(jwtSessionRepository).delete(mockSession);
   }
 
   @DisplayName("유요한 세션이 존재할 경우, 새로운 accesstoken을 발급")

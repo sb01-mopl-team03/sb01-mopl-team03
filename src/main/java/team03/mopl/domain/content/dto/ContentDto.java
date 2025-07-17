@@ -1,6 +1,7 @@
 package team03.mopl.domain.content.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import team03.mopl.domain.content.Content;
@@ -35,6 +36,8 @@ public record ContentDto (
 
     @Schema(description = "썸네일 이미지 URL", example = "https://cdn.mopl.com/thumbnails/content01.png")
     String thumbnailUrl
+
+    BigDecimal avgRating
 ){
   public static ContentDto from(Content content){
     return new ContentDto(
@@ -46,7 +49,8 @@ public record ContentDto (
         content.getContentType(),
         content.getReleaseDate(),
         content.getYoutubeUrl(),
-        content.getThumbnailUrl()
+        content.getThumbnailUrl(),
+        content.getAvgRating()
     );
   }
 }
