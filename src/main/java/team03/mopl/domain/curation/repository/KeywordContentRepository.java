@@ -31,7 +31,6 @@ public interface KeywordContentRepository extends JpaRepository<KeywordContent, 
   );
 
   // 키워드별 점수 존재 여부 확인
-  @Query("SELECT COUNT(kc) > 0 FROM KeywordContent kc WHERE kc.keyword.id = :keywordId")
   boolean existsByKeywordId(@Param("keywordId") UUID keywordId);
 
   // 키워드별 총 추천 콘텐츠 수
