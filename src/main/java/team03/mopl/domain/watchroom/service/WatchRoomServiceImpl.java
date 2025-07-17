@@ -14,6 +14,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
@@ -255,8 +256,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())
         .newUserId(user.getId())
-        .contentTitle(watchRoom.getContent().getTitle())
-        .contentUrl(watchRoom.getContent().getYoutubeUrl())
+        .content(ContentDto.from(watchRoom.getContent()))
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }
@@ -266,8 +266,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())
-        .contentTitle(watchRoom.getContent().getTitle())
-        .contentUrl(watchRoom.getContent().getYoutubeUrl())
+        .content(ContentDto.from(watchRoom.getContent()))
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }
