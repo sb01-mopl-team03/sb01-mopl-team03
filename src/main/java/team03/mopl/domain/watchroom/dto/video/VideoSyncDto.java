@@ -1,4 +1,4 @@
-package team03.mopl.domain.watchroom.dto;
+package team03.mopl.domain.watchroom.dto.video;
 
 import lombok.Builder;
 import team03.mopl.domain.watchroom.entity.VideoControlAction;
