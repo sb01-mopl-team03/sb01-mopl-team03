@@ -207,7 +207,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         .leftJoin(qWatchRoomParticipant).on(qWatchRoomParticipant.watchRoom.eq(qWatchRoom))
         .join(qWatchRoom.content, qContent).fetchJoin()
         .where(qWatchRoom.id.eq(watchRoomId))
-        .groupBy(qWatchRoom.id)
+        .groupBy(qWatchRoom.id, qContent.id)
         .fetchOne();
 
     return Optional.ofNullable(result);

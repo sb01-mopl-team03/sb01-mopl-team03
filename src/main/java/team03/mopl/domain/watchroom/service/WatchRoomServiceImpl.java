@@ -256,6 +256,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         .id(watchRoom.getId())
         .newUserId(user.getId())
         .contentTitle(watchRoom.getContent().getTitle())
+        .contentUrl(watchRoom.getContent().getYoutubeUrl())
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }
@@ -266,6 +267,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())
         .contentTitle(watchRoom.getContent().getTitle())
+        .contentUrl(watchRoom.getContent().getYoutubeUrl())
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }

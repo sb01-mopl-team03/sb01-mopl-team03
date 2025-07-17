@@ -10,6 +10,7 @@ public record WatchRoomInfoDto (
     String title,
     UUID newUserId,
     String contentTitle,
+    String contentUrl,
     ParticipantsInfoDto participantsInfoDto
 ){
 
