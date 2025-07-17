@@ -32,7 +32,7 @@ public class SportsBatchConfig {
 
   @Bean
   public Job sportsJob() {
-    return new JobBuilder("sportsJob", jobRepository)
+    return new JobBuilder("sportCurationJob", jobRepository)
         .start(sportsStep())
         .listener(curationJobListener)
         .build();

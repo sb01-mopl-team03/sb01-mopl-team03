@@ -36,7 +36,7 @@ public class TmdbBatchConfig {
 
   @Bean
   public Job tmdbJob() {
-    return new JobBuilder("tmdbJob", jobRepository)
+    return new JobBuilder("tmdbCurationJob", jobRepository)
         .start(tmdbStep())
         .listener(curationJobListener)
         .build();
