@@ -45,6 +45,7 @@ class FollowControllerTest {
   }
 
   @Test
+  @WithMockUser(username = "testuser", roles = "USER")
   void testFollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
@@ -63,6 +64,7 @@ class FollowControllerTest {
 
 
   @Test
+  @WithMockUser(username = "testuser", roles = "USER")
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();

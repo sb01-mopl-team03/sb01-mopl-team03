@@ -17,7 +17,6 @@ import team03.mopl.common.exception.follow.BadRequestFollowingException;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
-import team03.mopl.domain.user.UserResponse;
 import team03.mopl.jwt.CustomUserDetails;
 
 @RestController
