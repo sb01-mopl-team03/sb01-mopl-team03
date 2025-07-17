@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -52,8 +53,8 @@ public class KeywordContent {
   @JoinColumn(name = "content_id", nullable = false)
   private Content content;
 
-  @Column(nullable = false)
-  private Double score;
+  @Column(nullable = false, precision = 3, scale = 2)
+  private BigDecimal score;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false)
@@ -63,13 +64,13 @@ public class KeywordContent {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
-  public KeywordContent(Keyword keyword, Content content, Double score) {
+  public KeywordContent(Keyword keyword, Content content, BigDecimal score) {
     this.keyword = keyword;
     this.content = content;
     this.score = score;
   }
 
-  public void updateScore(Double newScore) {
+  public void updateScore(BigDecimal newScore) {
     this.score = newScore;
   }
 }
