@@ -14,7 +14,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
-import team03.mopl.domain.watchroom.dto.WatchRoomContentWithHeadcountDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomSearchInternalDto;
@@ -139,12 +139,12 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   }
 
   private String extractLastValue(WatchRoomDto lastItem, String sortBy) {
-    String lowerSortBy = sortBy == null? "participantscount" : sortBy.toLowerCase();
+    String lowerSortBy = sortBy == null? "participantcount" : sortBy.toLowerCase();
 
     return switch (lowerSortBy) {
       case "createdat" -> lastItem.createdAt().toString();
       case "title" -> lastItem.title();
-      case "participantscount" -> String.valueOf(lastItem.headCount());
+      case "participantcount" -> String.valueOf(lastItem.headCount());
       default -> throw new IllegalArgumentException("지원하지 않는 정렬 방식: " + sortBy);
     };
   }
@@ -152,10 +152,10 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   @Override
   @Transactional(readOnly = true)
   public WatchRoomDto getById(UUID watchRoomId) {
-    WatchRoomContentWithHeadcountDto watchRoomContentWithHeadcountDto
+    WatchRoomContentWithParticipantCountDto watchRoomContentWithParticipantCountDto
         = watchRoomParticipantRepository.getWatchRoomContentWithHeadcountDto(watchRoomId)
         .orElseThrow(WatchRoomRoomNotFoundException::new);
-    return WatchRoomDto.from(watchRoomContentWithHeadcountDto);
+    return WatchRoomDto.from(watchRoomContentWithParticipantCountDto);
   }
 
   @Override
@@ -256,6 +256,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         .id(watchRoom.getId())
         .newUserId(user.getId())
         .contentTitle(watchRoom.getContent().getTitle())
+        .contentUrl(watchRoom.getContent().getYoutubeUrl())
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }
@@ -266,6 +267,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())
         .contentTitle(watchRoom.getContent().getTitle())
+        .contentUrl(watchRoom.getContent().getYoutubeUrl())
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))
         .build();
   }
@@ -284,7 +286,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     return ParticipantsInfoDto.builder()
         .participantDtoList(participantList)
-        .participantsCount(participantList.size())
+        .participantCount(participantList.size())
         .build();
   }
 }

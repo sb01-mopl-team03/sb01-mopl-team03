@@ -11,7 +11,7 @@ public record WatchRoomCreateRequest(
     UUID contentId,
 
     @Schema(description = "실시간 같이 보기(Owner) ID", example = "a1b2c3d4-1234-5678-9012-abcdefabcdef")
-    UUID ownerId
+    UUID ownerId,
 
     String title
 ){

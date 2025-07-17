@@ -35,7 +35,7 @@ public record ContentDto (
     String youtubeUrl,
 
     @Schema(description = "썸네일 이미지 URL", example = "https://cdn.mopl.com/thumbnails/content01.png")
-    String thumbnailUrl
+    String thumbnailUrl,
 
     BigDecimal avgRating
 ){

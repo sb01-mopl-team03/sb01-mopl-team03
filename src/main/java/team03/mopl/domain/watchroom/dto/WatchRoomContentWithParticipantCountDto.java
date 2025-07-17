@@ -9,10 +9,10 @@ import team03.mopl.domain.content.Content;
 @AllArgsConstructor
 @Getter
 @Setter
-public class WatchRoomContentWithHeadcountDto {
+public class WatchRoomContentWithParticipantCountDto {
 
   private WatchRoom watchRoom;
   private Content content;
-  Long headCount;
+  Long participantCount;
 
 }
