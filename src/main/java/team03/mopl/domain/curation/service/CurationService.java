@@ -3,12 +3,9 @@ package team03.mopl.domain.curation.service;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
-import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
-import team03.mopl.domain.curation.entity.Keyword;
 
 public interface CurationService {
 
