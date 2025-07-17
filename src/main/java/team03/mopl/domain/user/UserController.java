@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.UserApi;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
@@ -27,7 +28,7 @@ import team03.mopl.domain.subscription.service.SubscriptionService;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserApi {
 
   private final UserService userService;
   private final ProfileImageService profileImageService;
@@ -36,16 +37,19 @@ public class UserController {
   private final PlaylistService playlistService;
   private final CurationService curationService;
 
+  @Override
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<UserResponse> create(@ModelAttribute UserCreateRequest request) {
     return ResponseEntity.ok(userService.create(request));
   }
 
+  @Override
   @GetMapping("/{userId}")
   public ResponseEntity<UserResponse> find(@PathVariable UUID userId) {
     return ResponseEntity.ok(userService.find(userId));
   }
 
+  @Override
   @PutMapping("/{userId}")
   public ResponseEntity<UserResponse> update(@PathVariable UUID userId,
       @RequestPart UserUpdateRequest request,
@@ -53,37 +57,44 @@ public class UserController {
     return ResponseEntity.ok(userService.update(userId,request,profile));
   }
 
+  @Override
   @DeleteMapping("/{userId}")
   public ResponseEntity<Void> delete(@PathVariable UUID userId) {
     userService.delete(userId);
     return ResponseEntity.noContent().build();
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<List<UserResponse>> findAll() {
     return ResponseEntity.ok(userService.findAll());
   }
 
+  @Override
   @GetMapping("/profiles")
   public ResponseEntity<List<String>> getProfileImages() {
     return ResponseEntity.ok(profileImageService.getProfileImages());
   }
 
+  @Override
   @GetMapping("/{userId}/reviews")
   public ResponseEntity<List<ReviewDto>> getAllReviewByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
   }
 
+  @Override
   @GetMapping("/{userId}/keywords")
   public ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(curationService.getKeywordsByUser(userId));
   }
 
+  @Override
   @GetMapping("/{userId}/playlists")
   public ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(playlistService.getAllByUser(userId));
   }
-  
+
+  @Override
   @GetMapping("/{userId}/subscriptions")
   public ResponseEntity<List<SubscriptionDto>> getUserSubscriptions(
       @PathVariable UUID userId) {

@@ -15,7 +15,6 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.repository.ContentRepository;
@@ -91,7 +90,7 @@ public class ContentServiceImpl implements ContentService {
     }
 
     // 4. 총 데이터 개수 반환
-    long totalElements = contents.size();
+    long totalElements = contentRepository.countContentsWithFilter(title, contentType);
 
     // 5. Content를 ContentDto로 변환
     List<ContentDto> contentDtos = contents.stream()
@@ -182,8 +181,10 @@ public class ContentServiceImpl implements ContentService {
     String lastValue;
     if (sortBy.equalsIgnoreCase("RELEASE_AT")) {
       lastValue = contentDto.releaseDate().toString();
-    } else {
+    } else if(sortBy.equalsIgnoreCase("TITLE")) {
       lastValue = contentDto.titleNormalized();
+    } else { // AVG_RATING
+      lastValue = contentDto.avgRating().toString();
     }
 
     Cursor cursor = new Cursor(lastValue, lastId);
