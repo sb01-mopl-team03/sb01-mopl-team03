@@ -50,7 +50,7 @@ CREATE TABLE "keyword_contents"
     "id"         UUID PRIMARY KEY        NOT NULL,
     "keyword_id" UUID                    NOT NULL,
     "content_id" UUID                    NOT NULL,
-    "score"      DECIMAL                 NOT NULL,
+    "score"      DOUBLE PRECISION        NOT NULL,
     "created_at" TIMESTAMP DEFAULT now() NOT NULL,
     "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("keyword_id", "content_id"),

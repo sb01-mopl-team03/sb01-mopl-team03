@@ -46,7 +46,7 @@ import team03.mopl.domain.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("큐레이션 서비스 테스트")
-class CurationServiceTest {
+class CurationServiceImplTest {
 
   @Mock
   private ReviewService reviewService;
