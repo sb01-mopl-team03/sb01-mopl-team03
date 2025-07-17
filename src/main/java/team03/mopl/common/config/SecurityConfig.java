@@ -52,7 +52,8 @@ public class SecurityConfig {
             .requestMatchers("/error").permitAll()
             // SSE 엔드포인트를 permitAll로 설정
             .requestMatchers("/api/notifications/subscribe").permitAll()
-            .anyRequest().hasRole("USER")
+                .anyRequest().permitAll()
+//            .anyRequest().hasRole("USER")
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(((request, response, authException) -> {

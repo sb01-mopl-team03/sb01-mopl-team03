@@ -17,7 +17,7 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   // 배치 처리를 위한 페이징 조회
   @Query(value = """
-        SELECT * FROM content c 
+        SELECT * FROM contents c 
         ORDER BY c.id 
         LIMIT :limit OFFSET :offset
         """, nativeQuery = true)
