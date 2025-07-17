@@ -35,8 +35,9 @@ public record ContentDto (
     String youtubeUrl,
 
     @Schema(description = "썸네일 이미지 URL", example = "https://cdn.mopl.com/thumbnails/content01.png")
-    String thumbnailUrl
+    String thumbnailUrl,
 
+    @Schema(description = "리뷰 평균 점수", example = "3.5")
     BigDecimal avgRating
 ){
   public static ContentDto from(Content content){
