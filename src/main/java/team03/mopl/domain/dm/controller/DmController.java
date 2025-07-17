@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.DmApi;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.dto.DmPagingDto;
@@ -24,9 +25,10 @@ import team03.mopl.jwt.CustomUserDetails;
 @RequiredArgsConstructor
 @RequestMapping("/api/dm")
 @Slf4j
-public class DmController {
+public class DmController implements DmApi {
   private final DmService dmService;
 
+  @Override
   @GetMapping("/{roomId}")
   public ResponseEntity<CursorPageResponseDto<DmDto>> getDm(
       @PathVariable("roomId") UUID roomId,

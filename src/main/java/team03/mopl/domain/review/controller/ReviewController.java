@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.ReviewApi;
 import team03.mopl.domain.review.dto.ReviewCreateRequest;
 import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.review.dto.ReviewUpdateRequest;
@@ -22,20 +23,23 @@ import team03.mopl.jwt.CustomUserDetails;
 @RestController
 @RequestMapping("/api/reviews")
 @RequiredArgsConstructor
-public class ReviewController {
+public class ReviewController implements ReviewApi {
 
   private final ReviewService reviewService;
 
+  @Override
   @PostMapping
   public ResponseEntity<ReviewDto> create(@Valid @RequestBody ReviewCreateRequest request) {
     return ResponseEntity.ok(reviewService.create(request));
   }
 
+  @Override
   @GetMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> get(@PathVariable UUID reviewId) {
     return ResponseEntity.ok(reviewService.get(reviewId));
   }
 
+  @Override
   @PatchMapping("/{reviewId}")
   public ResponseEntity<ReviewDto> update(@PathVariable UUID reviewId,
       @Valid @RequestBody ReviewUpdateRequest request,
@@ -45,6 +49,7 @@ public class ReviewController {
     return ResponseEntity.ok(reviewService.update(reviewId, request, userId));
   }
 
+  @Override
   @DeleteMapping("/{reviewId}")
   public ResponseEntity<Void> delete(
       @PathVariable UUID reviewId,

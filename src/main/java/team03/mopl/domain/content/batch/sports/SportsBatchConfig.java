@@ -1,7 +1,9 @@
 package team03.mopl.domain.content.batch.sports;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.curation.CurationJobListener;
 
 @Configuration
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class SportsBatchConfig {
   private final PlatformTransactionManager transactionManager;
   private final ItemWriter<Content> itemWriter;
   private final JobRepository jobRepository;
+  private final CurationJobListener curationJobListener;
 
   @Value("${sports.baseurl}")
   private String baseUrl;

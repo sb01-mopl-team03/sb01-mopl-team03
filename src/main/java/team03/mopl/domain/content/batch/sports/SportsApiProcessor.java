@@ -47,14 +47,21 @@ public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content>
     // 3. title 문자열 정규화
     String titleNormalized = NormalizerUtil.normalize(item.getStrFilename());
 
-    // 2. content 객체 생성및 반환
+    // 4. item.getStrVideo() 여부 확인
+    String strVideo = "";
+    if(item.getStrVideo() != null){
+      strVideo = item.getStrVideo();
+    }
+
+    // 5. content 객체 생성및 반환
     Content content = Content.builder()
         .title(item.getStrFilename())
         .titleNormalized(titleNormalized)
         .description(description.toString())
         .contentType(ContentType.SPORTS)
         .releaseDate(dateTime)
-        .url(item.getStrVideo())
+        .youtubeUrl(strVideo)
+        .thumbnailUrl(item.getStrThumb())
         .build();
 
     return content;

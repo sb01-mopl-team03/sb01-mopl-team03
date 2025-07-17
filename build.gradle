@@ -59,7 +59,7 @@ dependencies {
     // Security
     implementation 'org.springframework.security:spring-security-messaging'
 
-// AI - Stanford CoreNLP with JAXB exclusions
+    // AI - Stanford CoreNLP with JAXB exclusions
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation('edu.stanford.nlp:stanford-corenlp:4.5.4') {
         exclude group: 'javax.xml.bind', module: 'jaxb-api'
@@ -90,6 +90,13 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2' // 테스트용
 
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -109,6 +116,22 @@ tasks.named('jacocoTestReport') {
     reports {
         xml.required = true
         html.required = true
+    }
+}
+
+afterEvaluate {
+    tasks.jacocoTestReport {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/MoplApplication.class',    // 메인 애플리케이션 클래스
+                    '**/Q*',                        // Q 클래스
+                    '**/*$*.class',      // Lombok이 생성한 내부 클래스
+                    '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
+                    '**/team03/mopl/domain/**/dto/**', // DTO 클래스
+                    '**/team03/mopl/domain/**/batch/**', // 배치
+                    '**/S3Service.class' // s3 서비스
+            ])
+        })
     }
 }
 

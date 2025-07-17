@@ -63,11 +63,15 @@ public class Content {
   @Column(name = "release_date", nullable = false)
   private LocalDateTime releaseDate;
 
+  @Builder.Default
   @Column(name = "avg_rating", precision = 3, scale = 2)
-  private BigDecimal avgRating;
+  private BigDecimal avgRating = BigDecimal.ZERO;
 
-  @Column(name = "url")
-  private String url;
+  @Column(name = "youtube_url", nullable = false)
+  private String youtubeUrl;
+
+  @Column(name = "thumbnail_url")
+  private String thumbnailUrl;
 
   @Builder.Default
   @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)

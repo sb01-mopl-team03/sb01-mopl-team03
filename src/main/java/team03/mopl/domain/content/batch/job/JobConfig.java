@@ -7,11 +7,13 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import team03.mopl.domain.curation.CurationJobListener;
 
 @Configuration
 public class JobConfig {
 
   private final JobRepository jobRepository;
+  private final CurationJobListener curationJobListener;
 
   @Qualifier("initialSportsStep")
   private final Step initialSportsStep;
@@ -27,12 +29,13 @@ public class JobConfig {
 
 
   public JobConfig(
-      JobRepository jobRepository,
+      JobRepository jobRepository, CurationJobListener curationJobListener,
       @Qualifier("initialSportsStep") Step initialSportsStep,
       @Qualifier("sportsStep") Step sportsStep,
       @Qualifier("initialTmdbStep") Step initialTmdbStep,
       @Qualifier("tmdbStep") Step tmdbStep) {
     this.jobRepository = jobRepository;
+    this.curationJobListener = curationJobListener;
     this.initialSportsStep = initialSportsStep;
     this.sportsStep = sportsStep;
     this.initialTmdbStep = initialTmdbStep;
@@ -64,6 +67,22 @@ public class JobConfig {
   public Job TmdbJob(){
     return new JobBuilder("TmdbJob", jobRepository)
         .start(tmdbStep)
+        .build();
+  }
+
+  @Bean
+  public Job sportCurationJob() {
+    return new JobBuilder("sportCurationJob", jobRepository)
+        .start(sportsStep)
+        .listener(curationJobListener)
+        .build();
+  }
+
+  @Bean
+  public Job tmdbCurationJob() {
+    return new JobBuilder("tmdbCurationJob", jobRepository)
+        .start(tmdbStep)
+        .listener(curationJobListener)
         .build();
   }
 }

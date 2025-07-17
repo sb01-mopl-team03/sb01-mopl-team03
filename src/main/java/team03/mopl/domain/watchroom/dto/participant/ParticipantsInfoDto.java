@@ -1,4 +1,4 @@
-package team03.mopl.domain.watchroom.dto;
+package team03.mopl.domain.watchroom.dto.participant;
 
 import java.util.List;
 import lombok.Builder;
@@ -7,7 +7,7 @@ import lombok.Builder;
 public record ParticipantsInfoDto(
 
     List<ParticipantDto> participantDtoList,
-    int participantsCount
+    int participantCount
 
 ) {
 
