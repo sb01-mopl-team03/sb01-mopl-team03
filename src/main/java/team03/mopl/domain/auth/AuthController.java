@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.AuthApi;
 import team03.mopl.domain.user.UserRepository;
 import team03.mopl.domain.user.UserResponse;
 import team03.mopl.jwt.CustomUserDetails;
@@ -23,13 +24,14 @@ import team03.mopl.jwt.TokenPair;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApi {
 
   private final AuthService authService;
 
   @Value("${jwt.refresh-token-expiration}")
   private long refreshTokenExpiration;
 
+  @Override
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
     LoginResult result = authService.login(request.email(), request.password());
@@ -42,6 +44,7 @@ public class AuthController {
     //isTempPassword true 면 change-password 로
   }
 
+  @Override
   @PostMapping("/logout")
   public ResponseEntity<?> logout(@CookieValue(value = "refresh", required = false) String refreshToken) {
     if (refreshToken == null) {
@@ -53,6 +56,7 @@ public class AuthController {
     return ResponseEntity.ok("LOGOUT");
   }
 
+  @Override
   @PostMapping("/refresh")
   public ResponseEntity<?> refresh(
       @CookieValue(value = "refresh", required = false) String refreshToken,
@@ -73,6 +77,7 @@ public class AuthController {
     }
   }
 
+  @Override
   @PostMapping("/me")
   public ResponseEntity<?> reissueAccessToken(
       @CookieValue(value = "refresh", required = false) String refreshToken) {
@@ -87,12 +92,14 @@ public class AuthController {
                 () -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token invalid"));
   }
 
+  @Override
   @PostMapping("/temp-password")
   public ResponseEntity<?> resetPassword(@RequestBody TempPasswordRequest request){
     authService.resetPassword(request.email());
     return ResponseEntity.ok("임시 비밀번호 발급");
   }
 
+  @Override
   @PostMapping("/change-password")
   public ResponseEntity<?> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestBody ChangePasswordRequest request){

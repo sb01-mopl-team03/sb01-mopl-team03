@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
+import team03.mopl.jwt.CustomUserDetails;
 
 @WebMvcTest(FollowController.class)
 class FollowControllerTest {
@@ -45,16 +46,18 @@ class FollowControllerTest {
   }
 
   @Test
-  @WithMockUser(username = "testuser", roles = "USER")
   void testFollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
+
+    CustomUserDetails principal = mock(CustomUserDetails.class);
+    when(principal.getId()).thenReturn(followerId);
 
     FollowRequest request = new FollowRequest(followerId, followingId);
 
     mockMvc.perform(post("/api/follows/follow")
             .with(csrf())
-            .with(user("testuser").roles("USER"))
+            .with(user(principal))
             .contentType(MediaType.APPLICATION_JSON)
             .content(new ObjectMapper().writeValueAsString(request)))
         .andExpect(status().isOk());
@@ -64,7 +67,6 @@ class FollowControllerTest {
 
 
   @Test
-  @WithMockUser(username = "testuser", roles = "USER")
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
