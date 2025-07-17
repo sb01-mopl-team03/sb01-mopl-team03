@@ -187,7 +187,7 @@ class CurationServiceImplTest {
       KeywordContent keywordContent = KeywordContent.builder()
           .keyword(testKeyword)
           .content(testContent)
-          .score(BigDecimal.valueOf(0.8))
+          .score(0.8)
           .build();
 
       when(keywordContentRepository.findByKeywordIdWithPagination(
@@ -315,13 +315,13 @@ class CurationServiceImplTest {
       KeywordContent keywordContent1 = KeywordContent.builder()
           .keyword(testKeyword)
           .content(testContent)
-          .score(BigDecimal.valueOf(0.9))
+          .score(0.9)
           .build();
 
       KeywordContent keywordContent2 = KeywordContent.builder()
           .keyword(testKeyword)
           .content(content2)
-          .score(BigDecimal.valueOf(0.8))
+          .score(0.8)
           .build();
 
       when(keywordContentRepository.findByKeywordIdWithPagination(

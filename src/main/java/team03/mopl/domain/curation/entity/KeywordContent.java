@@ -53,8 +53,8 @@ public class KeywordContent {
   @JoinColumn(name = "content_id", nullable = false)
   private Content content;
 
-  @Column(nullable = false, precision = 3, scale = 2)
-  private BigDecimal score;
+  @Column(nullable = false)
+  private Double score;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false)
@@ -64,13 +64,13 @@ public class KeywordContent {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
-  public KeywordContent(Keyword keyword, Content content, BigDecimal score) {
+  public KeywordContent(Keyword keyword, Content content, Double score) {
     this.keyword = keyword;
     this.content = content;
     this.score = score;
   }
 
-  public void updateScore(BigDecimal newScore) {
+  public void updateScore(Double newScore) {
     this.score = newScore;
   }
 }
