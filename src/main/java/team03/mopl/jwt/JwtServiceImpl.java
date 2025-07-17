@@ -41,7 +41,14 @@ public class JwtServiceImpl implements JwtService {
   @Override
   @Transactional
   public void delete(User user) {
-    jwtSessionRepository.deleteByUser(user);
+    jwtSessionRepository.findByUser(user).ifPresent(oldSession -> {
+      String oldAccessToken = oldSession.getAccessToken();
+      long remainingTime = jwtProvider.getRemainingTime(oldAccessToken);
+      if (remainingTime > 0){
+        jwtBlacklist.addBlacklist(oldAccessToken, remainingTime);
+      }
+      jwtSessionRepository.delete(oldSession);
+    });
   }
 
   @Override
@@ -75,8 +82,11 @@ public class JwtServiceImpl implements JwtService {
     jwtSessionRepository.findByRefreshToken(refreshToken).ifPresent(session -> {
       if (useBlacklist) {
         String accessToken=session.getAccessToken();
-        long exp = jwtProvider.getClaims(accessToken).getExpiration().getTime();
-        jwtBlacklist.addBlacklist(session.getAccessToken(), exp);
+        long remainingTime = jwtProvider.getRemainingTime(accessToken);
+
+        if (remainingTime > 0){
+          jwtBlacklist.addBlacklist(session.getAccessToken(), remainingTime);
+        }
       }
       jwtSessionRepository.delete(session);
     });
