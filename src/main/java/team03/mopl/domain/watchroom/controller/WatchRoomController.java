@@ -29,20 +29,20 @@ public class WatchRoomController implements WatchRoomApi {
 
   @Override
   @GetMapping
-  public ResponseEntity<CursorPageResponseDto<WatchRoomDto>> getAllWatchRooms(
+  public ResponseEntity<CursorPageResponseDto<WatchRoomDto>> getAll(
       @ParameterObject @ModelAttribute WatchRoomSearchDto request){
     return ResponseEntity.ok(watchRoomService.getAll(request));
   }
 
   @Override
   @GetMapping("/{roomId}")
-  public ResponseEntity<WatchRoomDto> getChatRoom(@PathVariable("roomId") String roomId) {
+  public ResponseEntity<WatchRoomDto> getWatchRoom(@PathVariable("roomId") String roomId) {
     return ResponseEntity.ok(watchRoomService.getById(UUID.fromString(roomId)));
   }
 
   @Override
   @PostMapping
-  public ResponseEntity<WatchRoomDto> createChatRoom(@RequestBody WatchRoomCreateRequest request) {
+  public ResponseEntity<WatchRoomDto> createWatchRoom(@RequestBody WatchRoomCreateRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(watchRoomService.create(request));
   }
 }
