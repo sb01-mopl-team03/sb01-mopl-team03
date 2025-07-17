@@ -2,7 +2,6 @@ package team03.mopl.domain.watchroom.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -17,8 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageCreateRequest;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageCreateRequest;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
 import team03.mopl.domain.watchroom.service.WatchRoomMessageService;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
 

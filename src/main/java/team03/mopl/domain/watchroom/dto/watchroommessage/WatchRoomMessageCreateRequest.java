@@ -1,4 +1,4 @@
-package team03.mopl.domain.watchroom.dto;
+package team03.mopl.domain.watchroom.dto.watchroommessage;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

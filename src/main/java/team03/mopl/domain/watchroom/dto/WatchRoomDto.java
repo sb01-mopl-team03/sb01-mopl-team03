@@ -8,6 +8,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 public record WatchRoomDto(
 
     UUID id,
+    String title,
     String contentTitle,
     UUID ownerId,
     String ownerName,
@@ -19,6 +20,7 @@ public record WatchRoomDto(
   public static WatchRoomDto fromWatchRoomWithHeadcount(WatchRoom watchRoom, long headcount ) {
     return new WatchRoomDto(
         watchRoom.getId(),
+        watchRoom.getTitle(),
         watchRoom.getContent().getTitle(),
         watchRoom.getOwner().getId(),
         watchRoom.getOwner().getName(),
@@ -30,6 +32,7 @@ public record WatchRoomDto(
   public static WatchRoomDto from(WatchRoomContentWithHeadcountDto watchRoomContentWithHeadcountDto) {
     return new WatchRoomDto(
         watchRoomContentWithHeadcountDto.getWatchRoom().getId(),
+        watchRoomContentWithHeadcountDto.getWatchRoom().getTitle(),
         watchRoomContentWithHeadcountDto.getContent().getTitle(),
         watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getId(),
         watchRoomContentWithHeadcountDto.getWatchRoom().getOwner().getName(),
