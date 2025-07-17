@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.common.exception.follow.BadRequestFollowingException;
 import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.UserResponse;
+import team03.mopl.jwt.CustomUserDetails;
 
 @RestController
 @RequestMapping("/api/follows")
@@ -26,13 +29,21 @@ public class FollowController {
   private final FollowService followService;
 
   @PostMapping("/follow")
-  public ResponseEntity<Void> follow(@RequestBody FollowRequest request) {
+  public ResponseEntity<Void> follow( @AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
+    //로그인된 사람과 팔로우하려는 사람과 같은지 확인
+    if( user.getId() != request.getFollowerId() ) {
+      throw new BadRequestFollowingException();
+    }
     followService.follow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/unfollow")
-  public ResponseEntity<Void> unfollow(@RequestBody FollowRequest request) {
+  public ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
+    //로그인된 사람과 언팔하려는 사람 같은지 확인
+    if( user.getId() != request.getFollowerId() ) {
+      throw new BadRequestFollowingException();
+    }
     followService.unfollow(request.getFollowerId(), request.getFollowingId());
     return ResponseEntity.ok().build();
   }

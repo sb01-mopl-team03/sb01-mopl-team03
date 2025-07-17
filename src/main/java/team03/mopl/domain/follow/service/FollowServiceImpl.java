@@ -34,26 +34,22 @@ public class FollowServiceImpl implements FollowService {
   public void follow(UUID followerId, UUID followingId) {
     log.info("follow - 팔로우 시도: followerId={}, followingId={}", followerId, followingId);
     //팔로우 하는 사람
-    User follower = userRepository.findById(followerId)
-        .orElseThrow(() -> {
-          log.warn("follow - 존재하지 않는 팔로워: followerId={}", followerId);
-          return new UserNotFoundException();
-        });
+    User follower = userRepository.findById(followerId).orElseThrow(() -> {
+      log.warn("follow - 존재하지 않는 팔로워: followerId={}", followerId);
+      return new UserNotFoundException();
+    });
     //팔로우 당하는 사람
-    User following = userRepository.findById(followingId)
-        .orElseThrow(() -> {
-          log.warn("follow - 존재하지 않는 팔로잉 대상: followingId={}", followingId);
-          return new UserNotFoundException();
-        });
+    User following = userRepository.findById(followingId).orElseThrow(() -> {
+      log.warn("follow - 존재하지 않는 팔로잉 대상: followingId={}", followingId);
+      return new UserNotFoundException();
+    });
     if (followingId.equals(followerId)) {
       log.warn("follow - 자기 자신을 팔로우 시도: userId={}", followerId);
       throw new CantFollowSelfException(); //자신을 팔로잉할 수 없음
     }
-    boolean alreadyFollowing = followRepository.existsByFollowerIdAndFollowingId(followerId,
-        followingId);
+    boolean alreadyFollowing = followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
     if (alreadyFollowing) {
-      log.warn("follow - 해당 유저를 이미 팔로우 중: followerId={} -> followingId={}", followerId,
-          followingId);
+      log.warn("follow - 해당 유저를 이미 팔로우 중: followerId={} -> followingId={}", followerId, followingId);
       throw new AlreadyFollowingException(); //이미 팔로잉 중
     }
     Follow follow = new Follow(followerId, followingId);
@@ -62,38 +58,35 @@ public class FollowServiceImpl implements FollowService {
     // 알림 전송 추가
     notificationService.sendNotification(
         new NotificationDto(following.getId(), NotificationType.FOLLOWED,
-            following.getName() + "이(가) 팔로우 했습니다."));
+            follower.getName()+ "이(가) "+following.getName()+"를 팔로우 했습니다."));
     log.info("follow - 팔로우 성공: followerId={}, followingId={}", followerId, followingId);
   }
 
   @Override
   @Transactional
-  public void unfollow(UUID followerId, UUID followingId) {
-    log.info("unfollow - 언팔로우 시도: followerId={}, followingId={}", followerId, followingId);
-    User unFollower = userRepository.findById(followerId)
-        .orElseThrow(() -> {
-          log.warn("unfollow - 언팔로우 실패 - 존재하지 않는 사용자(followerId): {}", followerId);
-          return new UserNotFoundException();
-        });
-    User unFollowing = userRepository.findById(followingId)
-        .orElseThrow(() -> {
-          log.warn("unfollow - 언팔로우 실패 - 존재하지 않는 사용자(followingId): {}", followingId);
-          return new UserNotFoundException();
-        });
+  public void unfollow(UUID unfollowerId, UUID unfollowingId) {
+    log.info("unfollow - 언팔로우 시도: unfollowerId={}, unfollowingId={}", unfollowerId, unfollowingId);
+    User unFollower = userRepository.findById(unfollowerId).orElseThrow(() -> {
+      log.warn("unfollow - 언팔로우 실패 - 존재하지 않는 사용자(unfollowerId): {}", unfollowerId);
+      return new UserNotFoundException();
+    });
+    User unFollowing = userRepository.findById(unfollowingId).orElseThrow(() -> {
+      log.warn("unfollow - 언팔로우 실패 - 존재하지 않는 사용자(unfollowingId): {}", unfollowingId);
+      return new UserNotFoundException();
+    });
 
     //팔로우 관계 확인
-    if (isFollowing(followerId, followingId)) {
+    if (isFollowing(unfollowerId, unfollowingId)) {
       //삭제
-      followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
+      followRepository.deleteByFollowerIdAndFollowingId(unfollowerId, unfollowingId);
       // 알림 전송 추가
       notificationService.sendNotification(
           new NotificationDto(unFollowing.getId(), NotificationType.UNFOLLOWED,
-              unFollowing.getName() + "을(를) 언팔로우 했습니다."));
-      log.info("unfollow - 언팔로우 성공: followerId={}, followingId={}", followerId, followingId);
+              unFollower.getName()+" 이(가) "+unFollowing.getName() + "을(를) 언팔로우 했습니다."));
+      log.info("unfollow - 언팔로우 성공: unfollowerId={}, unfollowingId={}", unfollowerId, unfollowingId);
 
     } else {
-      log.warn("unfollow - 언팔로우 실패 - 팔로우 관계가 없음: followerId={}, followingId={}", followerId,
-          followingId);
+      log.warn("unfollow - 언팔로우 실패 - 팔로우 관계가 없음: unfollowerId={}, unfollowingId={}", unfollowerId, unfollowingId);
       throw new FollowNotFoundException();
     }
   }
@@ -116,13 +109,9 @@ public class FollowServiceImpl implements FollowService {
   public List<FollowResponse> getFollowing(UUID userId) {
     log.info("getFollowing - 팔로잉 목록 조회: userId={}", userId);
 
-    List<UUID> list = followRepository.findAllByFollowerId(userId).stream()
-        .map(Follow::getFollowingId).toList();
+    List<UUID> list = followRepository.findAllByFollowerId(userId).stream().map(Follow::getFollowingId).toList();
 
-    return list.stream()
-        .map(id -> FollowResponse.fromUser(
-            userRepository.findById(id)
-                .orElseThrow(UserNotFoundException::new))).toList();
+    return list.stream().map(id -> FollowResponse.fromUser(userRepository.findById(id).orElseThrow(UserNotFoundException::new))).toList();
   }
 
   //나를 팔로우하는 사람들 목록
@@ -130,13 +119,9 @@ public class FollowServiceImpl implements FollowService {
   public List<FollowResponse> getFollowers(UUID userId) {
     log.info("getFollowers - 팔로워 목록 조회: userId={}", userId);
 
-    List<UUID> list = followRepository.findAllByFollowingId(userId).stream()
-        .map(Follow::getFollowerId).toList();
+    List<UUID> list = followRepository.findAllByFollowingId(userId).stream().map(Follow::getFollowerId).toList();
 
-    return list.stream()
-        .map(id -> FollowResponse.fromUser(
-            userRepository.findById(id)
-                .orElseThrow(UserNotFoundException::new))).toList();
+    return list.stream().map(id -> FollowResponse.fromUser(userRepository.findById(id).orElseThrow(UserNotFoundException::new))).toList();
   }
 
   @Override
