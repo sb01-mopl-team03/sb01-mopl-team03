@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import team03.mopl.api.CurationApi;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.dto.CursorPageRequest;
@@ -25,11 +26,12 @@ import team03.mopl.jwt.CustomUserDetails;
 @RestController
 @RequestMapping("/api/keywords")
 @RequiredArgsConstructor
-public class CurationController {
+public class CurationController implements CurationApi {
 
   private final CurationService curationService;
 
-  @PostMapping()
+  @Override
+  @PostMapping
   public ResponseEntity<KeywordDto> registerKeyword(@Valid @RequestBody KeywordRequest request) {
     KeywordDto keyword = curationService.registerKeyword(request.userId(), request.keyword());
     return ResponseEntity.ok(keyword);
@@ -47,6 +49,7 @@ public class CurationController {
     return ResponseEntity.ok(recommendations);
   }
 
+  @Override
   @DeleteMapping("/{keywordId}")
   public ResponseEntity<Void> delete(
       @PathVariable UUID keywordId,
