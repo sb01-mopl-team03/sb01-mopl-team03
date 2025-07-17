@@ -5,12 +5,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.domain.notification.entity.Notification;
 
 @Repository
 @NoArgsConstructor
+@Slf4j
 public class EmitterRepositoryImpl implements EmitterRepository {
 
   /**
@@ -39,7 +41,6 @@ public class EmitterRepositoryImpl implements EmitterRepository {
     emitters.put(emitterId, sseEmitter);
     return sseEmitter;
   }
-
 
   /**
    * 특정 userId prefix로 시작하는 모든 SseEmitter를 조회합니다.
@@ -79,4 +80,5 @@ public class EmitterRepositoryImpl implements EmitterRepository {
       }
     });
   }
+
 }
