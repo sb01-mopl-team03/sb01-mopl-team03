@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
+import team03.mopl.domain.notification.repository.EmitterCacheRepository;
 import team03.mopl.domain.notification.repository.EmitterRepository;
 
 @Service
@@ -23,6 +24,7 @@ import team03.mopl.domain.notification.repository.EmitterRepository;
 public class EmitterService {
 
   private final EmitterRepository emitterRepository;
+  private final EmitterCacheRepository emitterCacheRepository;
   private final ScheduledExecutorService heartbeatExecutor = Executors.newScheduledThreadPool(5);
   private final ThreadPoolTaskExecutor notificationExecutor;
   private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
@@ -146,7 +148,7 @@ public class EmitterService {
                 NotificationDto notificationDto = NotificationDto.from(notification);
 
                 // 캐시에 일시저장
-                emitterRepository.saveNotificationCache(notificationCacheId, notification);
+                emitterCacheRepository.saveNotificationCache(notificationCacheId, notification);
 
                 emitter.send(SseEmitter.event().id(notificationCacheId).name(notification.getType().getNotificationName()).data(notificationDto));
 
@@ -210,7 +212,7 @@ public class EmitterService {
     // 임시 보관소에 저장된 유저에 대한 알림을 모두 가져옴
     log.info("누락된 알림 재전송 시작: userId={}, lastEventId={}", userId, lastEventId);
 
-    var notificationCaches = emitterRepository.findAllNotificationCachesByUserIdPrefix(userId);
+    var notificationCaches = emitterCacheRepository.findAllNotificationCachesByUserIdPrefix(userId);
     int resendCount = 0;
 
     for (var entry : notificationCaches.entrySet()) {
@@ -245,7 +247,7 @@ public class EmitterService {
   public void deleteNotificationCaches(List<Notification> notifications) {
     notifications.forEach(notification -> {
       try {
-        emitterRepository.deleteNotificationCachesByNotificationIdPrefix(notification.getId());
+        emitterCacheRepository.deleteNotificationCachesByNotificationIdPrefix(notification.getId());
       } catch (Exception e) {
         log.warn("알림 캐시 삭제 실패: notificationId={}, 에러={}", notification.getId(), e.getMessage());
       }
