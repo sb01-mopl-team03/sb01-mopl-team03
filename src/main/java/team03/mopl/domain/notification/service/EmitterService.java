@@ -41,12 +41,8 @@ public class EmitterService {
   // 각 emitter의 heartbeat 작업을 추적하기 위한 맵
   private final ConcurrentHashMap<String, ScheduledFuture<?>> heartbeatTasks = new ConcurrentHashMap<>();
 
-  public SseEmitter subscribe(UUID userId, String lastNotificationId, String accessToken) {
-    // 토큰 검증
-    if (!jwtProvider.validateToken(accessToken)) {
-      log.warn("유효하지 않은 토큰으로 SSE 연결 시도: userId = {}", userId);
-      throw new AccessDeniedException("Invalid or expired token");
-    }
+  public SseEmitter subscribe(UUID userId, String lastNotificationId ) {
+
 
     // 기존 연결 정리 먼저 수행
     cleanupExistingConnections(userId);
@@ -59,7 +55,7 @@ public class EmitterService {
     SseEmitter emitter = new SseEmitter(TimeUnit.MINUTES.toMillis(60));
 
     // Repository에 저장하기 전에 emitter 설정 완료
-    setupEmitterCallbacks(emitterId, emitter, userId, accessToken);
+    setupEmitterCallbacks(emitterId, emitter, userId);
     emitterRepository.saveEmitter(emitterId, emitter);
 
     // 미수신 데이터 재전송
@@ -82,7 +78,7 @@ public class EmitterService {
   /**
    * Emitter 콜백 설정
    */
-  private void setupEmitterCallbacks(String emitterId, SseEmitter emitter, UUID userId, String accessToken) {
+  private void setupEmitterCallbacks(String emitterId, SseEmitter emitter, UUID userId) {
     // 연결 종료, 타임아웃, 에러 시 콜백 등록
     emitter.onCompletion(() -> {
       log.debug("SSE 연결 정상 완료: emitterId = {}", emitterId);
@@ -105,7 +101,7 @@ public class EmitterService {
     });
 
     // Heartbeat 스케줄링 (45초마다 - 토큰 검증 포함)
-    scheduleHeartbeatWithTokenValidation(emitterId, emitter, userId, accessToken);
+    scheduleHeartbeatWithTokenValidation(emitterId, emitter, userId);
   }
 
   /**
@@ -188,22 +184,13 @@ public class EmitterService {
   /**
    * 토큰 검증을 포함한 Heartbeat 스케줄링
    */
-  private void scheduleHeartbeatWithTokenValidation(String emitterId, SseEmitter emitter, UUID userId, String accessToken) {
+  private void scheduleHeartbeatWithTokenValidation(String emitterId, SseEmitter emitter, UUID userId) {
     ScheduledFuture<?> heartbeatTask = heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
         // Repository에서 emitter가 아직 존재하는지 확인
         if (!emitterRepository.findAllEmittersByUserIdPrefix(userId.toString()).containsKey(emitterId)) {
           log.debug("Emitter가 더 이상 존재하지 않음: emitterId = {}", emitterId);
           cancelHeartbeatTask(emitterId);
-          return;
-        }
-
-        // 토큰 유효성 재검증
-        if (!jwtProvider.validateToken(accessToken)) {
-          log.info("토큰 만료로 인한 SSE 연결 종료: userId = {}, emitterId = {}", userId, emitterId);
-
-          // 토큰 만료 알림 전송 후 연결 종료
-          handleTokenExpired(emitterId, emitter);
           return;
         }
 
