@@ -30,9 +30,9 @@ public class FollowController implements FollowApi {
 
   @Override
   @PostMapping("/follow")
-  public ResponseEntity<Void> follow( @AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
+  public ResponseEntity<Void> follow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
     //로그인된 사람과 팔로우하려는 사람과 같은지 확인
-    if( user.getId() != request.getFollowerId() ) {
+    if (!user.getId().toString().equals(request.getFollowerId().toString())) {
       throw new BadRequestFollowingException();
     }
     followService.follow(request.getFollowerId(), request.getFollowingId());
@@ -43,7 +43,7 @@ public class FollowController implements FollowApi {
   @DeleteMapping("/unfollow")
   public ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
     //로그인된 사람과 언팔하려는 사람 같은지 확인
-    if( user.getId() != request.getFollowerId() ) {
+    if (!user.getId().toString().equals(request.getFollowerId().toString())) {
       throw new BadRequestFollowingException();
     }
     followService.unfollow(request.getFollowerId(), request.getFollowingId());
