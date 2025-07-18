@@ -440,20 +440,20 @@ class ContentRepositoryImplTest {
       int size = 2;
 
       // when
-      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType,
+      List<Content> firstPageResults = contentRepository.findContentsWithCursor(title, contentType,
           sortBy,
           direction, cursor, cursorId, size);
 
       // then
-      assertThat(firstPageresults).isNotNull();
-      assertThat(firstPageresults.size()).isEqualTo(2);
-      assertThat(firstPageresults)
+      assertThat(firstPageResults).isNotNull();
+      assertThat(firstPageResults.size()).isEqualTo(2);
+      assertThat(firstPageResults)
           .extracting(Content::getTitle)
           .containsExactly("Ç", "B-");
 
       // 두번째 페이지
       // given
-      Content lastContentFirstPage = firstPageresults.get(size - 1);
+      Content lastContentFirstPage = firstPageResults.get(size - 1);
       String nextCursor = lastContentFirstPage.getTitleNormalized();
       UUID nextCursorId = lastContentFirstPage.getId();
 
@@ -471,8 +471,125 @@ class ContentRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("제목 기준 오름차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
+    void shouldReturnResultTitleAscCursorPaging() {
+      // given
+      List<Content> contents = List.of(
+          Content.builder().title("Ç").titleNormalized("C")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build(),
+          //
+          Content.builder().title("B-").titleNormalized("B")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build(),
+          Content.builder().title("A").titleNormalized("A")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build()
+      );
+      contentRepository.saveAll(contents);
+
+      // 첫번째 페이지
+      String title = null;
+      String contentType = "MOVIE";
+      String sortBy = "TITLE";
+      String direction = "ASC";
+      String cursor = null;
+      UUID cursorId = null;
+      int size = 2;
+
+      // when
+      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, cursor, cursorId, size);
+
+      // then
+      assertThat(firstPageresults).isNotNull();
+      assertThat(firstPageresults.size()).isEqualTo(2);
+      assertThat(firstPageresults)
+          .extracting(Content::getTitle)
+          .containsExactly("A", "B-");
+
+      // 두번째 페이지
+      // given
+      Content lastContentFirstPage = firstPageresults.get(size - 1);
+      String nextCursor = lastContentFirstPage.getTitleNormalized();
+      UUID nextCursorId = lastContentFirstPage.getId();
+
+      // when
+      List<Content> secondPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, nextCursor, nextCursorId, size);
+
+      // then
+      assertThat(secondPageResults).isNotNull();
+      assertThat(secondPageResults.size()).isEqualTo(1);
+      assertThat(secondPageResults)
+          .extracting(Content::getTitle)
+          .containsExactly("Ç");
+    }
+
+    @Test
     @DisplayName("릴리즈 날짜 기준 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
     void shouldReturnResultReleaseAtDescCursorPaging() {
+      // given
+      List<Content> contents = List.of(
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-06T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build(),
+          //
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build(),
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-08T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").build()
+      );
+      contentRepository.saveAll(contents);
+
+      // 첫번째 페이지
+      String title = null;
+      String contentType = "MOVIE";
+      String sortBy = "RELEASE_AT";
+      String direction = "DESC";
+      String cursor = null;
+      UUID cursorId = null;
+      int size = 2;
+
+      // when
+      List<Content> firstPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, cursor, cursorId, size);
+
+      // then
+      assertThat(firstPageResults).isNotNull();
+      assertThat(firstPageResults.size()).isEqualTo(2);
+      assertThat(firstPageResults)
+          .extracting(Content::getReleaseDate)
+          .containsExactly(LocalDateTime.parse("2025-07-08T10:00"),
+              LocalDateTime.parse("2025-07-07T10:00"));
+
+      // 두번째 페이지
+      // given
+      Content lastContentFirstPage = firstPageResults.get(size - 1);
+      String nextCursor = lastContentFirstPage.getReleaseDate().toString();
+      UUID nextCursorId = lastContentFirstPage.getId();
+
+      // when
+      List<Content> secondPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, nextCursor, nextCursorId, size);
+
+      // then
+      assertThat(secondPageResults).isNotNull();
+      assertThat(secondPageResults.size()).isEqualTo(1);
+      assertThat(secondPageResults)
+          .extracting(Content::getReleaseDate)
+          .containsExactly(LocalDateTime.parse("2025-07-06T10:00"));
+    }
+
+    @Test
+    @DisplayName("릴리즈 날짜 기준 오름차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
+    void shouldReturnResultReleaseAtAscCursorPaging() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -492,27 +609,27 @@ class ContentRepositoryImplTest {
       String title = null;
       String contentType = "MOVIE";
       String sortBy = "RELEASE_AT";
-      String direction = "DESC";
+      String direction = "ASC";
       String cursor = null;
       UUID cursorId = null;
       int size = 2;
 
       // when
-      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType,
+      List<Content> firstPageResults = contentRepository.findContentsWithCursor(title, contentType,
           sortBy,
           direction, cursor, cursorId, size);
 
       // then
-      assertThat(firstPageresults).isNotNull();
-      assertThat(firstPageresults.size()).isEqualTo(2);
-      assertThat(firstPageresults)
+      assertThat(firstPageResults).isNotNull();
+      assertThat(firstPageResults.size()).isEqualTo(2);
+      assertThat(firstPageResults)
           .extracting(Content::getReleaseDate)
-          .containsExactly(LocalDateTime.parse("2025-07-08T10:00"),
+          .containsExactly(LocalDateTime.parse("2025-07-06T10:00"),
               LocalDateTime.parse("2025-07-07T10:00"));
 
       // 두번째 페이지
       // given
-      Content lastContentFirstPage = firstPageresults.get(size - 1);
+      Content lastContentFirstPage = firstPageResults.get(size - 1);
       String nextCursor = lastContentFirstPage.getReleaseDate().toString();
       UUID nextCursorId = lastContentFirstPage.getId();
 
@@ -526,9 +643,8 @@ class ContentRepositoryImplTest {
       assertThat(secondPageResults.size()).isEqualTo(1);
       assertThat(secondPageResults)
           .extracting(Content::getReleaseDate)
-          .containsExactly(LocalDateTime.parse("2025-07-06T10:00"));
+          .containsExactly(LocalDateTime.parse("2025-07-08T10:00"));
     }
-
 
     @Test
     @DisplayName("평균 별점 기준 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
@@ -538,13 +654,13 @@ class ContentRepositoryImplTest {
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
               .youtubeUrl("").avgRating(BigDecimal.valueOf(3)).build(),
-          Content.builder().title("더미").titleNormalized("더미")
-              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(5)).build(),
           //
           Content.builder().title("더미").titleNormalized("더미")
               .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
-              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build()
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build(),
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(5)).build()
       );
       contentRepository.saveAll(contents);
 
@@ -558,20 +674,20 @@ class ContentRepositoryImplTest {
       int size = 2;
 
       // when
-      List<Content> firstPageresults = contentRepository.findContentsWithCursor(title, contentType,
+      List<Content> firstPageResults = contentRepository.findContentsWithCursor(title, contentType,
           sortBy,
           direction, cursor, cursorId, size);
 
       // then
-      assertThat(firstPageresults).isNotNull();
-      assertThat(firstPageresults.size()).isEqualTo(2);
-      assertThat(firstPageresults)
+      assertThat(firstPageResults).isNotNull();
+      assertThat(firstPageResults.size()).isEqualTo(2);
+      assertThat(firstPageResults)
           .extracting(Content::getAvgRating)
           .containsExactly(BigDecimal.valueOf(5), BigDecimal.valueOf(4));
 
       // 두번째 페이지
       // given
-      Content lastContentFirstPage = firstPageresults.get(size - 1);
+      Content lastContentFirstPage = firstPageResults.get(size - 1);
       String nextCursor = lastContentFirstPage.getAvgRating().toString();
       UUID nextCursorId = lastContentFirstPage.getId();
 
@@ -586,6 +702,64 @@ class ContentRepositoryImplTest {
       assertThat(secondPageResults)
           .extracting(Content::getAvgRating)
           .containsExactly(BigDecimal.valueOf(3));
+    }
+
+    @Test
+    @DisplayName("평균 별점 기준 오름차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
+    void shouldReturnResultAvgRatingAscCursorPaging() {
+      // given
+      List<Content> contents = List.of(
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(3)).build(),
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(4)).build(),
+          //
+          Content.builder().title("더미").titleNormalized("더미")
+              .releaseDate(LocalDateTime.parse("2025-07-07T10:00")).contentType(ContentType.MOVIE)
+              .youtubeUrl("").avgRating(BigDecimal.valueOf(5)).build()
+      );
+      contentRepository.saveAll(contents);
+
+      // 첫번째 페이지
+      String title = null;
+      String contentType = "MOVIE";
+      String sortBy = "AVG_RATING";
+      String direction = "ASC";
+      String cursor = null;
+      UUID cursorId = null;
+      int size = 2;
+
+      // when
+      List<Content> firstPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, cursor, cursorId, size);
+
+      // then
+      assertThat(firstPageResults).isNotNull();
+      assertThat(firstPageResults.size()).isEqualTo(2);
+      assertThat(firstPageResults)
+          .extracting(Content::getAvgRating)
+          .containsExactly(BigDecimal.valueOf(3), BigDecimal.valueOf(4));
+
+      // 두번째 페이지
+      // given
+      Content lastContentFirstPage = firstPageResults.get(size - 1);
+      String nextCursor = lastContentFirstPage.getAvgRating().toString();
+      UUID nextCursorId = lastContentFirstPage.getId();
+
+      // when
+      List<Content> secondPageResults = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          direction, nextCursor, nextCursorId, size);
+
+      // then
+      assertThat(secondPageResults).isNotNull();
+      assertThat(secondPageResults.size()).isEqualTo(1);
+      assertThat(secondPageResults)
+          .extracting(Content::getAvgRating)
+          .containsExactly(BigDecimal.valueOf(5));
     }
 
     @Test
