@@ -14,6 +14,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
@@ -43,7 +44,9 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   private final ContentRepository contentRepository;
   private final WatchRoomParticipantRepository watchRoomParticipantRepository;
   private final WatchRoomRepository watchRoomRepository;
-  private final ObjectMapper objectMapper;
+//  private final ObjectMapper objectMapper;
+  //
+  private final CursorCodecUtil codecUtil;
 
   @Override
   @Transactional
@@ -77,7 +80,8 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
   @Override
   public CursorPageResponseDto<WatchRoomDto> getAll(WatchRoomSearchDto request) {
-    Cursor cursor = decodeCursor(request.getCursor());
+//    Cursor cursor = decodeCursor(request.getCursor());
+    Cursor cursor = codecUtil.decodeCursor(request.getCursor());
 
     WatchRoomSearchInternalDto watchRoomSearchInternalDto =
         WatchRoomSearchInternalDto.fromRequestWithCursor(request, cursor);
@@ -104,52 +108,54 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     return CursorPageResponseDto.<WatchRoomDto>builder()
         .data(result)
-        .nextCursor(nextCursor == null? null : encodeNextCursor(nextCursor, request.getSortBy()))
+//        .nextCursor(nextCursor == null? null : encodeNextCursor(nextCursor, request.getSortBy()))
+        .nextCursor(nextCursor == null? null : codecUtil.encodeNextCursor(nextCursor,
+            request.getSortBy()))
         .hasNext(hasNext)
         .totalElements(totalElements)
         .size(result.size())
         .build();
   }
 
-  // 커서 디코더
-  private Cursor decodeCursor(String encodedCursor) {
-    if (encodedCursor == null) {
-      return new Cursor(null, null);
-    }
-
-    try {
-      byte[] decodedBytes = Base64.getUrlDecoder().decode(encodedCursor);
-      String decodedJson = new String(decodedBytes, StandardCharsets.UTF_8);
-      return objectMapper.readValue(decodedJson, Cursor.class);
-    } catch (Exception e) {
-      return new Cursor(null, null);
-    }
-  }
-
-  // 커서 인코딩
-  public String encodeNextCursor(WatchRoomDto lastItem, String sortBy) {
-    String lastId = lastItem.id().toString();
-    String lastValue = extractLastValue(lastItem, sortBy);
-
-    Cursor cursor = new Cursor(lastValue, lastId);
-    try {
-      String cursorToJson = objectMapper.writeValueAsString(cursor);
-      return Base64.getUrlEncoder().encodeToString(cursorToJson.getBytes(StandardCharsets.UTF_8));
-    } catch (Exception e) {
-      throw new RuntimeException("커서 인코딩 실패", e);
-    }
-  }
-
-  private String extractLastValue(WatchRoomDto lastItem, String sortBy) {
-    String lowerSortBy = sortBy == null? "participantcount" : sortBy.toLowerCase();
-
-    return switch (lowerSortBy) {
-      case "createdat" -> lastItem.createdAt().toString();
-      case "title" -> lastItem.title();
-      case "participantcount" -> String.valueOf(lastItem.headCount());
-      default -> throw new IllegalArgumentException("지원하지 않는 정렬 방식: " + sortBy);
-    };
-  }
+//  // 커서 디코더
+//  private Cursor decodeCursor(String encodedCursor) {
+//    if (encodedCursor == null) {
+//      return new Cursor(null, null);
+//    }
+//
+//    try {
+//      byte[] decodedBytes = Base64.getUrlDecoder().decode(encodedCursor);
+//      String decodedJson = new String(decodedBytes, StandardCharsets.UTF_8);
+//      return objectMapper.readValue(decodedJson, Cursor.class);
+//    } catch (Exception e) {
+//      return new Cursor(null, null);
+//    }
+//  }
+//
+//  // 커서 인코딩
+//  public String encodeNextCursor(WatchRoomDto lastItem, String sortBy) {
+//    String lastId = lastItem.id().toString();
+//    String lastValue = extractLastValue(lastItem, sortBy);
+//
+//    Cursor cursor = new Cursor(lastValue, lastId);
+//    try {
+//      String cursorToJson = objectMapper.writeValueAsString(cursor);
+//      return Base64.getUrlEncoder().encodeToString(cursorToJson.getBytes(StandardCharsets.UTF_8));
+//    } catch (Exception e) {
+//      throw new RuntimeException("커서 인코딩 실패", e);
+//    }
+//  }
+//
+//  private String extractLastValue(WatchRoomDto lastItem, String sortBy) {
+//    String lowerSortBy = sortBy == null? "participantcount" : sortBy.toLowerCase();
+//
+//    return switch (lowerSortBy) {
+//      case "createdat" -> lastItem.createdAt().toString();
+//      case "title" -> lastItem.title();
+//      case "participantcount" -> String.valueOf(lastItem.headCount());
+//      default -> throw new IllegalArgumentException("지원하지 않는 정렬 방식: " + sortBy);
+//    };
+//  }
 
   @Override
   @Transactional(readOnly = true)
