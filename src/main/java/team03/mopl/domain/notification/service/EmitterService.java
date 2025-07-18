@@ -43,7 +43,6 @@ public class EmitterService {
 
   public SseEmitter subscribe(UUID userId, String lastNotificationId ) {
 
-
     // 기존 연결 정리 먼저 수행
     cleanupExistingConnections(userId);
 
@@ -397,13 +396,12 @@ public class EmitterService {
     log.info("누락된 알림 재전송 완료: userId = {}, 재전송 수 = {}", userId, resendCount);
   }
 
-  public void sendInitNotification(SseEmitter emitter, UUID notificationId, NotificationDto notificationDto) {
+  public void sendInitNotification(SseEmitter emitter) {
     try {
       emitter.send(SseEmitter.event()
-          .id(notificationId.toString())
           .name(NotificationType.CONNECTED.getNotificationName())
-          .data(notificationDto));
-      log.info("초기 연결 알림 전송 완료: notificationId = {}", notificationId);
+          .data("연결됨"));
+      log.info("초기 연결 알림 전송 완료");
     } catch (Exception e) {
       log.warn("초기 연결 알림 전송 실패: 에러={}", e.getMessage());
     }

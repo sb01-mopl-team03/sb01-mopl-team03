@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,16 +38,16 @@ public class NotificationController {
    * SSE 구독 연결
    * SSE 구독 연결 ResponseEntity나 JSON을 반환하면 SSE 프로토콜이 성립하지 않아서 EventSource나 SSE 클라이언트가 아예 수신을 못 합니다.
    */
-  @GetMapping("/subscribe")
+  @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails user,
       @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
       HttpServletResponse response) {
 
     // SSE를 위한 응답 헤더 설정
-    response.setHeader("Cache-Control", "no-cache");
+/*    response.setHeader("Cache-Control", "no-cache");
     response.setHeader("Connection", "keep-alive");
     response.setHeader("Content-Type", "text/event-stream");
-    response.setHeader("Access-Control-Expose-Headers", "Cache-Control, Connection, Content-Type");
+    response.setHeader("Access-Control-Expose-Headers", "Cache-Control, Connection, Content-Type");*/
 
     log.info("=== SSE 구독 요청 시작 ===");
     log.info("User 정보: {}", user);
@@ -91,15 +92,9 @@ public class NotificationController {
 
       log.debug("SSE Emitter 구독 완료");
 
-      // 4. 연결된 사실을 알림으로 저장
-      log.debug("CONNECTED 알림 생성 중...");
-      NotificationDto notificationDto = new NotificationDto(userId, NotificationType.CONNECTED, "SSE 연결 완료");
-      UUID connectedNotificationId = notificationService.sendNotification(notificationDto);
-      log.debug("CONNECTED 알림 생성 완료: notificationId={}", connectedNotificationId);
-
-      // 5. 구독 직후, CONNECTED 알림 전송
+      // 4. 구독 직후, CONNECTED 알림 전송
       log.debug("초기 알림 전송 중...");
-      emitterService.sendInitNotification(emitter, connectedNotificationId, notificationDto);
+      emitterService.sendInitNotification(emitter);
       log.info("SSE 구독 완료: userId={}", userId);
 
       return emitter;

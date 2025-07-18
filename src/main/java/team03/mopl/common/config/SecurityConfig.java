@@ -51,7 +51,6 @@ public class SecurityConfig {
             .requestMatchers("/actuator/health").permitAll()
             .requestMatchers("/error").permitAll()
             // SSE 엔드포인트를 permitAll로 설정
-            .requestMatchers("/api/notifications/subscribe").permitAll()
             .anyRequest().hasRole("USER")
         )
         .exceptionHandling(ex -> ex
