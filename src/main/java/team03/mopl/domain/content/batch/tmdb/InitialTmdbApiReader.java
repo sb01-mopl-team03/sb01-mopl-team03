@@ -49,15 +49,21 @@ public class InitialTmdbApiReader implements ItemStreamReader<TmdbItemDto> {
     while (true) {
       // 1. 읽을 Item이 있는지 확인
       if (tmdbItemDtos == null || nextItemIndex >= tmdbItemDtos.size()) {
+        log.debug("아이템 소진, API 데이터 패칭 시작");
         // 2. 다음 API가 없다면 false 반환
         if (!fetchTmdbFromApi()) {
+          log.debug("모든 API 요청 처리 완료, ItemReader 종료");
           // 2*. null을 반환한다.
           return null;
         }
       }
       if (!tmdbItemDtos.isEmpty() && nextItemIndex < tmdbItemDtos.size()) {
+        TmdbItemDto itemDto = tmdbItemDtos.get(nextItemIndex++);
+        String itemTitle =
+            itemDto.getTitle() != null ? itemDto.getTitle() : itemDto.getName();
+        log.debug("아이템 읽기 성공: itemTitle={}", itemTitle);
         // 3. Item 을 반환한다.
-        return tmdbItemDtos.get(nextItemIndex++);
+        return itemDto;
       }
     }
   }
@@ -82,7 +88,6 @@ public class InitialTmdbApiReader implements ItemStreamReader<TmdbItemDto> {
         .queryParam("language", "ko-KR")
         .queryParam("page", info.getPage())
         .build(info.getVideoType());
-    log.info("uri={}", uri);
 
     // 4. Header를 설정한다.
     HttpHeaders headers = new HttpHeaders();
@@ -104,6 +109,8 @@ public class InitialTmdbApiReader implements ItemStreamReader<TmdbItemDto> {
     // 7.  Response에서 List<TmdbItemDto>를 꺼낸다.
     this.tmdbItemDtos = (response != null && response.getResults() != null) ? response.getResults()
         : new ArrayList<>();
+
+    log.debug("받은 API 응답의 개수: tmdbItemDtos.size()={}", tmdbItemDtos.size());
 
     // 8. 초기화로 인한 nextItemIndex 초기화
     this.nextItemIndex = 0;
@@ -142,10 +149,10 @@ public class InitialTmdbApiReader implements ItemStreamReader<TmdbItemDto> {
   public void open(ExecutionContext executionContext) throws ItemStreamException {
     if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
-      log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
+      log.info("InitialTmdbApiReader - TMDB API 데이터 읽기 재시작: nextRequestIndex={}", this.nextRequestIndex);
     } else {
       this.nextRequestIndex = 0;
-      log.info("Job 신규 시작");
+      log.info("InitialTmdbApiReader - TMDB API 데이터 읽기 신규 시작");
     }
 
     if (executionContext.containsKey("nextItemIndex")) {
@@ -162,10 +169,11 @@ public class InitialTmdbApiReader implements ItemStreamReader<TmdbItemDto> {
   public void update(ExecutionContext executionContext) throws ItemStreamException {
     executionContext.putInt("nextRequestIndex", this.nextRequestIndex);
     executionContext.putInt("nextItemIndex", this.nextItemIndex);
+    log.debug("ExecutionContext 업데이트 중: nextRequestIndex={}, nextItemIndex={}", this.nextRequestIndex, this.nextItemIndex);
   }
 
   @Override
   public void close() throws ItemStreamException {
-    log.info("InitialTmdbApiReader 종료");
+    log.info("InitialTmdbApiReader - TMDB API 리더 리소스 정리 완료 (Step 종료 시 호출)");
   }
 }

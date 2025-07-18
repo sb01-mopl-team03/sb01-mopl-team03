@@ -16,6 +16,6 @@ public class ApiWriter implements ItemWriter<Content> {
   @Override
   public void write(Chunk<? extends Content> chunk) throws Exception {
     contentRepository.saveAll(chunk.getItems());
-    log.info("Item {}개 저장", chunk.getItems().size());
+    log.info("ApiWriter - Item {}개 저장", chunk.getItems().size());
   }
 }

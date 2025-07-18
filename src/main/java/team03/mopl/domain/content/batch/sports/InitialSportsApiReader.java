@@ -12,6 +12,7 @@ import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import team03.mopl.domain.content.batch.tmdb.TmdbItemDto;
 
 
 /**
@@ -41,15 +42,20 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
     while (true) {
       // 1. 읽을 Item이 있는지 확인
       if (sportsItemDtos == null || nextItemIndex >= sportsItemDtos.size()) {
+        log.debug("아이템 소진, API 데이터 패칭 시작");
         // 2. 다음 API가 없다면 false 반환
         if (!fetchSportsFromApi()) {
+          log.debug("모든 API 요청 처리 완료, ItemReader 종료");
           // 2*. null을 반환한다.
           return null;
         }
       }
       if (!sportsItemDtos.isEmpty() && nextItemIndex < sportsItemDtos.size()) {
+        SportsItemDto itemDto = sportsItemDtos.get(nextItemIndex++);
+        String itemTitle = itemDto.getStrFilename();
+        log.debug("아이템 읽기 성공: itemTitle={}", itemTitle);
         // 3. Item 을 반환한다.
-        return sportsItemDtos.get(nextItemIndex++);
+        return itemDto;
       }
     }
   }
@@ -85,6 +91,8 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
     // 6. sportsItemDtos 초기화로 인한 nextEventIndex 초기화
     this.nextItemIndex = 0;
 
+    log.debug("받은 API 응답의 개수: sportsItemDtos.size()={}", sportsItemDtos.size());
+
     return true;
   }
 
@@ -117,10 +125,10 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
   public void open(ExecutionContext executionContext) throws ItemStreamException {
     if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
-      log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
+      log.info("InitialSportsApiReader - SPORTS API 데이터 읽기 재시작: nextRequestIndex={}", this.nextRequestIndex);
     } else {
       this.nextRequestIndex = 0;
-      log.info("Job 신규 시작");
+      log.info("InitialSportsApiReader - SPORTS API 데이터 읽기 신규 시작");
     }
 
     if (executionContext.containsKey("nextItemIndex")) {
@@ -137,10 +145,12 @@ public class InitialSportsApiReader implements ItemStreamReader<SportsItemDto> {
   public void update(ExecutionContext executionContext) throws ItemStreamException {
     executionContext.putInt("nextRequestIndex", this.nextRequestIndex);
     executionContext.putInt("nextItemIndex", this.nextItemIndex);
+    log.debug("ExecutionContext 업데이트 중: nextRequestIndex={}, nextItemIndex={}", this.nextRequestIndex, this.nextItemIndex);
+
   }
 
   @Override
   public void close() throws ItemStreamException {
-    log.info("InitialTmdbApiReader 종료");
+    log.info("InitialSportsApiReader - SPORTS API 리더 리소스 정리 완료 (Step 종료 시 호출)");
   }
 }
