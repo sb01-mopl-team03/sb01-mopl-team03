@@ -20,7 +20,7 @@ CREATE TABLE "contents"
 (
     "id"               UUID PRIMARY KEY                  NOT NULL,
     "title"            VARCHAR(255)                      NOT NULL,
-    "title_normalized" VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
+    "title_normalized" VARCHAR(255)                      NOT NULL,
     "data_id"          varchar(255)                      NULL,
     "description"      TEXT                              NULL,
     "content_type"     VARCHAR(50)                       NOT NULL,
@@ -57,8 +57,8 @@ CREATE TABLE "keyword_contents"
     FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
-CREATE INDEX idx_keyword_score ON keyword_contents(keyword_id, score DESC, content_id);
-CREATE INDEX idx_content_updated ON keyword_contents(content_id, updated_at);
+CREATE INDEX idx_keyword_content_keyword_score
+    ON keyword_contents (keyword_id, score DESC, content_id ASC);
 
 -- 리뷰 테이블
 CREATE TABLE "reviews"

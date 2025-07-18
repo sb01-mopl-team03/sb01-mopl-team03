@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
@@ -27,7 +26,6 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.controller.CurationController;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.entity.Keyword;
@@ -141,14 +139,12 @@ class CurationControllerTest {
   class GetRecommendations {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("성공 - 상위 30개 추천 조회")
     void success() {
       // given
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
       CustomUserDetails userDetails = mock(CustomUserDetails.class);
-
-      CursorPageRequest request = new CursorPageRequest(null, 10);
 
       Content mockContent1 = Content.builder()
           .id(UUID.randomUUID())
@@ -173,33 +169,23 @@ class CurationControllerTest {
           ContentDto.from(mockContent2)
       );
 
-      CursorPageResponseDto<ContentDto> mockResponse = CursorPageResponseDto.<ContentDto>builder()
-          .data(mockRecommendations)
-          .nextCursor(null)
-          .size(2)
-          .totalElements(2L)
-          .hasNext(false)
-          .build();
-
       when(userDetails.getId()).thenReturn(userId);
-      when(curationService.getRecommendationsByKeyword(keywordId, userId, request))
-          .thenReturn(mockResponse);
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
+          .thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<CursorPageResponseDto<ContentDto>> response =
-          curationController.getRecommendations(keywordId, request, userDetails);
+      ResponseEntity<List<ContentDto>> response =
+          curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
       assertEquals(200, response.getStatusCode().value());
-      assertEquals(2, response.getBody().data().size());
-      assertEquals("액션 영화", response.getBody().data().get(0).title());
-      assertEquals("스릴러 드라마", response.getBody().data().get(1).title());
-      assertFalse(response.getBody().hasNext());
-      assertEquals(2L, response.getBody().totalElements());
+      assertEquals(2, response.getBody().size());
+      assertEquals("액션 영화", response.getBody().get(0).title());
+      assertEquals("스릴러 드라마", response.getBody().get(1).title());
 
       verify(userDetails, times(1)).getId();
-      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId, request);
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
@@ -209,33 +195,24 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
       CustomUserDetails userDetails = mock(CustomUserDetails.class);
-      CursorPageRequest request = new CursorPageRequest(null, 10);
 
-      CursorPageResponseDto<ContentDto> emptyResponse = CursorPageResponseDto.<ContentDto>builder()
-          .data(List.of())
-          .nextCursor(null)
-          .size(0)
-          .totalElements(0L)
-          .hasNext(false)
-          .build();
+      List<ContentDto> emptyRecommendations = List.of();
 
       when(userDetails.getId()).thenReturn(userId);
-      when(curationService.getRecommendationsByKeyword(keywordId, userId, request))
-          .thenReturn(emptyResponse);
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
+          .thenReturn(emptyRecommendations);
 
       // when
-      ResponseEntity<CursorPageResponseDto<ContentDto>> response =
-          curationController.getRecommendations(keywordId, request, userDetails);
+      ResponseEntity<List<ContentDto>> response =
+          curationController.getRecommendations(keywordId, userDetails);
 
       // then
       assertNotNull(response.getBody());
       assertEquals(200, response.getStatusCode().value());
-      assertTrue(response.getBody().data().isEmpty());
-      assertEquals(0L, response.getBody().totalElements());
-      assertFalse(response.getBody().hasNext());
+      assertTrue(response.getBody().isEmpty());
 
       verify(userDetails, times(1)).getId();
-      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId, request);
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
@@ -245,19 +222,18 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
       CustomUserDetails userDetails = mock(CustomUserDetails.class);
-      CursorPageRequest request = new CursorPageRequest(null, 10);
 
       when(userDetails.getId()).thenReturn(userId);
-      when(curationService.getRecommendationsByKeyword(keywordId, userId, request))
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
           .thenThrow(new KeywordNotFoundException());
 
       // when & then
       assertThrows(KeywordNotFoundException.class, () -> {
-        curationController.getRecommendations(keywordId, request, userDetails);
+        curationController.getRecommendations(keywordId, userDetails);
       });
 
       verify(userDetails, times(1)).getId();
-      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId, request);
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
@@ -267,59 +243,132 @@ class CurationControllerTest {
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
       CustomUserDetails userDetails = mock(CustomUserDetails.class);
-      CursorPageRequest request = new CursorPageRequest(null, 10);
 
-      CursorPageResponseDto<ContentDto> mockResponse = CursorPageResponseDto.<ContentDto>builder()
-          .data(List.of())
-          .nextCursor(null)
-          .size(0)
-          .totalElements(0L)
-          .hasNext(false)
-          .build();
+      List<ContentDto> mockRecommendations = List.of();
 
       when(userDetails.getId()).thenReturn(userId);
-      when(curationService.getRecommendationsByKeyword(keywordId, userId, request))
-          .thenReturn(mockResponse);
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
+          .thenReturn(mockRecommendations);
 
       // when
-      ResponseEntity<CursorPageResponseDto<ContentDto>> response =
-          curationController.getRecommendations(keywordId, request, userDetails);
+      ResponseEntity<List<ContentDto>> response =
+          curationController.getRecommendations(keywordId, userDetails);
 
       // then
       verify(userDetails, times(1)).getId();
-      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId, request);
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
     }
 
     @Test
-    @DisplayName("페이지네이션 파라미터 전달")
-    void passesPageRequestParameters() {
+    @DisplayName("30개 콘텐츠 추천 조회")
+    void returns30Recommendations() {
       // given
       UUID userId = UUID.randomUUID();
       UUID keywordId = UUID.randomUUID();
       CustomUserDetails userDetails = mock(CustomUserDetails.class);
-      String cursor = "someCursor";
-      CursorPageRequest request = new CursorPageRequest(cursor, 5);
 
-      CursorPageResponseDto<ContentDto> mockResponse = CursorPageResponseDto.<ContentDto>builder()
-          .data(List.of())
-          .nextCursor("nextCursor")
-          .size(0)
-          .totalElements(0L)
-          .hasNext(true)
-          .build();
+      // 30개의 콘텐츠 생성
+      List<ContentDto> thirtyRecommendations = List.of(
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 1")
+              .description("첫 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(4.5))
+              .build()),
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 2")
+              .description("두 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(4.0))
+              .build())
+          // 실제로는 30개지만 테스트에서는 2개만 사용
+      );
 
       when(userDetails.getId()).thenReturn(userId);
-      when(curationService.getRecommendationsByKeyword(keywordId, userId, request))
-          .thenReturn(mockResponse);
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
+          .thenReturn(thirtyRecommendations);
 
       // when
-      ResponseEntity<CursorPageResponseDto<ContentDto>> response =
-          curationController.getRecommendations(keywordId, request, userDetails);
+      ResponseEntity<List<ContentDto>> response =
+          curationController.getRecommendations(keywordId, userDetails);
 
       // then
-      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId, request);
-      assertEquals("nextCursor", response.getBody().nextCursor());
-      assertTrue(response.getBody().hasNext());
+      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals(2, response.getBody().size());
+      assertEquals("액션 영화 1", response.getBody().get(0).title());
+      assertEquals("액션 영화 2", response.getBody().get(1).title());
+
+      verify(userDetails, times(1)).getId();
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
+    }
+
+    @Test
+    @DisplayName("30개 미만 콘텐츠 추천 조회")
+    void returnsLessThan30Recommendations() {
+      // given
+      UUID userId = UUID.randomUUID();
+      UUID keywordId = UUID.randomUUID();
+      CustomUserDetails userDetails = mock(CustomUserDetails.class);
+
+      // 5개의 콘텐츠만 있는 경우
+      List<ContentDto> fiveRecommendations = List.of(
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 1")
+              .description("첫 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(4.5))
+              .build()),
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 2")
+              .description("두 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(4.0))
+              .build()),
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 3")
+              .description("세 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(3.5))
+              .build()),
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 4")
+              .description("네 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(3.0))
+              .build()),
+          ContentDto.from(Content.builder()
+              .id(UUID.randomUUID())
+              .title("액션 영화 5")
+              .description("다섯 번째 액션 영화")
+              .contentType(ContentType.MOVIE)
+              .avgRating(BigDecimal.valueOf(2.5))
+              .build())
+      );
+
+      when(userDetails.getId()).thenReturn(userId);
+      when(curationService.getRecommendationsByKeyword(keywordId, userId))
+          .thenReturn(fiveRecommendations);
+
+      // when
+      ResponseEntity<List<ContentDto>> response =
+          curationController.getRecommendations(keywordId, userDetails);
+
+      // then
+      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals(5, response.getBody().size()); // 30개가 아닌 5개 반환
+      assertEquals("액션 영화 1", response.getBody().get(0).title());
+      assertEquals("액션 영화 5", response.getBody().get(4).title());
+
+      verify(userDetails, times(1)).getId();
+      verify(curationService, times(1)).getRecommendationsByKeyword(keywordId, userId);
     }
   }
 
@@ -403,7 +452,6 @@ class CurationControllerTest {
 
       String keywordText = "액션";
       KeywordRequest registerRequest = new KeywordRequest(workflowUserId, keywordText);
-      CursorPageRequest pageRequest = new CursorPageRequest(null, 10);
 
       User mockUser = User.builder()
           .id(workflowUserId)
@@ -430,13 +478,6 @@ class CurationControllerTest {
           .build();
 
       List<ContentDto> recommendations = List.of(ContentDto.from(actionContent));
-      CursorPageResponseDto<ContentDto> pageResponse = CursorPageResponseDto.<ContentDto>builder()
-          .data(recommendations)
-          .nextCursor(null)
-          .size(1)
-          .totalElements(1L)
-          .hasNext(false)
-          .build();
 
       // when & then - 키워드 등록
       when(curationService.registerKeyword(workflowUserId, keywordText)).thenReturn(keywordResponse);
@@ -448,15 +489,15 @@ class CurationControllerTest {
       // when & then - 추천 조회
       CustomUserDetails workflowUserDetails = mock(CustomUserDetails.class);
       when(workflowUserDetails.getId()).thenReturn(workflowUserId);
-      when(curationService.getRecommendationsByKeyword(workflowKeywordId, workflowUserId, pageRequest))
-          .thenReturn(pageResponse);
+      when(curationService.getRecommendationsByKeyword(workflowKeywordId, workflowUserId))
+          .thenReturn(recommendations);
 
-      ResponseEntity<CursorPageResponseDto<ContentDto>> getResponse =
-          curationController.getRecommendations(workflowKeywordId, pageRequest, workflowUserDetails);
+      ResponseEntity<List<ContentDto>> getResponse =
+          curationController.getRecommendations(workflowKeywordId, workflowUserDetails);
 
       assertEquals(200, getResponse.getStatusCode().value());
-      assertEquals(1, getResponse.getBody().data().size());
-      assertEquals("액션 영화", getResponse.getBody().data().get(0).title());
+      assertEquals(1, getResponse.getBody().size());
+      assertEquals("액션 영화", getResponse.getBody().get(0).title());
 
       // when & then - 키워드 삭제
       doNothing().when(curationService).delete(workflowKeywordId, workflowUserId);
@@ -467,7 +508,7 @@ class CurationControllerTest {
 
       // verify all interactions
       verify(curationService, times(1)).registerKeyword(workflowUserId, keywordText);
-      verify(curationService, times(1)).getRecommendationsByKeyword(workflowKeywordId, workflowUserId, pageRequest);
+      verify(curationService, times(1)).getRecommendationsByKeyword(workflowKeywordId, workflowUserId);
       verify(curationService, times(1)).delete(workflowKeywordId, workflowUserId);
       verify(workflowUserDetails, times(2)).getId();
     }
@@ -511,11 +552,10 @@ class CurationControllerTest {
     void handlesNullUserDetails() {
       // given
       UUID keywordId = UUID.randomUUID();
-      CursorPageRequest request = new CursorPageRequest(null, 10);
 
       // when & then
       assertThrows(NullPointerException.class, () -> {
-        curationController.getRecommendations(keywordId, request, null);
+        curationController.getRecommendations(keywordId, null);
       });
 
       assertThrows(NullPointerException.class, () -> {

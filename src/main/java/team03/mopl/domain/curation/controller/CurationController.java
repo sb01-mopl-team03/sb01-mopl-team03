@@ -1,6 +1,7 @@
 package team03.mopl.domain.curation.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -15,9 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.api.CurationApi;
-import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.dto.ContentDto;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
 import team03.mopl.domain.curation.service.CurationService;
@@ -38,14 +37,13 @@ public class CurationController implements CurationApi {
   }
 
   @GetMapping("/{keywordId}/contents")
-  public ResponseEntity<CursorPageResponseDto<ContentDto>> getRecommendations(
+  public ResponseEntity<List<ContentDto>> getRecommendations(
       @PathVariable UUID keywordId,
-      @ParameterObject @ModelAttribute CursorPageRequest request,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
 
     UUID userId = userDetails.getId();
 
-    CursorPageResponseDto<ContentDto> recommendations = curationService.getRecommendationsByKeyword(keywordId, userId, request);
+    List<ContentDto> recommendations = curationService.getRecommendationsByKeyword(keywordId, userId);
     return ResponseEntity.ok(recommendations);
   }
 

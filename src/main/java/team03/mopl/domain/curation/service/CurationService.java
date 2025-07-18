@@ -15,11 +15,9 @@ public interface CurationService {
 
   // 메인 추천 조회 메서드
   @Transactional(readOnly = true)
-  CursorPageResponseDto<ContentDto> getRecommendationsByKeyword(
+  List<ContentDto> getRecommendationsByKeyword(
       UUID keywordId,
-      UUID userId,
-      CursorPageRequest request
-  );
+      UUID userId);
 
   List<KeywordDto> getKeywordsByUser(UUID userId);
 

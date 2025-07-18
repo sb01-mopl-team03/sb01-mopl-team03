@@ -19,9 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import team03.mopl.common.dto.CursorPageResponseDto;
-import team03.mopl.common.exception.InvalidCursorFormatException;
-import team03.mopl.common.exception.InvalidPageSizeException;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.curation.ContentRatingUpdateException;
 import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
@@ -31,7 +28,6 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
@@ -174,11 +170,9 @@ class CurationServiceImplTest {
   class GetRecommendationsByKeywordTest {
 
     @Test
-    @DisplayName("성공적인 추천 조회")
+    @DisplayName("성공적인 추천 조회 - 상위 30개 반환")
     void getRecommendations_Success() {
       // given
-      CursorPageRequest request = new CursorPageRequest(null, 10);
-
       when(keywordRepository.findByIdAndUserId(keywordId, userId))
           .thenReturn(Optional.of(testKeyword));
       when(keywordContentRepository.existsByKeywordId(keywordId))
@@ -190,120 +184,68 @@ class CurationServiceImplTest {
           .score(0.8)
           .build();
 
-      when(keywordContentRepository.findByKeywordIdWithPagination(
-          eq(keywordId), isNull(), isNull(), eq(11)))
+      when(keywordContentRepository.findTop30ByKeywordIdOrderByScoreDesc(keywordId))
           .thenReturn(List.of(keywordContent));
-      when(keywordContentRepository.countByKeywordId(keywordId))
-          .thenReturn(1L);
 
       // when
-      CursorPageResponseDto<ContentDto> result = curationService
-          .getRecommendationsByKeyword(keywordId, userId, request);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertEquals(1, result.data().size());
-      assertEquals(1L, result.totalElements());
-      assertFalse(result.hasNext());
-      assertNull(result.nextCursor());
+      assertEquals(1, result.size());
 
-      ContentDto contentDto = result.data().get(0);
+      ContentDto contentDto = result.get(0);
       assertEquals(testContent.getId(), contentDto.id());
       assertEquals(testContent.getTitle(), contentDto.title());
+      assertEquals(testContent.getDescription(), contentDto.description());
+      assertEquals(testContent.getContentType(), contentDto.contentType());
+
+      verify(keywordRepository).findByIdAndUserId(keywordId, userId);
+      verify(keywordContentRepository).existsByKeywordId(keywordId);
+      verify(keywordContentRepository).findTop30ByKeywordIdOrderByScoreDesc(keywordId);
     }
 
     @Test
     @DisplayName("키워드가 존재하지 않을 때 예외 발생")
     void getRecommendations_KeywordNotFound() {
       // given
-      CursorPageRequest request = new CursorPageRequest(null, 10);
       when(keywordRepository.findByIdAndUserId(keywordId, userId))
           .thenReturn(Optional.empty());
 
       // when & then
       assertThrows(KeywordNotFoundException.class, () -> {
-        curationService.getRecommendationsByKeyword(keywordId, userId, request);
+        curationService.getRecommendationsByKeyword(keywordId, userId);
       });
 
       verify(keywordRepository).findByIdAndUserId(keywordId, userId);
-    }
-
-    @Test
-    @DisplayName("잘못된 페이지 크기로 요청 시 예외 발생")
-    void getRecommendations_InvalidPageSize() {
-      // given
-      CursorPageRequest request = new CursorPageRequest(null, 0);
-
-      // when & then
-      assertThrows(InvalidPageSizeException.class, () -> {
-        curationService.getRecommendationsByKeyword(keywordId, userId, request);
-      });
-    }
-
-    @Test
-    @DisplayName("페이지 크기가 너무 클 때 예외 발생")
-    void getRecommendations_PageSizeTooLarge() {
-      // given
-      CursorPageRequest request = new CursorPageRequest(null, 100);
-
-      // when & then
-      assertThrows(InvalidPageSizeException.class, () -> {
-        curationService.getRecommendationsByKeyword(keywordId, userId, request);
-      });
+      verify(keywordContentRepository, never()).existsByKeywordId(any());
     }
 
     @Test
     @DisplayName("점수가 계산되지 않은 경우 빈 결과 반환")
     void getRecommendations_NoScoresCalculated() {
       // given
-      CursorPageRequest request = new CursorPageRequest(null, 10);
-
       when(keywordRepository.findByIdAndUserId(keywordId, userId))
           .thenReturn(Optional.of(testKeyword));
       when(keywordContentRepository.existsByKeywordId(keywordId))
           .thenReturn(false);
 
       // when
-      CursorPageResponseDto<ContentDto> result = curationService
-          .getRecommendationsByKeyword(keywordId, userId, request);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertTrue(result.data().isEmpty());
-      assertEquals(0, result.size());
-      assertEquals(0L, result.totalElements());
-      assertFalse(result.hasNext());
-      assertNull(result.nextCursor());
+      assertTrue(result.isEmpty());
+
+      verify(keywordRepository).findByIdAndUserId(keywordId, userId);
+      verify(keywordContentRepository).existsByKeywordId(keywordId);
+      verify(keywordContentRepository, never()).findTop30ByKeywordIdOrderByScoreDesc(any());
     }
 
     @Test
-    @DisplayName("잘못된 커서 형식으로 요청 시 예외 발생")
-    void getRecommendations_InvalidCursor() {
+    @DisplayName("다수의 콘텐츠 추천 조회")
+    void getRecommendations_MultipleContents() {
       // given
-      CursorPageRequest request = new CursorPageRequest("invalid-cursor", 10);
-
-      when(keywordRepository.findByIdAndUserId(keywordId, userId))
-          .thenReturn(Optional.of(testKeyword));
-      when(keywordContentRepository.existsByKeywordId(keywordId))
-          .thenReturn(true);
-
-      // when & then
-      assertThrows(InvalidCursorFormatException.class, () -> {
-        curationService.getRecommendationsByKeyword(keywordId, userId, request);
-      });
-    }
-
-    @Test
-    @DisplayName("페이지네이션 with hasNext")
-    void getRecommendations_WithPagination() {
-      // given
-      CursorPageRequest request = new CursorPageRequest(null, 1);
-
-      when(keywordRepository.findByIdAndUserId(keywordId, userId))
-          .thenReturn(Optional.of(testKeyword));
-      when(keywordContentRepository.existsByKeywordId(keywordId))
-          .thenReturn(true);
-
       Content content2 = Content.builder()
           .id(UUID.randomUUID())
           .title("액션 영화 2")
@@ -312,34 +254,64 @@ class CurationServiceImplTest {
           .avgRating(BigDecimal.valueOf(4.0))
           .build();
 
-      KeywordContent keywordContent1 = KeywordContent.builder()
-          .keyword(testKeyword)
-          .content(testContent)
-          .score(0.9)
+      Content content3 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("액션 영화 3")
+          .description("세 번째 액션 영화")
+          .contentType(ContentType.MOVIE)
+          .avgRating(BigDecimal.valueOf(3.5))
           .build();
 
-      KeywordContent keywordContent2 = KeywordContent.builder()
-          .keyword(testKeyword)
-          .content(content2)
-          .score(0.8)
-          .build();
+      when(keywordRepository.findByIdAndUserId(keywordId, userId))
+          .thenReturn(Optional.of(testKeyword));
+      when(keywordContentRepository.existsByKeywordId(keywordId))
+          .thenReturn(true);
 
-      when(keywordContentRepository.findByKeywordIdWithPagination(
-          eq(keywordId), isNull(), isNull(), eq(2)))
-          .thenReturn(List.of(keywordContent1, keywordContent2));
-      when(keywordContentRepository.countByKeywordId(keywordId))
-          .thenReturn(2L);
+      List<KeywordContent> keywordContents = List.of(
+          KeywordContent.builder().keyword(testKeyword).content(testContent).score(0.9).build(),
+          KeywordContent.builder().keyword(testKeyword).content(content2).score(0.8).build(),
+          KeywordContent.builder().keyword(testKeyword).content(content3).score(0.7).build()
+      );
+
+      when(keywordContentRepository.findTop30ByKeywordIdOrderByScoreDesc(keywordId))
+          .thenReturn(keywordContents);
 
       // when
-      CursorPageResponseDto<ContentDto> result = curationService
-          .getRecommendationsByKeyword(keywordId, userId, request);
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
 
       // then
       assertNotNull(result);
-      assertEquals(1, result.data().size());
-      assertEquals(2L, result.totalElements());
-      assertTrue(result.hasNext());
-      assertNotNull(result.nextCursor());
+      assertEquals(3, result.size());
+
+      // 결과 순서 확인 (score 높은 순)
+      assertEquals(testContent.getTitle(), result.get(0).title());
+      assertEquals(content2.getTitle(), result.get(1).title());
+      assertEquals(content3.getTitle(), result.get(2).title());
+    }
+
+    @Test
+    @DisplayName("30개 미만의 콘텐츠 추천 조회")
+    void getRecommendations_LessThan30Contents() {
+      // given
+      when(keywordRepository.findByIdAndUserId(keywordId, userId))
+          .thenReturn(Optional.of(testKeyword));
+      when(keywordContentRepository.existsByKeywordId(keywordId))
+          .thenReturn(true);
+
+      // 5개의 콘텐츠만 있는 경우
+      List<KeywordContent> keywordContents = List.of(
+          KeywordContent.builder().keyword(testKeyword).content(testContent).score(0.9).build()
+      );
+
+      when(keywordContentRepository.findTop30ByKeywordIdOrderByScoreDesc(keywordId))
+          .thenReturn(keywordContents);
+
+      // when
+      List<ContentDto> result = curationService.getRecommendationsByKeyword(keywordId, userId);
+
+      // then
+      assertNotNull(result);
+      assertEquals(1, result.size()); // 30개가 아닌 실제 개수 반환
     }
   }
 
@@ -456,10 +428,9 @@ class CurationServiceImplTest {
   @DisplayName("콘텐츠 평점 업데이트 테스트")
   class UpdateContentRatingTest {
 
-    @DisplayName("성공적인 콘텐츠 평점 업데이트")
     @Test
+    @DisplayName("성공적인 콘텐츠 평점 업데이트")
     void updateContentRating_Success() {
-
       // given
       UUID contentId = UUID.randomUUID();
       Content content = Content.builder()
@@ -540,8 +511,6 @@ class CurationServiceImplTest {
           .build();
 
       when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
-
-      // reviewService.getAllByContent()에서 예외 발생 시키기
       when(reviewService.getAllByContent(contentId))
           .thenThrow(new RuntimeException("Review service error"));
 
@@ -553,102 +522,101 @@ class CurationServiceImplTest {
 
       verify(contentRepository, times(1)).findById(contentId);
       verify(reviewService, times(1)).getAllByContent(contentId);
-      // save는 호출되지 않아야 함 (예외 발생으로 인해)
       verify(contentRepository, never()).save(any(Content.class));
     }
+  }
 
-    @Nested
-    @DisplayName("신규 콘텐츠 배치 큐레이션 테스트")
-    class BatchCurationTest {
+  @Nested
+  @DisplayName("신규 콘텐츠 배치 큐레이션 테스트")
+  class BatchCurationTest {
 
-      @Test
-      @DisplayName("성공적인 신규 콘텐츠 배치 큐레이션")
-      void batchCurationForNewContents_Success() {
-        // given
-        List<Content> newContents = List.of(testContent);
-        when(keywordRepository.findAll()).thenReturn(List.of(testKeyword));
-        when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId))
-            .thenReturn(false);
-        when(keywordContentRepository.save(any(KeywordContent.class)))
-            .thenReturn(mock(KeywordContent.class));
+    @Test
+    @DisplayName("성공적인 신규 콘텐츠 배치 큐레이션")
+    void batchCurationForNewContents_Success() {
+      // given
+      List<Content> newContents = List.of(testContent);
+      when(keywordRepository.findAll()).thenReturn(List.of(testKeyword));
+      when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId))
+          .thenReturn(false);
+      when(keywordContentRepository.save(any(KeywordContent.class)))
+          .thenReturn(mock(KeywordContent.class));
 
-        // when
-        assertDoesNotThrow(() -> {
-          curationService.batchCurationForNewContents(newContents);
-        });
+      // when
+      assertDoesNotThrow(() -> {
+        curationService.batchCurationForNewContents(newContents);
+      });
 
-        // then
-        verify(keywordRepository).findAll();
-        verify(keywordContentRepository).existsByKeywordIdAndContentId(keywordId, contentId);
-        verify(keywordContentRepository).save(any(KeywordContent.class));
-      }
-
-      @Test
-      @DisplayName("빈 콘텐츠 목록으로 배치 큐레이션")
-      void batchCurationForNewContents_EmptyContents() {
-        // given
-        List<Content> newContents = List.of();
-
-        // when
-        assertDoesNotThrow(() -> {
-          curationService.batchCurationForNewContents(newContents);
-        });
-
-        // then
-        verify(keywordRepository, never()).findAll();
-        verify(keywordContentRepository, never()).save(any());
-      }
-
-      @Test
-      @DisplayName("키워드가 없을 때 배치 큐레이션")
-      void batchCurationForNewContents_NoKeywords() {
-        // given
-        List<Content> newContents = List.of(testContent);
-        when(keywordRepository.findAll()).thenReturn(List.of());
-
-        // when
-        assertDoesNotThrow(() -> {
-          curationService.batchCurationForNewContents(newContents);
-        });
-
-        // then
-        verify(keywordRepository).findAll();
-        verify(keywordContentRepository, never()).save(any());
-      }
-
-      @Test
-      @DisplayName("이미 존재하는 키워드-콘텐츠 매칭 건너뛰기")
-      void batchCurationForNewContents_ExistingMatch() {
-        // given
-        List<Content> newContents = List.of(testContent);
-        when(keywordRepository.findAll()).thenReturn(List.of(testKeyword));
-        when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId))
-            .thenReturn(true);
-
-        // when
-        assertDoesNotThrow(() -> {
-          curationService.batchCurationForNewContents(newContents);
-        });
-
-        // then
-        verify(keywordRepository).findAll();
-        verify(keywordContentRepository).existsByKeywordIdAndContentId(keywordId, contentId);
-        verify(keywordContentRepository, never()).save(any());
-      }
+      // then
+      verify(keywordRepository).findAll();
+      verify(keywordContentRepository).existsByKeywordIdAndContentId(keywordId, contentId);
+      verify(keywordContentRepository).save(any(KeywordContent.class));
     }
 
-    @Nested
-    @DisplayName("초기화 테스트")
-    class InitializationTest {
+    @Test
+    @DisplayName("빈 콘텐츠 목록으로 배치 큐레이션")
+    void batchCurationForNewContents_EmptyContents() {
+      // given
+      List<Content> newContents = List.of();
 
-      @Test
-      @DisplayName("서비스 초기화 성공")
-      void init_Success() {
-        // when & then
-        assertDoesNotThrow(() -> {
-          curationService.init();
-        });
-      }
+      // when
+      assertDoesNotThrow(() -> {
+        curationService.batchCurationForNewContents(newContents);
+      });
+
+      // then
+      verify(keywordRepository, never()).findAll();
+      verify(keywordContentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("키워드가 없을 때 배치 큐레이션")
+    void batchCurationForNewContents_NoKeywords() {
+      // given
+      List<Content> newContents = List.of(testContent);
+      when(keywordRepository.findAll()).thenReturn(List.of());
+
+      // when
+      assertDoesNotThrow(() -> {
+        curationService.batchCurationForNewContents(newContents);
+      });
+
+      // then
+      verify(keywordRepository).findAll();
+      verify(keywordContentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("이미 존재하는 키워드-콘텐츠 매칭 건너뛰기")
+    void batchCurationForNewContents_ExistingMatch() {
+      // given
+      List<Content> newContents = List.of(testContent);
+      when(keywordRepository.findAll()).thenReturn(List.of(testKeyword));
+      when(keywordContentRepository.existsByKeywordIdAndContentId(keywordId, contentId))
+          .thenReturn(true);
+
+      // when
+      assertDoesNotThrow(() -> {
+        curationService.batchCurationForNewContents(newContents);
+      });
+
+      // then
+      verify(keywordRepository).findAll();
+      verify(keywordContentRepository).existsByKeywordIdAndContentId(keywordId, contentId);
+      verify(keywordContentRepository, never()).save(any());
+    }
+  }
+
+  @Nested
+  @DisplayName("초기화 테스트")
+  class InitializationTest {
+
+    @Test
+    @DisplayName("서비스 초기화 성공")
+    void init_Success() {
+      // when & then
+      assertDoesNotThrow(() -> {
+        curationService.init();
+      });
     }
   }
 }
