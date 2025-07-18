@@ -146,8 +146,8 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     return switch (lowerSortBy) {
       case "createdat" -> lastItem.createdAt().toString();
       case "title" -> lastItem.title();
-      case "participantcount" -> String.valueOf(lastItem.headCount());
-      default -> throw new IllegalArgumentException("지원하지 않는 정렬 방식: " + sortBy);
+      default -> String.valueOf(lastItem.headCount());
+
     };
   }
 
