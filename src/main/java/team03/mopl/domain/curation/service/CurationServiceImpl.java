@@ -15,13 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team03.mopl.common.dto.Cursor;
-import team03.mopl.common.dto.CursorPageResponseDto;
-import team03.mopl.common.exception.InvalidCursorFormatException;
-import team03.mopl.common.exception.InvalidPageSizeException;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.curation.ContentRatingUpdateException;
-import team03.mopl.common.exception.curation.InvalidScoreRangeException;
 import team03.mopl.common.exception.curation.KeywordDeleteDeniedException;
 import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
@@ -29,7 +24,6 @@ import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
@@ -239,14 +233,10 @@ public class CurationServiceImpl implements CurationService {
   // 메인 추천 조회 메서드
   @Override
   @Transactional(readOnly = true)
-  public CursorPageResponseDto<ContentDto> getRecommendationsByKeyword(
+  public List<ContentDto> getRecommendationsByKeyword(
       UUID keywordId,
-      UUID userId,
-      CursorPageRequest request
+      UUID userId
   ) {
-    // 입력 검증 추가
-    validatePageRequest(request);
-
     // 키워드 권한 확인
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
         .orElseThrow(KeywordNotFoundException::new);
@@ -256,71 +246,14 @@ public class CurationServiceImpl implements CurationService {
       return handleMissingScores(keyword);
     }
 
-    // 커서 파싱 (예외 처리 개선)
-    Double cursorScore = null;
-    String cursorContentId = null;
-    if (request.cursor() != null && !request.cursor().isEmpty()) {
-      try {
-        Cursor cursor = parseCursor(request.cursor());
-        cursorScore = Double.parseDouble(cursor.lastValue());
-        cursorContentId = cursor.lastId();
-      } catch (Exception e) {
-        log.warn("잘못된 커서 형식: {}", request.cursor());
-        throw new InvalidCursorFormatException();
-      }
-    }
-
-    // 데이터베이스에서 직접 페이징된 결과 조회
-    List<KeywordContent> keywordContents = keywordContentRepository
-        .findByKeywordIdWithPagination(
-            keywordId,
-            cursorScore,
-            cursorContentId,
-            request.size() + 1
-        );
-
-    // 응답 생성
-    return buildCursorResponse(keywordContents, request.size(), keywordId);
-  }
-
-  private CursorPageResponseDto<ContentDto> buildCursorResponse(
-      List<KeywordContent> keywordContents,
-      int requestSize,
-      UUID keywordId
-  ) {
-    // hasNext 판단 및 실제 데이터 추출
-    boolean hasNext = keywordContents.size() > requestSize;
-    List<KeywordContent> pageKeywordContents = hasNext ?
-        keywordContents.subList(0, requestSize) : keywordContents;
-
-    // 다음 커서 생성
-    String nextCursor = null;
-    if (hasNext && !pageKeywordContents.isEmpty()) {
-      KeywordContent lastContent = pageKeywordContents.get(pageKeywordContents.size() - 1);
-      nextCursor = createCursor(lastContent.getScore(), lastContent.getContent().getId().toString());
-    }
+    // 상위 30개 데이터 조회 (score 높은 순)
+    List<KeywordContent> top30Contents = keywordContentRepository
+        .findTop30ByKeywordIdOrderByScoreDesc(keywordId);
 
     // ContentDto 리스트 생성
-    List<ContentDto> contentDtos = pageKeywordContents.stream()
+    return top30Contents.stream()
         .map(kc -> ContentDto.from(kc.getContent()))
         .toList();
-
-    // 총 개수 조회 (캐싱 고려)
-    long totalElements = keywordContentRepository.countByKeywordId(keywordId);
-
-    return CursorPageResponseDto.<ContentDto>builder()
-        .data(contentDtos)
-        .nextCursor(nextCursor)
-        .size(contentDtos.size())
-        .totalElements(totalElements)
-        .hasNext(hasNext)
-        .build();
-  }
-
-  private void validatePageRequest(CursorPageRequest request) {
-    if (request.size() <= 0 || request.size() > 50) {
-      throw new InvalidPageSizeException();
-    }
   }
 
   // 비동기 점수 계산
@@ -391,56 +324,13 @@ public class CurationServiceImpl implements CurationService {
   }
 
   // 점수가 없을 때 처리
-  private CursorPageResponseDto<ContentDto> handleMissingScores(
+  private List<ContentDto> handleMissingScores(
       Keyword keyword
   ) {
     log.warn("점수 계산이 완료되지 않음 - 키워드 ID: {}", keyword.getId());
 
-    // 빈 결과 반환 또는 제한된 실시간 계산
-    return CursorPageResponseDto.<ContentDto>builder()
-        .data(List.of())
-        .nextCursor(null)
-        .size(0)
-        .totalElements(0)
-        .hasNext(false)
-        .build();
-  }
-
-  // 커서 파싱
-  private Cursor parseCursor(String cursorString) {
-    try {
-      if (cursorString == null || cursorString.trim().isEmpty()) {
-        return null;
-      }
-
-      String decoded = new String(Base64.getDecoder().decode(cursorString));
-      String[] parts = decoded.split(":");
-
-      if (parts.length != 2) {
-        throw new InvalidCursorFormatException();
-      }
-
-      // 점수가 유효한 double인지 확인
-      double score = Double.parseDouble(parts[0]);
-      if (score < 0 || score > 1) {
-        throw new InvalidScoreRangeException();
-      }
-
-      // UUID 형식 확인
-      UUID.fromString(parts[1]);
-
-      return new Cursor(parts[0], parts[1]);
-    } catch (InvalidCursorFormatException | InvalidScoreRangeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  // 커서 생성
-  private String createCursor(double score, String contentId) {
-    String cursorData = score + ":" + contentId;
-    return Base64.getEncoder().encodeToString(cursorData.getBytes());
+    // 빈 결과 반환
+    return List.of();
   }
 
   // 개선된 AI 매칭 점수 계산

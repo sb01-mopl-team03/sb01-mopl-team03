@@ -17,17 +17,11 @@ public interface KeywordContentRepository extends JpaRepository<KeywordContent, 
   @Query(value = """
       SELECT * FROM keyword_contents kc 
       WHERE kc.keyword_id = :keywordId 
-      AND (:cursorScore IS NULL OR 
-           (kc.score < :cursorScore OR 
-            (kc.score = :cursorScore AND kc.content_id > CAST(:cursorContentId AS uuid))))
-      ORDER BY kc.score DESC, kc.content_id ASC
-      LIMIT :limit
+      ORDER BY kc.score DESC, kc.content_id ASC 
+      LIMIT 30
       """, nativeQuery = true)
-  List<KeywordContent> findByKeywordIdWithPagination(
-      @Param("keywordId") UUID keywordId,
-      @Param("cursorScore") Double cursorScore,
-      @Param("cursorContentId") String cursorContentId,
-      @Param("limit") int limit
+  List<KeywordContent> findTop30ByKeywordIdOrderByScoreDesc(
+      @Param("keywordId") UUID keywordId
   );
 
   // 키워드별 점수 존재 여부 확인
@@ -41,9 +35,5 @@ public interface KeywordContentRepository extends JpaRepository<KeywordContent, 
   @Modifying
   @Query("DELETE FROM KeywordContent kc WHERE kc.keyword.id = :keywordId")
   void deleteByKeywordId(@Param("keywordId") UUID keywordId);
-
-  // 임계값 이상 점수만 조회
-  @Query("SELECT kc FROM KeywordContent kc WHERE kc.keyword.id = :keywordId AND kc.score >= :threshold ORDER BY kc.score DESC")
-  List<KeywordContent> findByKeywordIdAndScoreGreaterThanEqual(@Param("keywordId") UUID keywordId, @Param("threshold") Double threshold);
 
 }
