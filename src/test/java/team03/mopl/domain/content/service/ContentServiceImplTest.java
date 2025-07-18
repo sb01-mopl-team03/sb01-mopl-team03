@@ -63,8 +63,8 @@ class ContentServiceImplTest {
   class getContent {
 
     @Test
-    @DisplayName("컨텐츠 데이터 조회 성공")
-    void success() {
+    @DisplayName("컨텐츠 존재시 컨텐츠 데이터 조회 성공")
+    void shouldReturnContentWhenValidIdProvided() {
       // given
       UUID id = UUID.randomUUID();
       Content content = Content.builder()
@@ -88,8 +88,8 @@ class ContentServiceImplTest {
     }
 
     @Test
-    @DisplayName("컨텐츠 데이터 조회 실패 - 존재하지 않는 컨텐츠")
-    void fail_WhenNoContent() {
+    @DisplayName("컨텐츠가 없을시 컨텐츠 데이터 조회 실패")
+    void shouldThrowExceptionWhenContentNotFound() {
       //given
       UUID nonExistingid = UUID.randomUUID();
       when(contentRepository.findById(nonExistingid)).thenReturn(Optional.empty());
@@ -106,8 +106,8 @@ class ContentServiceImplTest {
   class getContentWithCursor {
 
     @Test
-    @DisplayName("첫 페이지 조회 시, 다음 페이지가 있으면 hasNext=true, nextCursor가 생성된다.")
-    void getCursorPage_WhenFirstPageAndHasNext() throws JsonProcessingException {
+    @DisplayName("컨텐츠 존재시 컨텐츠 목록 조회 성공")
+    void shouldReturnFirstPageWithNextCursorWhenHasMoreData() throws JsonProcessingException {
       // given
       ContentSearchRequest request = new ContentSearchRequest(null, null, "TITLE", "DESC", null, 5);
 
@@ -152,12 +152,12 @@ class ContentServiceImplTest {
   }
 
   @Nested
-  @DisplayName("커서 페이지네이션 기반 컨텐츠 데이터 목록 조회")
+  @DisplayName("평점 업데이트")
   class updateContentRating {
 
     @Test
-    @DisplayName("성공 - 리뷰들의 평균 평점이 정상적으로 계산되어 업데이트 ")
-    void success_updateRating() {
+    @DisplayName("리뷰 존재 시 평균 평점 계산")
+    void shouldCalculateAndUpdateAverageRatingWhenReviewsExist() {
       // given
       UUID id = UUID.randomUUID();
       Content content = Content.builder().build();
@@ -181,5 +181,26 @@ class ContentServiceImplTest {
       verify(contentRepository, times(1)).findById(any(UUID.class));
       verify(contentRepository, times(1)).save(content);
     }
+
+    @Test
+    @DisplayName("리뷰 없을 시 평점 0으로 설정")
+    void shouldSetZeroWhenNoReviews() {
+      // given
+      UUID id = UUID.randomUUID();
+      Content content = Content.builder().build();
+
+      when(reviewService.getAllByContent(any(UUID.class))).thenReturn(List.of());
+      when(contentRepository.findById(any(UUID.class))).thenReturn(Optional.of(content));
+
+      // when
+      contentService.updateContentRating(id);
+
+      // then
+      assertEquals(BigDecimal.ZERO, content.getAvgRating());
+      verify(reviewService, times(1)).getAllByContent(any(UUID.class));
+      verify(contentRepository, times(1)).findById(any(UUID.class));
+      verify(contentRepository, times(1)).save(content);
+    }
   }
+  
 }
