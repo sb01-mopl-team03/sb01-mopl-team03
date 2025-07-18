@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.review.ReviewDeleteDeniedException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
@@ -33,12 +34,10 @@ public class ReviewServiceImpl implements ReviewService {
   private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
+  @Transactional
   public ReviewDto create(ReviewCreateRequest request) {
     User user = userRepository.findById(request.userId())
-        .orElseThrow(() -> {
-          log.warn("존재하지 않는 유저입니다. 유저 ID: {}", request.userId());
-          return new UserNotFoundException();
-        });
+        .orElseThrow(UserNotFoundException::new);
 
     Content content = contentRepository.findById(request.contentId())
         .orElseThrow(() -> {
@@ -63,6 +62,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional
   public ReviewDto update(UUID reviewId, ReviewUpdateRequest request, UUID userId) {
     Review review = reviewRepository.findById(reviewId)
         .orElseThrow(ReviewNotFoundException::new);
@@ -113,6 +113,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID reviewId, UUID userId) {
     Review review = reviewRepository.findById(reviewId)
         .orElseThrow(ReviewNotFoundException::new);
