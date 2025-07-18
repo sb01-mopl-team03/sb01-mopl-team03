@@ -63,7 +63,7 @@ class FollowControllerTest {
     CustomUserDetails principal = new CustomUserDetails(follower);
     FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(post("/api/follows/follow")
+    mockMvc.perform(post("/api/follows")
             .with(csrf())
             .with(user(principal))
             .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +88,7 @@ class FollowControllerTest {
     CustomUserDetails principal = new CustomUserDetails(follower);
     FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(delete("/api/follows/unfollow")
+    mockMvc.perform(delete("/api/follows")
             .with(csrf())
             .with(user(principal))
             .contentType(MediaType.APPLICATION_JSON)
