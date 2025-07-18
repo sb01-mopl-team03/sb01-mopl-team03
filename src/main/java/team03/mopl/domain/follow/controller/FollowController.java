@@ -29,7 +29,7 @@ public class FollowController implements FollowApi {
   private final FollowService followService;
 
   @Override
-  @PostMapping("/follow")
+  @PostMapping
   public ResponseEntity<Void> follow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
     //로그인된 사람과 팔로우하려는 사람과 같은지 확인
     if (!user.getId().toString().equals(request.getFollowerId().toString())) {
@@ -40,7 +40,7 @@ public class FollowController implements FollowApi {
   }
 
   @Override
-  @DeleteMapping("/unfollow")
+  @DeleteMapping
   public ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
     //로그인된 사람과 언팔하려는 사람 같은지 확인
     if (!user.getId().toString().equals(request.getFollowerId().toString())) {
