@@ -1,6 +1,7 @@
 package team03.mopl.domain.content.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,9 +14,12 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +37,9 @@ import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.review.dto.ReviewDto;
+import team03.mopl.domain.review.service.ReviewService;
+import team03.mopl.domain.review.service.ReviewServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("컨텐츠 데이터 서비스 단위 테스트")
@@ -42,10 +49,14 @@ class ContentServiceImplTest {
   private ContentRepository contentRepository;
 
   @Mock
+  private ReviewServiceImpl reviewService;
+
+  @Mock
   private ObjectMapper objectMapper;
 
   @InjectMocks
   private ContentServiceImpl contentService;
+
 
   @Nested
   @DisplayName("컨텐츠 데이터 조회")
@@ -115,7 +126,8 @@ class ContentServiceImplTest {
           Field idField = Content.class.getDeclaredField("id");
           idField.setAccessible(true);
           idField.set(content, UUID.randomUUID());
-        } catch (Exception e){}
+        } catch (Exception e) {
+        }
 
         contents.add(content);
       }
@@ -139,4 +151,35 @@ class ContentServiceImplTest {
     }
   }
 
+  @Nested
+  @DisplayName("커서 페이지네이션 기반 컨텐츠 데이터 목록 조회")
+  class updateContentRating {
+
+    @Test
+    @DisplayName("성공 - 리뷰들의 평균 평점이 정상적으로 계산되어 업데이트 ")
+    void success_updateRating() {
+      // given
+      UUID id = UUID.randomUUID();
+      Content content = Content.builder().build();
+
+      List<ReviewDto> reviews = List.of(
+          new ReviewDto(UUID.randomUUID(), UUID.randomUUID(), "테스트 작성자1", "리뷰 테스트 제목1", "리뷰 테스트 본문1",
+              LocalDateTime.now(), new BigDecimal("4.0")),
+          new ReviewDto(UUID.randomUUID(), UUID.randomUUID(), "테스트 작성자2", "리뷰 테스트 제목2", "리뷰 테스트 본문2",
+              LocalDateTime.now(), new BigDecimal("3.0"))
+      );
+
+      when(reviewService.getAllByContent(any(UUID.class))).thenReturn(reviews);
+      when(contentRepository.findById(any(UUID.class))).thenReturn(Optional.of(content));
+
+      // when
+      contentService.updateContentRating(id);
+
+      // then
+      assertEquals(new BigDecimal("3.50"), content.getAvgRating());
+      verify(reviewService, times(1)).getAllByContent(any(UUID.class));
+      verify(contentRepository, times(1)).findById(any(UUID.class));
+      verify(contentRepository, times(1)).save(content);
+    }
+  }
 }

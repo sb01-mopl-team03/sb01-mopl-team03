@@ -31,13 +31,6 @@ public class ContentServiceImpl implements ContentService {
   //
   private final ObjectMapper objectMapper;
 
-  @Override
-  public List<ContentDto> getAll() {
-    return contentRepository.findAll()
-        .stream().map(ContentDto::from)
-        .toList();
-  }
-
   /**
    * 컨텐츠 데이터 목록을 커서 기반 페이지네이션으로 조회합니다.
    * <p>
@@ -181,7 +174,7 @@ public class ContentServiceImpl implements ContentService {
     String lastValue;
     if (sortBy.equalsIgnoreCase("RELEASE_AT")) {
       lastValue = contentDto.releaseDate().toString();
-    } else if(sortBy.equalsIgnoreCase("TITLE")) {
+    } else if (sortBy.equalsIgnoreCase("TITLE")) {
       lastValue = contentDto.titleNormalized();
     } else { // AVG_RATING
       lastValue = contentDto.avgRating().toString();
