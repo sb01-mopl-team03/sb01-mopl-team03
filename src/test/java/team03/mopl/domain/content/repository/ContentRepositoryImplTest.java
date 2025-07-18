@@ -59,7 +59,7 @@ class ContentRepositoryImplTest {
 
       @Test
       @DisplayName("제목에 키워드가 포함된 콘텐츠를 정상적으로 조회")
-      void returnResultsWhenTitleContainsKeyword() {
+      void shouldReturnResultsWhenTitleContainsKeyword() {
         // given
         List<Content> contents = List.of(
             Content.builder().title("제목필터링테스트1-검색됨").titleNormalized("제목필터링테스트1-검색됨")
@@ -97,7 +97,7 @@ class ContentRepositoryImplTest {
 
       @Test
       @DisplayName("컨텐츠 타입을 MOVIE 로 지정했을 때 MOVIE 타입의 데이터를 정상적으로 조회")
-      void returnResultsWhenContentTypeIsMovie() {
+      void shouldReturnResultsWhenContentTypeIsMovie() {
         // given
         List<Content> contents = List.of(
             Content.builder().title("컨텐츠타입필터링1").titleNormalized("컨텐츠타입필터링1")
@@ -134,7 +134,7 @@ class ContentRepositoryImplTest {
 
       @Test
       @DisplayName("컨텐츠 데이터에 존재하지 않는 영화의 제목을 검색했을 때 빈 리스트 반환")
-      void returnEmptyResultWhenTitleNotExist() {
+      void shouldReturnEmptyResultWhenTitleNotExist() {
         // given
         List<Content> contents = List.of(
             Content.builder().title("존재하는데이터").titleNormalized("존재하는데이터")
@@ -167,8 +167,8 @@ class ContentRepositoryImplTest {
   class order {
 
     @Test
-    @DisplayName("컨텐츠 데이터가 제목 기준의 내림차순으로 정렬했을 때 정상적으로 정렬")
-    void returnResultsWhenSortByTitle() {
+    @DisplayName("제목 기준, 컨텐츠 데이터가 정상적으로 내림차순/오름차순 정렬")
+    void shouldReturnResultsWhenSortByTitle() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("1").titleNormalized("1")
@@ -195,26 +195,38 @@ class ContentRepositoryImplTest {
       String title = null;
       String contentType = "MOVIE";
       String sortBy = "TITLE";
-      String direction = "DESC";
+      String directionDESC = "DESC";
       String cursor = null;
       UUID cursorId = null;
       int size = 10;
 
+      String directionASC = "ASC";
+
       // when
-      List<Content> results = contentRepository.findContentsWithCursor(title, contentType, sortBy,
-          direction, cursor, cursorId, size);
+      List<Content> resultsDESC = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          directionDESC, cursor, cursorId, size);
+
+      List<Content> resultsASC = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          directionASC, cursor, cursorId, size);
 
       // then
-      assertThat(results).isNotNull();
-      assertThat(results.size()).isEqualTo(6);
-      assertThat(results)
+      assertThat(resultsDESC).isNotNull();
+      assertThat(resultsDESC.size()).isEqualTo(6);
+      assertThat(resultsDESC)
           .extracting(Content::getTitle) // List<String> 타입의 새로운 리스트 반환
           .containsExactly("나", "가", "B", "A", "2", "1");
+      assertThat(resultsASC).isNotNull();
+      assertThat(resultsASC.size()).isEqualTo(6);
+      assertThat(resultsASC)
+          .extracting(Content::getTitle) // List<String> 타입의 새로운 리스트 반환
+          .containsExactly("1", "2", "A", "B", "가", "나");
     }
 
     @Test
-    @DisplayName("컨텐츠 데이터가 릴리즈 날짜 기준의 내림차순으로 정렬했을 때 정상적으로 정렬")
-    void returnResultsWhenSortByDate() {
+    @DisplayName("릴리즈 날짜 기준, 컨텐츠 데이터가 정상적으로 내림차순/오름차순 정렬")
+    void shouldReturnResultsWhenSortByDate() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -241,27 +253,40 @@ class ContentRepositoryImplTest {
       String title = null;
       String contentType = "MOVIE";
       String sortBy = "RELEASE_AT";
-      String direction = "DESC";
+      String directionDESC = "DESC";
       String cursor = null;
       UUID cursorId = null;
       int size = 10;
 
+      String directionASC = "ASC";
+
       // when
-      List<Content> results = contentRepository.findContentsWithCursor(title, contentType, sortBy,
-          direction, cursor, cursorId, size);
+      List<Content> resultsDESC = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          directionDESC, cursor, cursorId, size);
+
+      List<Content> resultsASC = contentRepository.findContentsWithCursor(title, contentType,
+          sortBy,
+          directionASC, cursor, cursorId, size);
 
       // then
-      assertThat(results).isNotNull();
-      assertThat(results.size()).isEqualTo(6);
-      assertThat(results)
+      assertThat(resultsDESC).isNotNull();
+      assertThat(resultsDESC.size()).isEqualTo(6);
+      assertThat(resultsDESC)
           .extracting(content -> content.getReleaseDate().toString())
           .containsExactly("2025-07-07T10:00", "2025-06-07T10:00", "2025-05-07T10:00",
               "2025-04-07T10:00", "2025-03-07T10:00", "2025-02-07T10:00");
+      assertThat(resultsASC).isNotNull();
+      assertThat(resultsASC.size()).isEqualTo(6);
+      assertThat(resultsASC)
+          .extracting(content -> content.getReleaseDate().toString())
+          .containsExactly("2025-02-07T10:00", "2025-03-07T10:00", "2025-04-07T10:00",
+              "2025-05-07T10:00", "2025-06-07T10:00", "2025-07-07T10:00");
     }
 
     @Test
-    @DisplayName("컨텐츠 데이터가 평균 별점 기준의 내림차순으로 정렬했을 때 정상적으로 정렬")
-    void returnResultsWhenSortByAvgRating() {
+    @DisplayName("평균 별점 기준, 컨텐츠 데이터가 정상적으로 내림차순/오름차순 정렬")
+    void shouldReturnResultsWhenSortByAvgRating() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -288,27 +313,39 @@ class ContentRepositoryImplTest {
       String title = null;
       String contentType = "MOVIE";
       String sortBy = "AVG_RATING";
-      String direction = "DESC";
+      String directionDESC = "DESC";
       String cursor = null;
       UUID cursorId = null;
       int size = 10;
 
+      String directionASC = "ASC";
+
+
       // when
-      List<Content> results = contentRepository.findContentsWithCursor(title, contentType, sortBy,
-          direction, cursor, cursorId, size);
+      List<Content> resultsDESC = contentRepository.findContentsWithCursor(title, contentType, sortBy,
+          directionDESC, cursor, cursorId, size);
+
+      List<Content> resultsASC = contentRepository.findContentsWithCursor(title, contentType, sortBy,
+          directionASC, cursor, cursorId, size);
 
       // then
-      assertThat(results).isNotNull();
-      assertThat(results.size()).isEqualTo(6);
-      assertThat(results)
+      assertThat(resultsDESC).isNotNull();
+      assertThat(resultsDESC.size()).isEqualTo(6);
+      assertThat(resultsDESC)
           .extracting(content -> content.getAvgRating())
           .containsExactly(BigDecimal.valueOf(4.5), BigDecimal.valueOf(4), BigDecimal.valueOf(3.5),
               BigDecimal.valueOf(3), BigDecimal.valueOf(2.5), BigDecimal.valueOf(2));
+      assertThat(resultsASC).isNotNull();
+      assertThat(resultsASC.size()).isEqualTo(6);
+      assertThat(resultsASC)
+          .extracting(content -> content.getAvgRating())
+          .containsExactly(BigDecimal.valueOf(2), BigDecimal.valueOf(2.5), BigDecimal.valueOf(3),
+              BigDecimal.valueOf(3.5), BigDecimal.valueOf(4), BigDecimal.valueOf(4.5));
     }
 
     @Test
     @DisplayName("컨텐츠 데이터 내림차순 오름차순 테스트")
-    void returnResultsDescAndAsc() {
+    void shouldReturnResultsDescAndAsc() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("1").titleNormalized("1")
@@ -377,7 +414,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("제목 기준 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
-    void returnResultTitleDescCursorPaging() {
+    void shouldReturnResultTitleDescCursorPaging() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("Ç").titleNormalized("C")
@@ -435,7 +472,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("릴리즈 날짜 기준 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
-    void returnResultReleaseAtDescCursorPaging() {
+    void shouldReturnResultReleaseAtDescCursorPaging() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -470,7 +507,8 @@ class ContentRepositoryImplTest {
       assertThat(firstPageresults.size()).isEqualTo(2);
       assertThat(firstPageresults)
           .extracting(Content::getReleaseDate)
-          .containsExactly(LocalDateTime.parse("2025-07-08T10:00"), LocalDateTime.parse("2025-07-07T10:00"));
+          .containsExactly(LocalDateTime.parse("2025-07-08T10:00"),
+              LocalDateTime.parse("2025-07-07T10:00"));
 
       // 두번째 페이지
       // given
@@ -494,7 +532,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("평균 별점 기준 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
-    void returnResultAvgRatingDescCursorPaging() {
+    void shouldReturnResultAvgRatingDescCursorPaging() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -552,7 +590,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("평균 별점 기준 동점자 처리 확인. 내림차순 정렬 시, 커서를 이용해 첫번째, 두번째 페이지를 정상적으로 조회")
-    void returnResultTiedAvgRatingDescCursorPaging() {
+    void shouldReturnResultTiedAvgRatingDescCursorPaging() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -582,7 +620,6 @@ class ContentRepositoryImplTest {
           sortBy,
           direction, cursor, cursorId, size);
 
-
       // 두번째 페이지
       // given
       Content lastContentFirstPage = firstPageresults.get(size - 1);
@@ -606,10 +643,11 @@ class ContentRepositoryImplTest {
 
   @Nested
   @DisplayName("컨텐츠 개수 조회 테스트")
-  class count{
+  class count {
+
     @Test
     @DisplayName("제목에 키워드가 포함된 콘텐츠의 수를 정상적으로 조회")
-    void returnCountResultsWhenTitleContainsKeyword() {
+    void shouldReturnCountResultsWhenTitleContainsKeyword() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("제목필터링테스트1-검색됨").titleNormalized("제목필터링테스트1-검색됨")
@@ -639,7 +677,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("컨텐츠 타입을 지정했을 때 콘텐츠의 수를 정상적으로 조회")
-    void returnCountResultsFilteredByContentType(){
+    void shouldReturnCountResultsFilteredByContentType() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("더미").titleNormalized("더미")
@@ -688,7 +726,7 @@ class ContentRepositoryImplTest {
 
     @Test
     @DisplayName("제목과 컨텐츠 타입 지정했을 때 콘텐츠의 수를 정상적으로 조회")
-    void returnCountResultsFilteredByTitleAndContentType(){
+    void shouldReturnCountResultsFilteredByTitleAndContentType() {
       // given
       List<Content> contents = List.of(
           Content.builder().title("검색됨").titleNormalized("더미")
