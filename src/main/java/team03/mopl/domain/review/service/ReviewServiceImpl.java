@@ -26,7 +26,6 @@ import team03.mopl.domain.user.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class ReviewServiceImpl implements ReviewService {
 
   private final ReviewRepository reviewRepository;
@@ -35,6 +34,7 @@ public class ReviewServiceImpl implements ReviewService {
   private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
+  @Transactional
   public ReviewDto create(ReviewCreateRequest request) {
     User user = userRepository.findById(request.userId())
         .orElseThrow(UserNotFoundException::new);
@@ -62,6 +62,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional
   public ReviewDto update(UUID reviewId, ReviewUpdateRequest request, UUID userId) {
     Review review = reviewRepository.findById(reviewId)
         .orElseThrow(ReviewNotFoundException::new);
@@ -112,6 +113,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID reviewId, UUID userId) {
     Review review = reviewRepository.findById(reviewId)
         .orElseThrow(ReviewNotFoundException::new);
