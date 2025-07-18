@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class DmWebSocketControllerTest {
     UUID senderId = UUID.randomUUID();
     UUID receiverId = UUID.randomUUID();
     String content = "hello";
-    DmRequest dmRequest = new DmRequest(senderId, roomId, content, false, LocalDateTime.now());
+    DmRequest dmRequest = new DmRequest(senderId, roomId, content);
     var dmRoom = new DmRoom(senderId, receiverId);
     ReflectionTestUtils.setField(dmRoom, "id", roomId);
 
@@ -52,7 +51,7 @@ class DmWebSocketControllerTest {
             dto.getContent().equals(content)
     ))).thenReturn(dmDto);
 
-    controller.sendMessage(dmRequest);
+    controller.sendMessage(roomId, dmRequest);
 
     verify(dmService).sendDm(argThat(dto ->
         dto.getSenderId().equals(senderId) &&

@@ -1,7 +1,9 @@
 package team03.mopl.domain.dm.controller;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -18,8 +20,8 @@ public class DmWebSocketController {
   private final SimpMessagingTemplate messagingTemplate;
   private final DmService dmService;
 
-  @MessageMapping("/dm.send") // /app/dm.send
-  public void sendMessage(DmRequest dmRequest) {
+  @MessageMapping("/dm.send/{roomId}") // /app/dm.send
+  public void sendMessage(@DestinationVariable UUID roomId, DmRequest dmRequest) {
     log.debug("sendMessage - WebSocket DM 전송 요청: senderId={}, roomId={}, content={}",
         dmRequest.getSenderId(), dmRequest.getRoomId(), dmRequest.getContent());
     // 메시지를 DB에 저장
