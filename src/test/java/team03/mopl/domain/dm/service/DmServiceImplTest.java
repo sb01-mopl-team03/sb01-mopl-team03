@@ -47,41 +47,70 @@ class DmServiceImplTest {
   @InjectMocks
   private DmServiceImpl dmService;
 
-  private UUID senderId;
-  private UUID receiverId;
+  private UUID userA;
+  private UUID userB;
   private UUID roomId;
-  private DmRoom dmRoom;
+  private DmRoom dmRoom_SenderEqualDmRoomSenderUserA;
+  private DmRoom SenderEqualDmRoomReceiverUserB;
+
 
   @BeforeEach
   void setUp() {
-    senderId = UUID.randomUUID();
-    receiverId = UUID.randomUUID();
+    userA = UUID.randomUUID();
+    userB = UUID.randomUUID();
     roomId = UUID.randomUUID();
 
-    dmRoom = new DmRoom(roomId, senderId, receiverId);
+    dmRoom_SenderEqualDmRoomSenderUserA = new DmRoom(roomId, userA, userB);
+    SenderEqualDmRoomReceiverUserB = new DmRoom(roomId, userB, userA);
   }
 
   @Test
   @DisplayName("DM 전송 - sendDm")
-  void sendDm() {
+  void sendDm_SenderEqualDmRoomSender() {
     // given
-    String content = "헬로 DM";
+    String content = "헬로 DM - DM 보내는 사람이 DM ROOM의 Sender일 때";
 
-    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom));
+    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom_SenderEqualDmRoomSenderUserA));
     given(dmRepository.save(any(Dm.class)))
         .willAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    var result = dmService.sendDm(new SendDmDto(senderId, roomId, content));
+    var result = dmService.sendDm(new SendDmDto(userA, roomId, content));
 
     // then
     assertThat(result).isNotNull();
     assertThat(result.getContent()).isEqualTo(content);
-    assertThat(result.getSenderId()).isEqualTo(senderId);
+    assertThat(result.getSenderId()).isEqualTo(userA);
 
     then(notificationService).should().sendNotification(
         argThat(dto ->
-            dto.getReceiverId().equals(dmRoom.getReceiverId())
+            dto.getReceiverId().equals(dmRoom_SenderEqualDmRoomSenderUserA.getReceiverId())
+                && dto.getNotificationType() == NotificationType.DM_RECEIVED
+                && dto.getContent().equals(content)
+        )
+    );
+  }
+  @Test
+  @DisplayName("DM 전송 - sendDm - DM 보내는 사람이 DM ROOM의 Receiver일 때")
+  void sendDm_SenderEqualDmRoomReceiver() {
+    // given
+    String content = "헬로 DM";
+
+    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(SenderEqualDmRoomReceiverUserB));
+    given(dmRepository.save(any(Dm.class)))
+        .willAnswer(invocation -> invocation.getArgument(0));
+
+    // when
+    var result = dmService.sendDm(new SendDmDto(userB, roomId, content));
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEqualTo(content);
+    assertThat(result.getSenderId()).isEqualTo(userB);
+
+    then(notificationService).should().sendNotification(
+        argThat(dto ->
+            dto.getReceiverId().equals(SenderEqualDmRoomReceiverUserB.getReceiverId())
                 && dto.getNotificationType() == NotificationType.DM_RECEIVED
                 && dto.getContent().equals(content)
         )
@@ -108,7 +137,7 @@ class DmServiceImplTest {
     String tooLongContent = "a".repeat(256);
 
     assertThrows(DmContentTooLongException.class, () -> {
-      dmService.sendDm(new SendDmDto(senderId, roomId, tooLongContent));
+      dmService.sendDm(new SendDmDto(userA, roomId, tooLongContent));
     });
   }
 
@@ -117,13 +146,13 @@ class DmServiceImplTest {
   @DisplayName("DM 리스트 조회 - getDmList (모두 읽음 처리 포함)")
   void getDmList() {
     // given
-    Dm dm1 = new Dm(senderId, "메시지1");
-    dm1.setDmRoom(dmRoom);
-    Dm dm2 = new Dm(senderId, "메시지2");
-    dm2.setDmRoom(dmRoom);
-    dm1.readDm(senderId);
-    dm2.readDm(senderId);
-    dmRoom.getMessages().addAll(List.of(dm1, dm2));
+    Dm dm1 = new Dm(userA, "메시지1");
+    dm1.setDmRoom(dmRoom_SenderEqualDmRoomSenderUserA);
+    Dm dm2 = new Dm(userA, "메시지2");
+    dm2.setDmRoom(dmRoom_SenderEqualDmRoomSenderUserA);
+    dm1.readDm(userA);
+    dm2.readDm(userA);
+    dmRoom_SenderEqualDmRoomSenderUserA.getMessages().addAll(List.of(dm1, dm2));
 
     // 커서 조회 결과는 dm1, dm2
     given(dmRepositoryCustom.findByCursor(eq(roomId), anyInt(), any(), any()))
@@ -132,13 +161,13 @@ class DmServiceImplTest {
 
     // when
     var pagingDto = new DmPagingDto(null, 20); // cursor 없음, size=20
-    var result = dmService.getDmList(roomId, pagingDto, receiverId);
+    var result = dmService.getDmList(roomId, pagingDto, userB);
 
     // then
     assertThat(result.data()).hasSize(2);
     assertThat(result.hasNext()).isFalse();
-    assertThat(dm1.getReadUserIds()).contains(senderId);
-    assertThat(dm2.getReadUserIds()).contains(senderId);
+    assertThat(dm1.getReadUserIds()).contains(userA);
+    assertThat(dm2.getReadUserIds()).contains(userA);
   }
 
 
@@ -160,7 +189,7 @@ class DmServiceImplTest {
   void deleteDm() {
     // given
     UUID dmId = UUID.randomUUID();
-    Dm dm = new Dm(senderId, "삭제할 메시지");
+    Dm dm = new Dm(userA, "삭제할 메시지");
     given(dmRepository.findById(dmId)).willReturn(Optional.of(dm));
 
     // when
