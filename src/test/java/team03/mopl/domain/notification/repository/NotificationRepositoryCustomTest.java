@@ -55,7 +55,11 @@ class NotificationRepositoryCustomTest {
   void findByCursor_init() {
     List<Notification> result = notificationRepositoryCustom.findByCursor(userId, 5, null, null);
     assertThat(result).hasSize(5);
-
+    for (Notification notification : result) {
+      System.out.println("notification.getId() = " + notification.getId());
+      System.out.println("notification.getCreatedAt() = " + notification.getCreatedAt());
+      System.out.println();
+    }
     for (int i = 0; i < result.size() - 1; i++) {
       Notification current = result.get(i);
       Notification next = result.get(i + 1);
@@ -65,7 +69,7 @@ class NotificationRepositoryCustomTest {
       if (current.getCreatedAt().isAfter(next.getCreatedAt())) {
         isOrdered = true;
       } else if (current.getCreatedAt().isEqual(next.getCreatedAt())) {
-        isOrdered = current.getId().compareTo(next.getId()) < 0;
+        isOrdered = current.getId().toString().compareTo(next.getId().toString()) > 0;
         System.out.println("isOrdered = " + isOrdered);
       } else {
         isOrdered = false;
@@ -77,30 +81,39 @@ class NotificationRepositoryCustomTest {
               next.getCreatedAt(), next.getId())
           .isTrue();
     }
-
-
   }
+
 
   @Test
   @DisplayName("findByCursor_커서_기반_페이지_조회")
   void findByCursor_withCursor() {
     List<Notification> firstPage = notificationRepositoryCustom.findByCursor(userId, 5, null, null);
     Notification last = firstPage.get(4); // 커서 기준
-
+    System.out.println("last.getId() = " + last.getId());
+    System.out.println("last.getCreatedAt() = " + last.getCreatedAt());
+    System.out.println();
     List<Notification> nextPage = notificationRepositoryCustom.findByCursor(
         userId,
         5,
         last.getCreatedAt().toString(),
         last.getId().toString()
     );
+    for (Notification notification : nextPage) {
+      System.out.println("notification.getId() = " + notification.getId());
+      System.out.println("notification.getCreatedAt() = " + notification.getCreatedAt());
+      System.out.println();
+    }
 
     assertThat(nextPage).isNotEmpty();
     for (Notification n : nextPage) {
       //생성일이 더 과거거나,
       // 생성일이 동일할 경우 UUID가 더 작은 경우만 허용
+      // 커서 이후 항목만 가져왔는지 검증
       boolean isOlder =
-          n.getCreatedAt().isBefore(last.getCreatedAt()) || (n.getCreatedAt().isEqual(last.getCreatedAt()) && n.getId().compareTo(last.getId()) < 0);
+          n.getCreatedAt().isBefore(last.getCreatedAt()) ||
+              (n.getCreatedAt().isEqual(last.getCreatedAt()) && n.getId().toString().compareTo(last.getId().toString()) < 0);
       assertThat(isOlder).isTrue();
+
     }
   }
 }

@@ -24,13 +24,11 @@ public class NotificationRepositoryCustom {
     if (mainCursorValue != null && subCursorValue != null) {
       LocalDateTime mainCursorDate = LocalDateTime.parse(mainCursorValue); // cursor 기준
       UUID subCursorId = UUID.fromString(subCursorValue); // 서브 기준
-      BooleanExpression cursorCondition = notification.createdAt.lt(mainCursorDate)
-          .or(notification.createdAt.eq(mainCursorDate).and(notification.id.lt(subCursorId)));
+      BooleanExpression cursorCondition = notification.createdAt.lt(mainCursorDate).or(notification.createdAt.eq(mainCursorDate).and(notification.id.lt(subCursorId)));
 
       baseCondition = baseCondition.and(cursorCondition);
     }
-    // createdAt desc, id asc
-    return queryFactory.selectFrom(notification).where(baseCondition).orderBy(notification.createdAt.desc(), notification.id.asc()).limit(size)
+    return queryFactory.selectFrom(notification).where(baseCondition).orderBy(notification.createdAt.desc(), notification.id.desc()).limit(size)
         .fetch();
   }
 
