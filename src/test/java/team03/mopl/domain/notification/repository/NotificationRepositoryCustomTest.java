@@ -10,17 +10,20 @@ import java.util.UUID;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.test.util.ReflectionTestUtils;
+import team03.mopl.common.config.JpaConfig;
 import team03.mopl.common.config.QueryDslConfig;
 import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 
 @DataJpaTest
-@Import(QueryDslConfig.class)
+@Import({QueryDslConfig.class, JpaConfig.class})
 class NotificationRepositoryCustomTest {
 
   @Autowired
@@ -36,27 +39,51 @@ class NotificationRepositoryCustomTest {
     userId = UUID.randomUUID();
 
     // 테스트 데이터 삽입 (10분 단위로 생성일 설정)
+    LocalDateTime baseTime = LocalDateTime.of(2025, 7, 19, 12, 0);
+
     for (int i = 0; i < 10; i++) {
       Notification notification = new Notification(userId, NotificationType.FOLLOWED, "알림 " + i);
-      em.persist(setCreatedAt(notification, LocalDateTime.now().minusMinutes(i)));
+      ReflectionTestUtils.setField(notification, "createdAt", baseTime.minusSeconds(i));
+      em.persist(notification);
     }
     em.flush();
     em.clear();
   }
 
   @Test
-  void findByCursor_초기_페이지_조회() {
+  @DisplayName("findByCursor_초기_페이지_조회")
+  void findByCursor_init() {
     List<Notification> result = notificationRepositoryCustom.findByCursor(userId, 5, null, null);
-
     assertThat(result).hasSize(5);
-    assertThat(result).isSortedAccordingTo((a, b) -> {
-      int compareTime = b.getCreatedAt().compareTo(a.getCreatedAt());
-      return compareTime != 0 ? compareTime : b.getId().compareTo(a.getId());
-    });
+
+    for (int i = 0; i < result.size() - 1; i++) {
+      Notification current = result.get(i);
+      Notification next = result.get(i + 1);
+
+      boolean isOrdered;
+
+      if (current.getCreatedAt().isAfter(next.getCreatedAt())) {
+        isOrdered = true;
+      } else if (current.getCreatedAt().isEqual(next.getCreatedAt())) {
+        isOrdered = current.getId().compareTo(next.getId()) < 0;
+        System.out.println("isOrdered = " + isOrdered);
+      } else {
+        isOrdered = false;
+      }
+
+      assertThat(isOrdered)
+          .as("정렬 순서 확인 실패: \n현재 = %s (%s)\n다음 = %s (%s)",
+              current.getCreatedAt(), current.getId(),
+              next.getCreatedAt(), next.getId())
+          .isTrue();
+    }
+
+
   }
 
   @Test
-  void findByCursor_커서_기반_페이지_조회() {
+  @DisplayName("findByCursor_커서_기반_페이지_조회")
+  void findByCursor_withCursor() {
     List<Notification> firstPage = notificationRepositoryCustom.findByCursor(userId, 5, null, null);
     Notification last = firstPage.get(4); // 커서 기준
 
@@ -74,18 +101,6 @@ class NotificationRepositoryCustomTest {
       boolean isOlder =
           n.getCreatedAt().isBefore(last.getCreatedAt()) || (n.getCreatedAt().isEqual(last.getCreatedAt()) && n.getId().compareTo(last.getId()) < 0);
       assertThat(isOlder).isTrue();
-    }
-  }
-
-  // createdAt 수동 설정 메서드
-  private Notification setCreatedAt(Notification n, LocalDateTime createdAt) {
-    try {
-      var field = Notification.class.getDeclaredField("createdAt");
-      field.setAccessible(true);
-      field.set(n, createdAt);
-      return n;
-    } catch (Exception e) {
-      throw new RuntimeException("createdAt 필드 설정 실패", e);
     }
   }
 }
