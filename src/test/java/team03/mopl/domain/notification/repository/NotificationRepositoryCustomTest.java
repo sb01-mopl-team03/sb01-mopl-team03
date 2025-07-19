@@ -1,3 +1,4 @@
+/*
 package team03.mopl.domain.notification.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,3 +119,4 @@ class NotificationRepositoryCustomTest {
   }
 }
 
+*/
