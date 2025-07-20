@@ -51,7 +51,7 @@ class DmWebSocketControllerTest {
             dto.getContent().equals(content)
     ))).thenReturn(dmDto);
 
-    controller.sendMessage(roomId, dmRequest);
+    controller.sendMessage(dmRequest);
 
     verify(dmService).sendDm(argThat(dto ->
         dto.getSenderId().equals(senderId) &&
