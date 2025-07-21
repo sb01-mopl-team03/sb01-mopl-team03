@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
@@ -22,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import({DmRepositoryCustom.class, DmRepositoryCustomTest.QueryDslTestConfig.class})
+@TestPropertySource(properties = {
+    "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
+    "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
+})
 public class DmRepositoryCustomTest {
 
   @Autowired
