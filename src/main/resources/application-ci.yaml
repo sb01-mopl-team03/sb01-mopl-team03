@@ -34,7 +34,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
@@ -42,7 +42,7 @@ spring:
 
   sql:
     init:
-      mode: always  # schema.sql, data.sql 사용
+      mode: never  # schema.sql, data.sql 사용
 
 logging:
   level:
