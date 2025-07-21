@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import team03.mopl.common.config.JpaConfig;
 import team03.mopl.common.config.QueryDslConfig;
@@ -24,6 +25,12 @@ import team03.mopl.domain.notification.entity.NotificationType;
 
 @DataJpaTest
 @Import({QueryDslConfig.class, JpaConfig.class})
+//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@TestPropertySource(properties = {
+    "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
+    "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
+})
+@DisplayName("컨텐츠 데이터 레포지토리 단위 테스트")
 class NotificationRepositoryCustomTest {
 
   @Autowired
