@@ -1,5 +1,6 @@
 package team03.mopl.domain.notification.controller;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,6 +108,19 @@ class NotificationControllerTest {
   }
 
   @Test
+  @DisplayName("인증되지 않은 사용자의 SSE 구독 시도는 5xx 또는 에러 스트림으로 응답")
+  void subscribe_UnauthorizedUser_ShouldReturnErrorStream() throws Exception {
+    mockMvc.perform(get("/subscribe")
+            .header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE))
+        .andExpect(status().isOk()) // 상태는 200이지만...
+        .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
+        .andExpect(result -> {
+          String content = result.getResponse().getContentAsString();
+          // SSE 포맷이지만 에러 메시지가 들어갔는지 확인
+          assertTrue(content.contains("Unauthorized"), "응답에 Unauthorized 메시지가 포함되어야 합니다.");
+        });
+  }
+  @Test
   @WithMockUser
   void testGetNotifications() throws Exception {
     User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
@@ -186,36 +201,36 @@ class NotificationControllerTest {
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-//  @Test
-//  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
-//  void deleteNotificationByUserId() throws Exception {
-//    // given
-//    User user = User.builder()
-//        .id(UUID.randomUUID())
-//        .email("testuser@example.com")
-//        .password("password")
-//        .role(Role.USER)
-//        .build();
-//
-//    CustomUserDetails customUserDetails = new CustomUserDetails(user);
-//    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-//        customUserDetails,
-//        null,
-//        customUserDetails.getAuthorities()
-//    );
-//    SecurityContextHolder.getContext().setAuthentication(authToken);
-//
-//    // when & then
-//    mockMvc.perform(
-//            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-//                .delete("/api/notifications/userId")
-//                .with(authentication(authToken))
-//                .with(csrf())
-//        )
-//        .andExpect(status().isNoContent());
-//
-//    verify(notificationService).deleteNotificationByUserId(user.getId());
-//  }
+  @Test
+  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
+  void deleteNotificationByUserId() throws Exception {
+    // given
+    User user = User.builder()
+        .id(UUID.randomUUID())
+        .email("testuser@example.com")
+        .password("password")
+        .role(Role.USER)
+        .build();
+
+    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+        customUserDetails,
+        null,
+        customUserDetails.getAuthorities()
+    );
+    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+    // when & then
+    mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .delete("/api/notifications/userId")
+                .with(authentication(authToken))
+                .with(csrf())
+        )
+        .andExpect(status().isNoContent());
+
+    verify(notificationService).deleteNotificationByUserId(user.getId());
+  }
 
 
 }

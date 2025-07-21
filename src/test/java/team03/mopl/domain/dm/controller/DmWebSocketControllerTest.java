@@ -52,13 +52,14 @@ class DmWebSocketControllerTest {
             dto.getContent().equals(content)
     ))).thenReturn(dmDto);
 
-    controller.sendMessage(dmRequest);
+    controller.sendMessage(roomId.toString(), dmRequest);
 
     verify(dmService).sendDm(argThat(dto ->
         dto.getSenderId().equals(senderId) &&
             dto.getRoomId().equals(roomId) &&
             dto.getContent().equals(content)
     ));
-    verify(simpMessagingTemplate).convertAndSend(eq("/topic/dm.room." + roomId), eq(dmDto));
+    verify(simpMessagingTemplate).convertAndSend(eq("/topic/dm/" + roomId), eq(dmDto));
+
   }
 }

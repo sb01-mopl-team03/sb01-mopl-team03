@@ -43,12 +43,6 @@ public class NotificationController {
       @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
       HttpServletResponse response) {
 
-    // SSE를 위한 응답 헤더 설정
-/*    response.setHeader("Cache-Control", "no-cache");
-    response.setHeader("Connection", "keep-alive");
-    response.setHeader("Content-Type", "text/event-stream");
-    response.setHeader("Access-Control-Expose-Headers", "Cache-Control, Connection, Content-Type");*/
-
     log.info("=== SSE 구독 요청 시작 ===");
     log.info("User 정보: {}", user);
     log.info("Last-Event-ID: {}", lastEventId);

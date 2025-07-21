@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.Role;
@@ -61,20 +60,20 @@ class FollowControllerTest {
         .role(Role.USER) // 또는 Role.ADMIN
         .build();
     CustomUserDetails principal = new CustomUserDetails(follower);
-    FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(post("/api/follows")
+    mockMvc.perform(post("/api/follows/{followingId}", followingId)
             .with(csrf())
             .with(user(principal))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(new ObjectMapper().writeValueAsString(request)))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
+
 
     verify(followService).follow(followerId, followingId);
   }
 
 
   @Test
+  @WithMockUser(roles = "USER")
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
@@ -86,13 +85,11 @@ class FollowControllerTest {
         .role(Role.USER) // 또는 Role.ADMIN
         .build();
     CustomUserDetails principal = new CustomUserDetails(follower);
-    FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(delete("/api/follows")
+    mockMvc.perform(delete("/api/follows/{followingId}", followingId)
             .with(csrf())
             .with(user(principal))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(new ObjectMapper().writeValueAsString(request)))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
     verify(followService).unfollow(followerId, followingId);
