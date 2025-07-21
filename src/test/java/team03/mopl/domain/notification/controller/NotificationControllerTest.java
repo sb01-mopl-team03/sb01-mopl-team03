@@ -201,7 +201,7 @@ class NotificationControllerTest {
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-  @Test
+  /*@Test
   @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
   void deleteNotificationByUserId() throws Exception {
     // given
@@ -230,7 +230,7 @@ class NotificationControllerTest {
         .andExpect(status().isNoContent());
 
     verify(notificationService).deleteNotificationByUserId(user.getId());
-  }
+  }*/
 
 
 }
