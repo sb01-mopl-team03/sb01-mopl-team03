@@ -109,10 +109,11 @@ class NotificationEventListenerTest {
   void onFollowingPostedPlaylist_public_playlist_sends_notifications() {
     // given
     UUID creatorId = UUID.randomUUID();
+    String creatorName = "creator";
     UUID playlistId = UUID.randomUUID();
     String playlistName = "새 플리!";
     FollowingPostedPlaylistEvent event =
-        new FollowingPostedPlaylistEvent(creatorId, playlistId, playlistName, true);
+        new FollowingPostedPlaylistEvent(creatorId, creatorName, playlistId, playlistName, true);
 
     FollowResponse follower1 = new FollowResponse(UUID.randomUUID(), "user1", "img1", null, null);
     FollowResponse follower2 = new FollowResponse(UUID.randomUUID(), "user2", "img2", null, null);
@@ -143,8 +144,9 @@ class NotificationEventListenerTest {
   void onFollowingPostedPlaylist_private_playlist_no_notification() {
     // given
     UUID creatorId = UUID.randomUUID();
+    String creatorName = "creator";
     FollowingPostedPlaylistEvent event =
-        new FollowingPostedPlaylistEvent(creatorId, UUID.randomUUID(), "secret", false);
+        new FollowingPostedPlaylistEvent(creatorId, creatorName, UUID.randomUUID(), "secret", false);
 
     // when
     listener.onFollowingPostedPlaylist(event);
@@ -159,8 +161,9 @@ class NotificationEventListenerTest {
   void onFollowingPostedPlaylist_no_followers() {
     // given
     UUID creatorId = UUID.randomUUID();
+    String creatorName = "creator";
     FollowingPostedPlaylistEvent event =
-        new FollowingPostedPlaylistEvent(creatorId, UUID.randomUUID(), "empty world", true);
+        new FollowingPostedPlaylistEvent(creatorId, creatorName, UUID.randomUUID(), "empty world", true);
 
     when(followService.getFollowing(creatorId)).thenReturn(List.of());
 

@@ -59,6 +59,7 @@ public class PlaylistServiceImpl implements PlaylistService {
     //해당 유저를 구독하고 있던 유저들에게 알림 전송
     eventPublisher.publishEvent(new FollowingPostedPlaylistEvent(
         userId,
+        user.getName(),
         savedPlaylist.getId(),
         savedPlaylist.getName(),
         savedPlaylist.isPublic()

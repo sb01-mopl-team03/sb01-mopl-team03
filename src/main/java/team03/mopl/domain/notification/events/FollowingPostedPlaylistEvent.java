@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record FollowingPostedPlaylistEvent(
   UUID creatorId,
+  String creatorName,
   UUID playlistId,
   String playlistName,
   boolean isPublic
