@@ -212,4 +212,47 @@ class UserServiceImplTest {
     // then
     then(userRepository).should().deleteById(id);
   }
+
+  @Test
+  @DisplayName("OAuth 로그인 - 기존 유저가 있으면 로그인 처리")
+  void loginOrRegisterOAuth_existingUser() {
+    String email = "oauth@test.com";
+    String name = "OAuthUser";
+    User existingUser = User.builder()
+        .id(UUID.randomUUID())
+        .email(email)
+        .name(name)
+        .password("encoded")
+        .role(Role.USER)
+        .build();
+
+    given(userRepository.findByEmail(email)).willReturn(Optional.of(existingUser));
+
+    User result = userService.loginOrRegisterOAuth(email, name);
+
+    assertThat(result).isEqualTo(existingUser);
+    then(userRepository).should(never()).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("OAuth 로그인 - 유저가 없으면 자동 가입 처리")
+  void loginOrRegisterOAuth_registerNewUser() {
+    String email = "new@oauth.com";
+    String name = "NewOAuth";
+    given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+    given(passwordEncoder.encode(anyString())).willReturn("encoded-password");
+
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+    User result = userService.loginOrRegisterOAuth(email, name);
+
+    then(userRepository).should().save(userCaptor.capture());
+    User savedUser = userCaptor.getValue();
+
+    assertThat(savedUser.getEmail()).isEqualTo(email);
+    assertThat(savedUser.getName()).isEqualTo(name);
+    assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
+    assertThat(result).isEqualTo(savedUser);
+  }
 }
