@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
@@ -12,6 +13,7 @@ import team03.mopl.common.exception.subscription.SelfSubscriptionNotAllowedExcep
 import team03.mopl.common.exception.subscription.SubscriptionDeleteDeniedException;
 import team03.mopl.common.exception.subscription.SubscriptionNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.notification.events.PlaylistSubscribedEvent;
 import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.playlist.repository.PlaylistRepository;
 import team03.mopl.domain.subscription.Subscription;
@@ -28,6 +30,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private final SubscriptionRepository subscriptionRepository;
   private final UserRepository userRepository;
   private final PlaylistRepository playlistRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -52,6 +55,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .playlist(playlist)
         .build();
     Subscription savedSubscription = subscriptionRepository.save(subscription);
+
+    eventPublisher.publishEvent(new PlaylistSubscribedEvent(
+        playlist.getId(),
+        playlist.getUser().getId(),
+        user.getId()
+    ));
 
     return SubscriptionDto.from(savedSubscription);
   }
