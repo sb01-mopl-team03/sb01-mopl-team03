@@ -29,7 +29,7 @@ class EmitterRepositoryImplTest {
   private String makeNotificationCacheId(String emitterId, UUID notificationId, UUID userId) {
     return notificationId + "_" + emitterId + "_" + userId;
   }
-  
+
   @Test
   @DisplayName("새로운 Emitter를 추가한다.")
   void save() {

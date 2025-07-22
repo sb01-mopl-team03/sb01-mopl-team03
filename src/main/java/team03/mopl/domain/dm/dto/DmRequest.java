@@ -1,7 +1,6 @@
 package team03.mopl.domain.dm.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,10 +20,4 @@ public class DmRequest {
 
   @Schema(description = "메시지 내용", example = "안녕하세요, 지금 시간 어때요?")
   private String content;
-
-  @Schema(description = "읽음 여부", example = "false")
-  private boolean isRead;
-
-  @Schema(description = "메시지 생성 시각", example = "2025-07-16T10:20:30")
-  private LocalDateTime createdAt;
 }

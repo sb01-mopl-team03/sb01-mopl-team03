@@ -114,6 +114,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         .build();
   }
 
+
   @Override
   @Transactional(readOnly = true)
   public WatchRoomDto getById(UUID watchRoomId) {

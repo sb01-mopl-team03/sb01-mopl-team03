@@ -40,7 +40,8 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/oauth2/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/oauth2/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/login/oauth2/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/change-password").permitAll()

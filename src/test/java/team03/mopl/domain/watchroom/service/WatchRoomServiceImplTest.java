@@ -140,7 +140,7 @@ class WatchRoomServiceImplTest {
       WatchRoomDto watchRoomDto = watchRoomService.create(request);
 
       //then
-      assertEquals(expected.contentTitle(), watchRoomDto.contentTitle());
+      assertEquals(expected.contentDto().title(), watchRoomDto.contentDto().title());
       assertEquals(expected.title(), watchRoomDto.title());
       assertEquals(expected.ownerId(), watchRoomDto.ownerId());
       assertEquals(expected.headCount(), watchRoomDto.headCount());
@@ -491,7 +491,7 @@ class WatchRoomServiceImplTest {
       //then
       assertEquals(expected.id(), watchRoomDto.id());
       assertEquals(expected.ownerId(), watchRoomDto.ownerId());
-      assertEquals(expected.contentTitle(), watchRoomDto.contentTitle());
+      assertEquals(expected.contentDto().title(), watchRoomDto.contentDto().title());
       assertEquals(expected.headCount(), watchRoomDto.headCount());
 
     }
