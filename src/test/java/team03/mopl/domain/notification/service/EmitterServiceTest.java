@@ -1,18 +1,24 @@
 package team03.mopl.domain.notification.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
@@ -26,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,6 +48,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.domain.notification.entity.Notification;
@@ -107,34 +115,6 @@ class EmitterServiceTest {
     assertDoesNotThrow(() -> emitter.send(SseEmitter.event().comment("test")));
   }
 
-  /*@Test
-  @DisplayName("onTimeout 콜백이 등록되고 실행되면 handleEmitterTermination이 호출된다")
-  void setupEmitterCallbacks_shouldRegisterAndRunOnTimeout() {
-    // given
-    UUID userId = UUID.randomUUID();
-    String emitterId = userId + "_timeout_test";
-    long timeout = TimeUnit.MINUTES.toMillis(60);
-
-    SseEmitter emitter = mock(SseEmitter.class);
-
-    // 2) onTimeout 콜백을 캡처하기 위한 ArgumentCaptor
-    ArgumentCaptor<Runnable> timeoutCaptor = ArgumentCaptor.forClass(Runnable.class);
-    doNothing().when(emitter).onTimeout(timeoutCaptor.capture());
-
-    // 3) setupEmitterCallbacks 직접 호출 (protected)
-    emitterService.setupEmitterCallbacks(emitterId, emitter, userId);
-
-    // 4) 캡처된 Runnable이 제대로 존재하는지 검증
-    List<Runnable> captured = timeoutCaptor.getAllValues();
-    assertFalse("onTimeout 콜백이 등록되어야 합니다",captured.isEmpty());
-
-    // 5) onTimeout 핸들러를 직접 실행
-    Runnable onTimeoutHandler = captured.get(0);
-    onTimeoutHandler.run();
-
-    // 6) handleEmitterTermination에 의해 deleteEmitterById(emitterId) 호출되었는지 확인
-    verify(emitterRepository).deleteEmitterById(emitterId);
-  }*/
   @Test
   @DisplayName("setupEmitterCallbacks(private) - 리플렉션 호출 시 콜백 등록 & onError 로직 검증")
   void setupEmitterCallbacks_private_reflection() throws Exception {
@@ -201,6 +181,164 @@ class EmitterServiceTest {
   void handleEmitterError_shouldDeleteEmitterAndLog() {
     emitterService.handleEmitterError("emitter-id-456", new RuntimeException("fail"));
     verify(emitterRepository).deleteEmitterById("emitter-id-456");
+  }
+
+  private final TaskExecutor directExecutor = Runnable::run; //동기적 실행 트리거
+  @Test
+  @DisplayName("sendNotificationToMember: 등록된 모든 emitters 에 캐시 저장 후 전송한다")
+  void sendNotificationToMember_sendsAndCaches() throws IOException {
+    ReflectionTestUtils.setField(emitterService, "notificationExecutor", directExecutor);
+
+    // given
+    UUID userId = UUID.randomUUID();
+    Notification notification = new Notification(userId, NotificationType.DM_RECEIVED, "안녕하세요");
+
+    // 두 개의 emitter 를 미리 등록
+    String emitterId1 = userId + "1";
+    String emitterId2 = userId + "2";
+    SseEmitter emitter1 = mock(SseEmitter.class);
+    SseEmitter emitter2 = mock(SseEmitter.class);
+
+    given(emitterRepository.findAllEmittersByUserIdPrefix(userId.toString()))
+        .willReturn(Map.of(emitterId1, emitter1, emitterId2, emitter2));
+
+    // when: 비동기 CompletableFuture 가 바로 실행되도록 join()
+    emitterService.sendNotificationToMember(userId, notification).join();
+
+    //saveNotificationCache(notificationCacheId, notification)
+    //위 형식을 지키고 있는 지 확인
+    then(emitterCacheRepository).should().saveNotificationCache(
+        argThat(key -> key.startsWith(notification.getId() + "_" + emitterId1 + "_")),
+        eq(notification)
+    );
+    then(emitterCacheRepository).should().saveNotificationCache(
+        argThat(key -> key.startsWith(notification.getId() + "_" + emitterId2 + "_")),
+        eq(notification)
+    );
+    // isEmitterAlive + send
+    verify(emitter1, times(2))
+        .send(any(SseEmitter.SseEventBuilder.class));
+    verify(emitter2, times(2))
+        .send(any(SseEmitter.SseEventBuilder.class));
+  }
+  @Test
+  @DisplayName("sendInitNotification: 정상적으로 CONNECTED 이벤트 전송")
+  void sendInitNotification_sendsConnectedEvent() throws Exception {
+    // given
+    SseEmitter emitter = mock(SseEmitter.class);
+
+    // when
+    emitterService.sendInitNotification(emitter);
+
+    // then: SseEventBuilder 타입으로 한번 호출됐는지만 검증
+    verify(emitter, times(1))
+        .send(any(SseEmitter.SseEventBuilder.class));
+  }
+
+  @Test
+  @DisplayName("sendInitNotification: send() 중 예외 발생해도 예외를 던지지 않는다")
+  void sendInitNotification_handlesException() throws Exception {
+    // given
+    SseEmitter emitter = mock(SseEmitter.class);
+    doThrow(new IOException("Broken pipe"))
+        .when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    // when / then: 어떤 예외도 던지지 않아야 한다
+    assertThatCode(() -> emitterService.sendInitNotification(emitter)).doesNotThrowAnyException();
+
+    // 그리고 send는 한 번 시도된다
+    verify(emitter, times(1))
+        .send(any(SseEmitter.SseEventBuilder.class));
+  }
+
+  @Test
+  @DisplayName("deleteNotificationCaches: 모든 알림 캐시 ID로 delete 호출")
+  void deleteNotificationCaches_callsDeleteForEachNotification() {
+    // given: 두 개의 Notification 객체에 미리 ID 설정
+    UUID userId = UUID.randomUUID();
+    Notification n1 = new Notification(userId, NotificationType.FOLLOWED, "foo");
+    Notification n2 = new Notification(userId, NotificationType.FOLLOWED, "bar");
+    UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+    // ReflectionTestUtils 로 id 필드 주입 (만약 Notification.id 가 private 이라면)
+    ReflectionTestUtils.setField(n1, "id", id1);
+    ReflectionTestUtils.setField(n2, "id", id2);
+
+    // when
+    emitterService.deleteNotificationCaches(List.of(n1, n2));
+
+    // then: 정확히 두 번, 각 ID로 deleteNotificationCachesByNotificationIdPrefix 호출
+    verify(emitterCacheRepository, times(1))
+        .deleteNotificationCachesByNotificationIdPrefix(id1);
+    verify(emitterCacheRepository, times(1))
+        .deleteNotificationCachesByNotificationIdPrefix(id2);
+  }
+
+  @Test
+  @DisplayName("deleteNotificationCaches: 하나가 실패해도 나머지는 호출되고 예외를 던지지 않는다")
+  void deleteNotificationCaches_handlesExceptionAndContinues() {
+    // given
+    UUID userId = UUID.randomUUID();
+    Notification n1 = new Notification(userId, NotificationType.FOLLOWED, "foo");
+    Notification n2 = new Notification(userId, NotificationType.FOLLOWED, "bar");
+    UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+    ReflectionTestUtils.setField(n1, "id", id1);
+    ReflectionTestUtils.setField(n2, "id", id2);
+
+    // 의도적으로 첫 번째 호출 시 예외
+    doThrow(new RuntimeException("DB down"))
+        .when(emitterCacheRepository).deleteNotificationCachesByNotificationIdPrefix(id1);
+
+    // when / then: 메서드가 예외를 던지지 않아야 한다
+    assertDoesNotThrow(() ->
+        emitterService.deleteNotificationCaches(List.of(n1, n2))
+    );
+
+    //emitterCacheRepository 모킹된 객체에서 뒤에 이어지는 메서드 호출이 정확히 1회 일어났는지 확인
+    verify(emitterCacheRepository, times(1))
+        .deleteNotificationCachesByNotificationIdPrefix(id1);
+    // 그리고 두 번째 ID는 정상 호출
+    verify(emitterCacheRepository, times(1))
+        .deleteNotificationCachesByNotificationIdPrefix(id2);
+  }
+
+  @Test
+  @DisplayName("cleanup: 남아있는 heartbeat 작업은 취소하고, tasks 맵을 비운 뒤 executor를 종료한다")
+  void cleanup_shouldCancelPendingTasks_clearMap_andShutdownExecutor() {
+    // 1) heartbeatExecutor 를 mock 으로 교체
+    ScheduledExecutorService mockExecutor = mock(ScheduledExecutorService.class);
+    ReflectionTestUtils.setField(emitterService, "heartbeatExecutor", mockExecutor);
+
+    // 2) heartbeatTasks 맵에 두 개의 ScheduledFuture mock 추가
+    @SuppressWarnings("unchecked")
+    var tasks = (ConcurrentHashMap<String, ScheduledFuture<?>>)
+        ReflectionTestUtils.getField(emitterService, "heartbeatTasks");
+    ScheduledFuture<?> future1 = mock(ScheduledFuture.class);
+    ScheduledFuture<?> future2 = mock(ScheduledFuture.class);
+
+    // future1 은 아직 cancel 되지 않은 상태 → cancel(true) 되어야 함
+    when(future1.isCancelled()).thenReturn(false);
+    // future2 는 이미 cancel 됐다고 치자 → cancel() 호출되지 않아야 함
+    when(future2.isCancelled()).thenReturn(true);
+
+    tasks.put("task1", future1);
+    tasks.put("task2", future2);
+
+    // 3) cleanup() 호출
+    emitterService.cleanup();
+
+    // ---- 검증 ----
+    // 아직 취소되지 않은 future1 에만 cancel(true) 호출
+    verify(future1).cancel(true);
+    // 이미 cancel 됐던 future2 에는 cancel 호출 없어야 함
+    verify(future2, never()).cancel(anyBoolean());
+
+    // 맵이 완전히 비워졌는지
+    assertTrue(tasks.isEmpty(), "heartbeatTasks 맵이 비워져야 합니다");
+
+    // executor.shutdown() 과 shutdownNow() 가 호출됐는지
+    verify(mockExecutor).shutdown();
+    // 스텁하지 않은 mock 의 awaitTermination 은 false 를 반환하므로 shutdownNow() 까지 호출되는 시나리오입니다.
+    verify(mockExecutor).shutdownNow();
   }
 
 

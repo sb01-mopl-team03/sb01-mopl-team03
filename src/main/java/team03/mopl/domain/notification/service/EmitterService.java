@@ -234,7 +234,7 @@ public class EmitterService {
   /**
    * 토큰 만료 처리
    */
-  private void handleTokenExpired(String emitterId, SseEmitter emitter) {
+  /*private void handleTokenExpired(String emitterId, SseEmitter emitter) {
     try {
       // 토큰 만료 알림 전송
       emitter.send(SseEmitter.event()
@@ -250,7 +250,7 @@ public class EmitterService {
       cancelHeartbeatTask(emitterId);
       safeDeleteEmitter(emitterId);
     }
-  }
+  }*/
 
   /**
    * Heartbeat 작업 취소
