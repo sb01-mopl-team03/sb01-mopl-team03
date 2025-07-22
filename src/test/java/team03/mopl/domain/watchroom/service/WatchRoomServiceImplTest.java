@@ -520,6 +520,7 @@ class WatchRoomServiceImplTest {
       List<ParticipantDto> participantDtos = users.stream()
           .map(user -> {
             return ParticipantDto.builder()
+                .id(user.getId())
                 .username(user.getName())
                 .profile(null)
                 .isOwner(user.getId() == userId)

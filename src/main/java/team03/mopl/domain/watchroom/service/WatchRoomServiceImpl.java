@@ -280,6 +280,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     List<ParticipantDto> participantList = participants.stream()
         .map(participant -> new ParticipantDto(
+            participant.getUser().getId(),
             participant.getUser().getName(),
             participant.getUser().getProfileImage(),
             participant.getUser().getId().equals(watchRoom.getOwner().getId()))).toList();
