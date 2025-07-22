@@ -8,3 +8,4 @@ public record FollowingPostedPlaylistEvent(
   String playlistName,
   boolean isPublic
 ) {}
+

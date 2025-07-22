@@ -192,8 +192,6 @@ public class PlaylistServiceImpl implements PlaylistService {
     eventPublisher.publishEvent(new PlaylistUpdatedEvent(
         playlist.getId(),
         playlist.getUser().getId(),
-        userId,
-        newContents.stream().map(Content::getId).toList(),
         playlist.getName()
     ));
   }
