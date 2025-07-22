@@ -31,7 +31,6 @@ import team03.mopl.domain.subscription.service.SubscriptionService;
 public class UserController implements UserApi {
 
   private final UserService userService;
-  private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
   private final SubscriptionService subscriptionService;
   private final PlaylistService playlistService;
@@ -68,12 +67,6 @@ public class UserController implements UserApi {
   @GetMapping
   public ResponseEntity<List<UserResponse>> findAll() {
     return ResponseEntity.ok(userService.findAll());
-  }
-
-  @Override
-  @GetMapping("/profiles")
-  public ResponseEntity<List<String>> getProfileImages() {
-    return ResponseEntity.ok(profileImageService.getProfileImages());
   }
 
   @Override
