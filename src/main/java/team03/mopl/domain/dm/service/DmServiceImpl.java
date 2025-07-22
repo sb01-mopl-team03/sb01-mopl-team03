@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
+import team03.mopl.common.exception.dm.DmDecodingError;
 import team03.mopl.common.exception.dm.DmNotFoundException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
+import team03.mopl.common.exception.dm.NoOneMatchInDmRoomException;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.dto.DmPagingDto;
 import team03.mopl.domain.dm.dto.SendDmDto;
@@ -57,7 +59,7 @@ public class DmServiceImpl implements DmService {
       UUID receiverId = dmRoom.getSenderId();
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
     } else {
-      System.out.println("에러 발생");
+      throw new NoOneMatchInDmRoomException();
     }
 
     Dm savedDm = dmRepository.save(dm);
@@ -105,7 +107,7 @@ public class DmServiceImpl implements DmService {
       return objectMapper.readValue(json, Cursor.class);
     } catch (Exception e) {
       log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
-      throw new IllegalArgumentException("잘못된 커서 형식입니다.");
+      throw new DmDecodingError();
     }
   }
 

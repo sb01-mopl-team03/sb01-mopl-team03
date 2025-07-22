@@ -36,9 +36,6 @@ class UserControllerTest {
   @MockitoBean
   private UserService userService;
 
-  @MockitoBean
-  private ProfileImageService profileImageService;
-
   @Autowired
   private ObjectMapper objectMapper;
 
@@ -191,18 +188,5 @@ class UserControllerTest {
         .andExpect(jsonPath("$[0].email").value("hong@naver.com"))
         .andExpect(jsonPath("$[0].role").value("user"))
         .andExpect(jsonPath("$[0].isLocked").value(false));
-  }
-
-  @WithMockUser
-  @Test
-  void getProfileImages() throws Exception {
-    List<String> profiles = List.of("profile1.png", "profile2.png");
-
-    when(profileImageService.getProfileImages()).thenReturn(profiles);
-
-    mockMvc.perform(get("/api/users/profiles")
-            .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0]").value("profile1.png"));
   }
 }

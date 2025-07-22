@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.dto.ContentSearchRequest;
@@ -29,14 +30,7 @@ public class ContentServiceImpl implements ContentService {
   private final ContentRepository contentRepository;
   private final ReviewService reviewService;
   //
-  private final ObjectMapper objectMapper;
-
-  @Override
-  public List<ContentDto> getAll() {
-    return contentRepository.findAll()
-        .stream().map(ContentDto::from)
-        .toList();
-  }
+  private final CursorCodecUtil codecUtil;
 
   /**
    * 컨텐츠 데이터 목록을 커서 기반 페이지네이션으로 조회합니다.
@@ -64,7 +58,7 @@ public class ContentServiceImpl implements ContentService {
     String mainCursorValue = null;
     UUID subCursorId = null;
     if (cursor != null && !cursor.isEmpty()) {
-      decodeCursor = decodeCursor(cursor);
+      decodeCursor = codecUtil.decodeCursor(cursor);
       mainCursorValue = decodeCursor.lastValue();
       subCursorId = UUID.fromString(decodeCursor.lastId());
     }
@@ -100,7 +94,7 @@ public class ContentServiceImpl implements ContentService {
     // 6. 다음 페이지의 커서 지정 및 인코딩
     String nextCursor = null;
     if (hasNext) {
-      nextCursor = encodeNextCursor(contentDtos.get(contentDtos.size() - 1), sortBy);
+      nextCursor = codecUtil.encodeNextCursor(contentDtos.get(contentDtos.size() - 1), sortBy);
     }
 
     log.info("getCursorPage - 컨텐츠 데이터 목록 조회 끝");
@@ -146,56 +140,5 @@ public class ContentServiceImpl implements ContentService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     return sum.divide(new BigDecimal(reviews.size()), 2, RoundingMode.HALF_UP);
-  }
-
-  /**
-   * 인코딩된 cursor 값을 디코딩합니다.
-   *
-   * @param encodedCursor 인코딩된 문자열 값
-   */
-  private Cursor decodeCursor(String encodedCursor) {
-    log.info("decodeCursor - cursor 값 Base64 디코딩 시작");
-
-    try {
-      // 1. Base64 문자열 → Byte 변환
-      byte[] decodedBytes = Base64.getUrlDecoder().decode(encodedCursor);
-      // 2. Byte → JSON 변환
-      String decodedJson = new String(decodedBytes, StandardCharsets.UTF_8);
-      // 4. JSON → Cursor 객체 변환및 반환
-      return objectMapper.readValue(decodedJson, Cursor.class);
-    } catch (Exception e) {
-      log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * 커서 페이지네이션의 마지막 데이터를 인코딩하여 반환합니다.
-   *
-   * @param contentDto 커서 페이지네이션의 마지막 데이터
-   */
-  private String encodeNextCursor(ContentDto contentDto, String sortBy) {
-    log.info("encodeNextCursor - 커서 페이지네이션의 마지막 데이터 Base64 인코딩 시작");
-
-    String lastId = contentDto.id().toString();
-    String lastValue;
-    if (sortBy.equalsIgnoreCase("RELEASE_AT")) {
-      lastValue = contentDto.releaseDate().toString();
-    } else if(sortBy.equalsIgnoreCase("TITLE")) {
-      lastValue = contentDto.titleNormalized();
-    } else { // AVG_RATING
-      lastValue = contentDto.avgRating().toString();
-    }
-
-    Cursor cursor = new Cursor(lastValue, lastId);
-    try {
-      // 1. 객체 → JSON 변환
-      String cursorToJson = objectMapper.writeValueAsString(cursor);
-      // 2. JSON → Base64 문자열 변환 및 반환
-      return Base64.getUrlEncoder().encodeToString(cursorToJson.getBytes(StandardCharsets.UTF_8));
-    } catch (Exception e) {
-      log.warn("객체를 Base64로 인코딩 중 오류 발생", e);
-      throw new RuntimeException(e);
-    }
   }
 }
