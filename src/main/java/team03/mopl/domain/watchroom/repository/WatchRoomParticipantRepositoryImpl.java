@@ -111,12 +111,11 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
       case "title":  //시청방 이름
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
         break;
-      case "participantcount":  //시청자 수
+      default: //시청자 수
         Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
         applyParticipantCountCursor(whereClause, cursorParticipantCount, UUID.fromString(cursor.lastId()), isDesc);
         break;
-      default:
-        throw new IllegalArgumentException("지원하지 않는 정렬 조건: " + sortBy);
+
     }
   }
 
@@ -183,9 +182,8 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
     OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
       case "title" -> isDesc ? qWatchRoom.title.desc() : qWatchRoom.title.asc();
-      case "participantcount" -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
+      default -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
           : qWatchRoomParticipant.countDistinct().asc();
-      default -> throw new IllegalArgumentException("Unsupported sort field: " + sortBy);
     };
 
     OrderSpecifier<?> secondarySort = isDesc ? qWatchRoom.id.desc() : qWatchRoom.id.asc();

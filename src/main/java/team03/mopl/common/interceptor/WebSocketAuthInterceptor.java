@@ -33,8 +33,8 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     log.debug("STOMP Command: {}", accessor.getCommand());
     log.debug("Session ID: {}", accessor.getSessionId());
 
-    // CONNECT 명령이 아니면 통과
-    if (!StompCommand.CONNECT.equals(accessor.getCommand())) {
+    // CONNECT, SUBSCRIBE 명령이 아니면 통과
+    if (!StompCommand.CONNECT.equals(accessor.getCommand()) && !StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
       log.info("preSend - Non-CONNECT message 처리 건너뜀");
       return message;
     }

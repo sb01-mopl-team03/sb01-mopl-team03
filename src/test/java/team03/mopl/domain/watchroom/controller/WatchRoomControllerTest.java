@@ -26,6 +26,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.common.dto.CursorPageResponseDto;
+import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
@@ -63,12 +66,21 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
       UUID contentId = UUID.randomUUID();
+      Content content = Content.builder()
+          .id(contentId)
+          .title("테스트콘텐츠")
+          .description("테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+      ContentDto contentDto = ContentDto.from(content);
+
       String title = "실시간 시청방 테스트용 이름";
 
       WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId, title);
       String requestBody = objectMapper.writeValueAsString(request);
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, title ,"테스트용 콘텐츠 제목", ownerId, "유저1",
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, title, contentDto, ownerId, "유저1",
           LocalDateTime.now(), 1L);
 
       when(watchRoomService.create(request)).thenReturn(responseDto);
@@ -81,7 +93,7 @@ class WatchRoomControllerTest {
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
           .andExpect(jsonPath("$.id").value(roomId.toString()))
           .andExpect(jsonPath("$.ownerId").value(ownerId.toString()))
-          .andExpect(jsonPath("$.contentTitle").value("테스트용 콘텐츠 제목"));
+          .andExpect(jsonPath("$.contentDto.title").value("테스트콘텐츠"));
     }
 
     @Test
@@ -100,12 +112,36 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "아빠가유령임","인터스텔라", ownerId, "유저1",
-          LocalDateTime.now(), 1L);
-      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "명작","장고", ownerId, "유저1",
-          LocalDateTime.now(), 2L);
-      WatchRoomDto responseDto3 = new WatchRoomDto(roomId,"456번참가자" ,"오징어게임5", ownerId, "유저1",
-          LocalDateTime.now(), 3L);
+      Content content1 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("인터스텔라")
+          .description("인터스텔라 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+
+      Content content2 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("장고")
+          .description("장고 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+
+      Content content3 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("오징어게임5")
+          .description("오징어게임 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+
+      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "아빠가유령임", ContentDto.from(content1),
+          ownerId, "유저1", LocalDateTime.now(), 1L);
+      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "명작", ContentDto.from(content2), ownerId,
+          "유저1", LocalDateTime.now(), 2L);
+      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "456번참가자", ContentDto.from(content3),
+          ownerId, "유저1", LocalDateTime.now(), 3L);
 
       List<WatchRoomDto> watchRoomDtos = List.of(responseDto1, responseDto2, responseDto3);
       CursorPageResponseDto<WatchRoomDto> responseDtos =
@@ -137,9 +173,16 @@ class WatchRoomControllerTest {
     void success() throws Exception {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
+      Content content = Content.builder()
+          .id(UUID.randomUUID())
+          .title("인터스텔라")
+          .description("인터스텔라 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트시청방이름","테스트 콘텐츠 제목", ownerId, "유저1",
-          LocalDateTime.now(), 1L);
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트시청방이름", ContentDto.from(content),
+          ownerId, "유저1", LocalDateTime.now(), 1L);
 
       when(watchRoomService.getById(roomId)).thenReturn(responseDto);
 
@@ -151,7 +194,7 @@ class WatchRoomControllerTest {
           .andExpect(jsonPath("$.id").exists())  // 모든 요소가 id를 가지는지
           .andExpect(jsonPath("$.id").value(roomId.toString()))
           .andExpect(jsonPath("$.ownerId").value(ownerId.toString()))
-          .andExpect(jsonPath("$.contentTitle").value("테스트 콘텐츠 제목"));
+          .andExpect(jsonPath("$.contentDto.title").value("인터스텔라"));
     }
 
     @Test
