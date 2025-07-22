@@ -17,7 +17,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import team03.mopl.common.dto.Cursor;
-import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
@@ -130,10 +129,23 @@ class CursorCodecUtilTest {
       UUID testId = UUID.randomUUID();
       LocalDateTime testDate = LocalDateTime.now();
 
+      ContentDto contentDto = new ContentDto(
+          testId,
+          testDate,
+          "테스트 컨텐츠",
+          "테스트컨텐츠",
+          "콘텐츠 설명",
+          ContentType.MOVIE,
+          testDate.minusDays(1),
+          "https://youtube.com/watch?v=test",
+          "https://image.png",
+          BigDecimal.valueOf(2.5)
+      );
+
       WatchRoomDto lastItem = new WatchRoomDto(
           testId,
           "테스트 시청방",
-          "테스트 컨텐츠",
+          contentDto,
           UUID.randomUUID(),
           "테스트 방장",
           testDate,
@@ -155,10 +167,10 @@ class CursorCodecUtilTest {
       assertEquals(testDate.toString(), decodedSortByCreatedAt.lastValue());
       assertEquals("1", decodedSortByParticipantcount.lastValue());
     }
-    
+
     @Test
     @DisplayName("null 입력될 시 기본값 TITLE 기준 기본 커서 객체 생성")
-    void shouldReturnSortByTitleResultWithNull(){
+    void shouldReturnSortByTitleResultWithNull() {
       // given
       UUID testId = UUID.randomUUID();
       LocalDateTime testDate = LocalDateTime.now();
@@ -186,15 +198,28 @@ class CursorCodecUtilTest {
 
     @Test
     @DisplayName("null 입력될 시 기본값 participantcount 기준 기본 커서 객체 생성")
-    void shouldReturnSortByParticipantcountResultWithNull(){
+    void shouldReturnSortByParticipantcountResultWithNull() {
       // given
       UUID testId = UUID.randomUUID();
       LocalDateTime testDate = LocalDateTime.now();
 
+      ContentDto contentDto = new ContentDto(
+          testId,
+          testDate,
+          "테스트 컨텐츠",
+          "테스트컨텐츠",
+          "콘텐츠 설명",
+          ContentType.MOVIE,
+          testDate.minusDays(1),
+          "https://youtube.com/watch?v=test",
+          "https://image.png",
+          BigDecimal.valueOf(2.5)
+      );
+
       WatchRoomDto lastItem = new WatchRoomDto(
           testId,
           "테스트 시청방",
-          "테스트 컨텐츠",
+          contentDto,
           UUID.randomUUID(),
           "테스트 방장",
           testDate,
@@ -216,10 +241,23 @@ class CursorCodecUtilTest {
       UUID testId = UUID.randomUUID();
       LocalDateTime testDate = LocalDateTime.now();
 
+      ContentDto contentDto = new ContentDto(
+          testId,
+          testDate,
+          "테스트 컨텐츠",
+          "테스트컨텐츠",
+          "콘텐츠 설명",
+          ContentType.MOVIE,
+          testDate.minusDays(1),
+          "https://youtube.com/watch?v=test",
+          "https://image.png",
+          BigDecimal.valueOf(2.5)
+      );
+
       WatchRoomDto lastItem = new WatchRoomDto(
           testId,
           "테스트 시청방",
-          "테스트 컨텐츠",
+          contentDto,
           UUID.randomUUID(),
           "테스트 방장",
           testDate,
