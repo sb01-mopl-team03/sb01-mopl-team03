@@ -43,8 +43,10 @@ public class PlaylistServiceImpl implements PlaylistService {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
 
+    String nameNormalized = NormalizerUtil.normalize(request.name());
     Playlist playlist = Playlist.builder()
         .name(request.name())
+        .nameNormalized(nameNormalized)
         .user(user)
         .isPublic(request.isPublic())
         .build();
@@ -81,26 +83,34 @@ public class PlaylistServiceImpl implements PlaylistService {
     return playlists.stream().map(PlaylistDto::from).toList();
   }
 
-  // TODO: 검색 속도 리팩토링
   @Override
   @Transactional(readOnly = true)
-  public List<PlaylistDto> getAllByKeyword(String keyword) {
-    // 검색어를 정규화
-    String normalizedSearchName = NormalizerUtil.normalize(keyword);
+  public List<PlaylistDto> searchPlaylists(String keyword, UUID currentUserId) {
+    String normalizedKeyword = NormalizerUtil.normalize(keyword);
 
-    // 모든 플레이리스트를 가져와서 이름으로 필터링
-    List<Playlist> allPlaylists = playlistRepository.findAll();
-
-    List<Playlist> matchingPlaylists = allPlaylists.stream()
-        .filter(playlist -> {
-          String normalizedPlaylistName = NormalizerUtil.normalize(playlist.getName());
-          return normalizedPlaylistName.contains(normalizedSearchName);
-        })
-        .toList();
+    List<Playlist> matchingPlaylists = playlistRepository
+        .searchPlaylistsWithNormalizedKeyword(normalizedKeyword, currentUserId);
 
     return matchingPlaylists.stream()
         .map(PlaylistDto::from)
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<PlaylistDto> getUserPlaylists(UUID targetUserId, UUID currentUserId) {
+    log.info("getUserPlaylists - targetUserId: {}, currentUserId: {}", targetUserId, currentUserId);
+
+    List<Playlist> playlists;
+
+    if (targetUserId.equals(currentUserId)) {
+      playlists = playlistRepository.findAllByUserId(targetUserId);
+    } else {
+      playlists = playlistRepository.findPublicPlaylistsByUserId(targetUserId);
+    }
+
+    log.info("getUserPlaylists - 조회된 플레이리스트 수: {}", playlists.size());
+    return playlists.stream().map(PlaylistDto::from).toList();
   }
 
   @Override
