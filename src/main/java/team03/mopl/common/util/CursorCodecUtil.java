@@ -25,6 +25,7 @@ public class CursorCodecUtil {
   public Cursor decodeCursor(String encodedCursor) {
     log.info("decodeCursor - cursor 값 Base64 디코딩 시작");
     if (encodedCursor == null) {
+      log.warn("null 입력으로 기본 커서 객체를 반환");
       return new Cursor(null, null);
     }
     try {
@@ -37,7 +38,6 @@ public class CursorCodecUtil {
     } catch (Exception e) {
       log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
       return new Cursor(null, null);
-//      throw new RuntimeException(e);
     }
   }
 
