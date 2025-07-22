@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,6 +31,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
@@ -72,6 +74,9 @@ class WatchRoomServiceImplTest {
 
   @Mock
   private ObjectMapper objectMapper;
+
+  @Mock
+  private CursorCodecUtil codecUtil;
 
   @InjectMocks
   private WatchRoomServiceImpl watchRoomService;
@@ -247,7 +252,7 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when
@@ -274,7 +279,7 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when
@@ -304,11 +309,11 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
@@ -348,15 +353,16 @@ class WatchRoomServiceImplTest {
           .thenReturn(queryResult);
 
       // 커서 디코딩 시 objectMapper mock 설정
-      when(objectMapper.readValue(eq(jsonCursor), eq(Cursor.class)))
-          .thenReturn(new Cursor("1", "test-id"));
+      when(codecUtil.decodeCursor(any(String.class))).thenReturn(
+          new Cursor("1", "test-id")
+      );
 
       // 결과 인코딩 시에는 정상 동작
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
@@ -369,11 +375,14 @@ class WatchRoomServiceImplTest {
       assertEquals(1, result.size());
 
       // 커서 디코딩 호출 검증
-      verify(objectMapper).readValue(anyString(), eq(Cursor.class));
+//      verify(objectMapper).readValue(anyString(), eq(Cursor.class));
+      verify(codecUtil).decodeCursor(any(String.class));
 
       // 커서 인코딩 호출 검증
-      verify(objectMapper).writeValueAsString(any(Cursor.class));
+//      verify(objectMapper).writeValueAsString(any(Cursor.class));
+      verify(codecUtil).encodeNextCursor(any(WatchRoomDto.class), isNull());
     }
+
 
     @Test
     @DisplayName("커서 디코딩 에러 시 디폴트 조회")
@@ -392,24 +401,24 @@ class WatchRoomServiceImplTest {
           .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
+      when(codecUtil.decodeCursor(invalidCursor)).thenReturn(new Cursor(null, null));
+
       when(watchRoomParticipantRepository
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
       // 결과 인코딩 시에는 정상 동작
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
 
       // then
       assertEquals(2, result.data().size());
-      // 디코딩 시 예와 발생 검증
-      assertThrows(IllegalArgumentException.class, () -> Base64.getUrlDecoder().decode(invalidCursor));
       // 예외 발생했지만 정상 조회 검증
       verify(watchRoomParticipantRepository).getAllWatchRoomContentWithHeadcountDtoPaginated(
           argThat(dto -> dto.getCursor() != null && dto.getCursor().lastId() == null)
@@ -436,9 +445,11 @@ class WatchRoomServiceImplTest {
           .thenReturn(queryResult);
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
-      when(objectMapper.writeValueAsString(any(Cursor.class)))
+//      when(objectMapper.writeValueAsString(any(Cursor.class)))
+//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
+      when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       // when

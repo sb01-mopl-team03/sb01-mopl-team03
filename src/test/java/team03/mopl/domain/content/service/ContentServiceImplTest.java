@@ -32,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.content.dto.ContentDto;
@@ -49,10 +50,10 @@ class ContentServiceImplTest {
   private ContentRepository contentRepository;
 
   @Mock
-  private ReviewServiceImpl reviewService;
-
+  private CursorCodecUtil codecUtil;
+  
   @Mock
-  private ObjectMapper objectMapper;
+  private ReviewServiceImpl reviewService;
 
   @InjectMocks
   private ContentServiceImpl contentService;
@@ -136,7 +137,11 @@ class ContentServiceImplTest {
           any(), any(), anyString(), anyString(), any(), any(), anyInt()
       )).thenReturn(contents);
 
-      when(objectMapper.writeValueAsString(any(Cursor.class))).thenReturn(
+//      when(objectMapper.writeValueAsString(any(Cursor.class))).thenReturn(
+//          "{\"lastId\":\"some-id\",\"lastValue\":\"title+some-num\"}"
+//      );
+
+      when(codecUtil.encodeNextCursor(any(ContentDto.class), any(String.class))).thenReturn(
           "{\"lastId\":\"some-id\",\"lastValue\":\"title+some-num\"}"
       );
 
@@ -202,5 +207,4 @@ class ContentServiceImplTest {
       verify(contentRepository, times(1)).save(content);
     }
   }
-  
 }
