@@ -32,13 +32,6 @@ public class ContentServiceImpl implements ContentService {
   //
   private final CursorCodecUtil codecUtil;
 
-  @Override
-  public List<ContentDto> getAll() {
-    return contentRepository.findAll()
-        .stream().map(ContentDto::from)
-        .toList();
-  }
-
   /**
    * 컨텐츠 데이터 목록을 커서 기반 페이지네이션으로 조회합니다.
    * <p>
