@@ -197,7 +197,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     switch (request.videoControlAction()) {
       case PLAY -> watchRoom.play();
-      case PAUSE -> watchRoom.pause();
+      case PAUSE -> watchRoom.pause(request.currentTime());
       case SEEK -> watchRoom.seekTo(request.currentTime());
       default -> throw new IllegalArgumentException("지원하지 않는 비디오 제어");
     }
