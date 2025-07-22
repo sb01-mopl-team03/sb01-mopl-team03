@@ -23,6 +23,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.assertFalse;
 
@@ -184,6 +185,7 @@ class EmitterServiceTest {
   }
 
   private final TaskExecutor directExecutor = Runnable::run; //동기적 실행 트리거
+
   @Test
   @DisplayName("sendNotificationToMember: 등록된 모든 emitters 에 캐시 저장 후 전송한다")
   void sendNotificationToMember_sendsAndCaches() throws IOException {
@@ -221,6 +223,7 @@ class EmitterServiceTest {
     verify(emitter2, times(2))
         .send(any(SseEmitter.SseEventBuilder.class));
   }
+
   @Test
   @DisplayName("sendInitNotification: 정상적으로 CONNECTED 이벤트 전송")
   void sendInitNotification_sendsConnectedEvent() throws Exception {
@@ -249,6 +252,95 @@ class EmitterServiceTest {
     // 그리고 send는 한 번 시도된다
     verify(emitter, times(1))
         .send(any(SseEmitter.SseEventBuilder.class));
+  }
+
+  @Mock
+  ScheduledExecutorService retryScheduler;
+
+  @Test
+  @DisplayName("sendNotificationWithRetry: non-IOException failure 시 retryScheduler.schedule() 호출")
+  void sendNotificationWithRetry_nonIOExceptionFailure_schedulesRetry() {
+    // 1) notificationExecutor 를 동기 실행하는 executor 로 교체
+    ReflectionTestUtils.setField(emitterService, "notificationExecutor", directExecutor);
+    // 2) retryScheduler 에는 Mockito mock 을 주입
+    ReflectionTestUtils.setField(emitterService, "retryScheduler", retryScheduler);
+
+    // given
+    UUID userId = UUID.randomUUID();
+    Notification notification = new Notification(userId, NotificationType.DM_RECEIVED, "테스트 메시지");
+
+    // emitter 하나만 등록
+    String emitterId = userId + "_one";
+    SseEmitter emitter = mock(SseEmitter.class);
+    given(emitterRepository.findAllEmittersByUserIdPrefix(userId.toString()))
+        .willReturn(Map.of(emitterId, emitter));
+
+    // 캐시 저장 단계에서 RuntimeException 을 던지도록 설정 (IOException 은 아니므로 catch 블록 밖으로 빠져나감)
+    doThrow(new RuntimeException("cache-fail"))
+        .when(emitterCacheRepository).saveNotificationCache(anyString(), eq(notification));
+
+    // when: attempt = 1 으로 호출
+    emitterService.sendNotificationWithRetry(userId, notification, 1);
+
+    // then: attempt < 3 이므로 retryScheduler.schedule(...) 이 한 번 호출되어야 함
+    verify(retryScheduler).schedule(any(Runnable.class), eq(200L), eq(TimeUnit.MILLISECONDS));
+  }
+
+  @Test
+  @DisplayName("sendNotificationWithRetry: 세 번째 시도 실패 시 retryScheduler.schedule() 미호출")
+  void sendNotificationWithRetry_thirdAttemptFailure_doesNotScheduleRetry() {
+    // 1) notificationExecutor 를 동기 실행 executor 로 바꿔서 내부 로직을 바로 실행
+    ReflectionTestUtils.setField(emitterService, "notificationExecutor", directExecutor);
+    // 2) retryScheduler 에 Mockito mock 주입
+    ReflectionTestUtils.setField(emitterService, "retryScheduler", retryScheduler);
+
+    // given
+    UUID userId = UUID.randomUUID();
+    Notification notification = new Notification(userId, NotificationType.DM_RECEIVED, "최종 실패 테스트");
+
+    // emitter 하나만 등록
+    String emitterId = userId + "_final";
+    SseEmitter emitter = mock(SseEmitter.class);
+    given(emitterRepository.findAllEmittersByUserIdPrefix(userId.toString()))
+        .willReturn(Map.of(emitterId, emitter));
+
+    // 캐시 저장 단계에서 RuntimeException 을 던지도록 설정
+    doThrow(new RuntimeException("forced-failure"))
+        .when(emitterCacheRepository).saveNotificationCache(anyString(), eq(notification));
+
+    // when: attempt=3 로 호출 (최종 실패 조건)
+    emitterService.sendNotificationWithRetry(userId, notification, 3);
+
+    // then: attempt >= 3 이므로 retryScheduler.schedule() 이 절대 호출되지 않아야 함
+    verify(retryScheduler, never()).schedule(any(Runnable.class), anyLong(), any(TimeUnit.class));
+  }
+
+
+
+  @Test
+  @DisplayName("sendNotificationWithRetry: 세 번째(마지막) 시도 실패 시 재시도 스케줄되지 않는다")
+  void whenLastAttemptFails_thenDoesNotScheduleRetry() throws IOException {
+    UUID userId = UUID.randomUUID();
+    String userIdStr = userId.toString();
+    String emitterId = userId + "_one";
+    SseEmitter emitter = mock(SseEmitter.class);
+    Notification notification = new Notification(userId, NotificationType.DM_RECEIVED, "Test");
+    // notificationExecutor 에도 directExecutor 주입
+    ReflectionTestUtils.setField(emitterService, "notificationExecutor", directExecutor);
+    // retryScheduler 교체
+    ReflectionTestUtils.setField(emitterService, "retryScheduler", retryScheduler);
+
+    // emitterRepository 가 이 하나만 리턴
+    when(emitterRepository.findAllEmittersByUserIdPrefix(userIdStr)).thenReturn(Map.of(emitterId, emitter));
+
+    // emitter.send() 가 무조건 실패하도록 세팅
+    doThrow(new RuntimeException("fail")).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    // attempt=3 로 호출
+    emitterService.sendNotificationWithRetry(userId, notification, 3).join();
+
+    // attempt==3 이므로 retryScheduler 가 호출되면 안 된다
+    verifyNoInteractions(retryScheduler);
   }
 
   @Test
@@ -340,6 +432,7 @@ class EmitterServiceTest {
     // 스텁하지 않은 mock 의 awaitTermination 은 false 를 반환하므로 shutdownNow() 까지 호출되는 시나리오입니다.
     verify(mockExecutor).shutdownNow();
   }
+
   @Test
   @DisplayName("deleteById - 등록된 모든 Emitter 연결이 삭제된다")
   void deleteById_shouldDeleteAllRegisteredEmitters() {

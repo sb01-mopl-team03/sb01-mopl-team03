@@ -41,7 +41,7 @@ public class EmitterService {
   // 각 emitter의 heartbeat 작업을 추적하기 위한 맵
   private final ConcurrentHashMap<String, ScheduledFuture<?>> heartbeatTasks = new ConcurrentHashMap<>();
 
-  public SseEmitter subscribe(UUID userId, String lastNotificationId ) {
+  public SseEmitter subscribe(UUID userId, String lastNotificationId) {
 
     // 기존 연결 정리 먼저 수행
     cleanupExistingConnections(userId);
@@ -320,7 +320,7 @@ public class EmitterService {
                 safeDeleteEmitter(emitterId);
                 failCount++;
               }
-            } catch (Exception e) {
+            } catch (IOException e) {
               log.warn("SSE 알림 전송 실패: emitterId={}, 에러={}", emitterId, e.getMessage());
               safeDeleteEmitter(emitterId);
               failCount++;
