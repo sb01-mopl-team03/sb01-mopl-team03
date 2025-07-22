@@ -10,19 +10,10 @@ import team03.mopl.domain.curation.entity.KeywordContent;
 
 public interface KeywordContentRepository extends JpaRepository<KeywordContent, UUID> {
 
-  List<KeywordContent> findByKeywordId(UUID keywordId);
-
   boolean existsByKeywordIdAndContentId(UUID keywordId, UUID contentId);
 
-  @Query(value = """
-      SELECT * FROM keyword_contents kc 
-      WHERE kc.keyword_id = :keywordId 
-      ORDER BY kc.score DESC, kc.content_id ASC 
-      LIMIT 30
-      """, nativeQuery = true)
-  List<KeywordContent> findTop30ByKeywordIdOrderByScoreDesc(
-      @Param("keywordId") UUID keywordId
-  );
+  List<KeywordContent> findByKeywordIdAndScoreGreaterThanEqualOrderByScoreDesc(
+      UUID keywordId, double score);
 
   // 키워드별 점수 존재 여부 확인
   boolean existsByKeywordId(@Param("keywordId") UUID keywordId);

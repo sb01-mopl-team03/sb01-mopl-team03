@@ -3,6 +3,8 @@ package team03.mopl.domain.content.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,13 +17,9 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   boolean existsByDataId(String dataId);
 
-  // 배치 처리를 위한 페이징 조회
-  @Query(value = """
-        SELECT * FROM contents c 
-        ORDER BY c.id 
-        LIMIT :limit OFFSET :offset
-        """, nativeQuery = true)
-  List<Content> findAllWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+  @Query(value = "SELECT c FROM Content c",
+      countQuery = "SELECT count(c) FROM Content c")
+  Page<Content> findAllContents(Pageable pageable);
 
   // 최근 TMDB 콘텐츠 조회 (예: 최근 1시간 내)
   @Query("SELECT c FROM Content c WHERE c.createdAt >= :since AND c.contentType IN ('MOVIE', 'TV')")
@@ -39,13 +37,5 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
     return findRecentSportsContents(LocalDateTime.now().minusHours(1));
   }
 
-  @Query("SELECT c FROM Content c WHERE c.createdAt >= :since")
-  List<Content> findRecentContents(@Param("since") LocalDateTime since);
-
-  default List<Content> findRecentContents(int daysBack) {
-    return findRecentContents(LocalDateTime.now().minusDays(daysBack));
-  }
-
-  @Query("SELECT c FROM Content c ORDER BY c.id LIMIT :limit OFFSET :offset")
-  List<Content> findAllWithOffset(@Param("offset") int offset, @Param("limit") int limit);
+  List<Content> findByTitleNormalizedContaining(String normalizedKeyword);
 }

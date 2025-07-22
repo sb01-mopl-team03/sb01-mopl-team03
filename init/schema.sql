@@ -57,8 +57,23 @@ CREATE TABLE "keyword_contents"
     FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
+-- 점수 필터링 최적화
 CREATE INDEX idx_keyword_content_keyword_score
-    ON keyword_contents (keyword_id, score DESC, content_id ASC);
+    ON keyword_contents (keyword_id, score DESC);
+
+-- 점수 범위 검색용 인덱스 추가
+CREATE INDEX idx_keyword_content_score_range
+    ON keyword_contents (keyword_id) WHERE score >= 0.5;
+
+-- Contents 테이블 인덱스들
+CREATE INDEX CONCURRENTLY idx_content_title_normalized
+    ON contents (title_normalized);
+
+CREATE INDEX CONCURRENTLY idx_content_title_normalized_gin
+    ON contents USING gin(to_tsvector('simple', title_normalized));
+
+CREATE INDEX CONCURRENTLY idx_content_title_normalized_rating
+    ON contents (title_normalized, avg_rating DESC NULLS LAST);
 
 -- 리뷰 테이블
 CREATE TABLE "reviews"
