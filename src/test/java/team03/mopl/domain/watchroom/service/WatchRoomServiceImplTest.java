@@ -252,8 +252,6 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-//      when(objectMapper.writeValueAsString(any(Cursor.class)))
-//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
       when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
@@ -281,8 +279,6 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-//      when(objectMapper.writeValueAsString(any(Cursor.class)))
-//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
       when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
@@ -313,8 +309,6 @@ class WatchRoomServiceImplTest {
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
-//      when(objectMapper.writeValueAsString(any(Cursor.class)))
-//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
       when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
@@ -359,15 +353,11 @@ class WatchRoomServiceImplTest {
           .thenReturn(queryResult);
 
       // 커서 디코딩 시 objectMapper mock 설정
-//      when(objectMapper.readValue(eq(jsonCursor), eq(Cursor.class)))
-//          .thenReturn(new Cursor("1", "test-id"));
       when(codecUtil.decodeCursor(any(String.class))).thenReturn(
           new Cursor("1", "test-id")
       );
 
       // 결과 인코딩 시에는 정상 동작
-//      when(objectMapper.writeValueAsString(any(Cursor.class)))
-//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
       when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
@@ -393,19 +383,7 @@ class WatchRoomServiceImplTest {
       verify(codecUtil).encodeNextCursor(any(WatchRoomDto.class), isNull());
     }
 
-    /**
-     * @deprecated to. 유진님 이 테스트에 대해 논의가 필요해 주석 작성합니다!
-     *
-     * 원래는 서비스 내에서 커서 디코딩 예외 처리를 검증하기에 가능한 테스트였는데,
-     * 로직이 CursorCodecUtil로 분리되면서 지금은 서비스의 책임과 유틸의 책임이 한 테스트에 섞여있는 상태가 되었습니다.
-     *
-     * 디코딩 관련 유틸 검증 부분은 CursorCodecUtil 테스트로 이관하거나 삭제하거나 (이 부분도 논의 필요! util를 제외하기로 했기 때문에)
-     * 여기서는 실패 상황을 가정한 서비스 로직만 테스트하면 좋을 것 같습니다.
-     *
-     * 일단 급한대로 Mocking으로 통과하게만 뒀습니다!
-     * 나중에 확인하시고 방향 정하시고 얘기해주시면 주석 삭제 및 추가 처리는 제가 하겠습니다!
-     *  편하게 말씀해주세요!
-     */
+
     @Test
     @DisplayName("커서 디코딩 에러 시 디폴트 조회")
     void successWithAbnormalCursor() throws JsonProcessingException {
@@ -423,15 +401,13 @@ class WatchRoomServiceImplTest {
           .map(watchRoom -> new WatchRoomContentWithParticipantCountDto(watchRoom, content, 1L))
           .toList();
 
-      when(codecUtil.decodeCursor(invalidCursor)).thenReturn(new Cursor(null, null)); // 긴급 처치
+      when(codecUtil.decodeCursor(invalidCursor)).thenReturn(new Cursor(null, null));
 
       when(watchRoomParticipantRepository
           .getAllWatchRoomContentWithHeadcountDtoPaginated(any(WatchRoomSearchInternalDto.class)))
           .thenReturn(queryResult);
 
       // 결과 인코딩 시에는 정상 동작
-//      when(objectMapper.writeValueAsString(any(Cursor.class)))
-//          .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
       when(codecUtil.encodeNextCursor(any(WatchRoomDto.class), isNull()))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
@@ -443,9 +419,6 @@ class WatchRoomServiceImplTest {
 
       // then
       assertEquals(2, result.data().size());
-      // 디코딩 시 예와 발생 검증
-      assertThrows(IllegalArgumentException.class,
-          () -> Base64.getUrlDecoder().decode(invalidCursor));
       // 예외 발생했지만 정상 조회 검증
       verify(watchRoomParticipantRepository).getAllWatchRoomContentWithHeadcountDtoPaginated(
           argThat(dto -> dto.getCursor() != null && dto.getCursor().lastId() == null)
