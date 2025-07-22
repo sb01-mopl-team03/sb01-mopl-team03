@@ -5,11 +5,14 @@ import static org.mockito.BDDMockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -65,5 +68,70 @@ class EmitterServiceHeartbeatTest {
     verify(emitter).send(isA(SseEmitter.SseEventBuilder.class));
 
 
+  }
+
+  private Method sendHeartbeatMethod() throws NoSuchMethodException {
+    Method m = EmitterService.class
+        .getDeclaredMethod("sendHeartbeatSafely", SseEmitter.class, String.class);
+    m.setAccessible(true);
+    return m;
+  }
+
+  @Test
+  @DisplayName("sendHeartbeatSafely - Emitter already completed 시 IllegalStateException 을 RuntimeException으로 래핑한다")
+  void whenEmitterCompleted_thenRuntimeExceptionWithEmitterAlreadyCompleted() throws Exception {
+    SseEmitter emitter = mock(SseEmitter.class);
+    // send() 호출 시 IllegalStateException 발생
+    doThrow(new IllegalStateException("Emitter already completed")).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    Method m = sendHeartbeatMethod();
+    //실제 던져진 예외를 꺼내서 메시지 내용 확인
+    InvocationTargetException ite = assertThrows(
+        InvocationTargetException.class,
+        () -> m.invoke(emitterService, emitter, "em1")
+    );
+
+    Throwable rte = ite.getTargetException();
+    assertInstanceOf(RuntimeException.class, rte);
+    assertEquals("Emitter already completed", rte.getMessage());
+    assertInstanceOf(IllegalStateException.class, rte.getCause());
+  }
+
+  @Test
+  @DisplayName("sendHeartbeatSafely - Broken pipe 등 IOException 시 RuntimeException으로 래핑한다")
+  void whenBrokenPipe_thenRuntimeExceptionWithConnectionBroken() throws Exception {
+    SseEmitter emitter = mock(SseEmitter.class);
+    doThrow(new IOException("Connection broken"))
+        .when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    Method m = sendHeartbeatMethod();
+    InvocationTargetException ite = assertThrows(
+        InvocationTargetException.class,
+        () -> m.invoke(emitterService, emitter, "em2")
+    );
+
+    Throwable rte = ite.getTargetException();
+    assertInstanceOf(RuntimeException.class, rte);
+    assertEquals("Connection broken", rte.getMessage());
+    assertInstanceOf(IOException.class, rte.getCause());
+  }
+
+  @Test
+  @DisplayName("sendHeartbeatSafely - 기타 Exception 시 RuntimeException으로 래핑한다")
+  void whenOtherException_thenRuntimeExceptionWithHeartbeatFailed() throws Exception {
+    SseEmitter emitter = mock(SseEmitter.class);
+    doThrow(new RuntimeException("Heartbeat failed"))
+        .when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+    Method m = sendHeartbeatMethod();
+    InvocationTargetException ite = assertThrows(
+        InvocationTargetException.class,
+        () -> m.invoke(emitterService, emitter, "em3")
+    );
+
+    Throwable rte = ite.getTargetException();
+    assertInstanceOf(RuntimeException.class, rte);
+    assertEquals("Heartbeat failed", rte.getMessage());
+    assertInstanceOf(RuntimeException.class, rte.getCause());
   }
 }

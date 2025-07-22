@@ -340,6 +340,27 @@ class EmitterServiceTest {
     // 스텁하지 않은 mock 의 awaitTermination 은 false 를 반환하므로 shutdownNow() 까지 호출되는 시나리오입니다.
     verify(mockExecutor).shutdownNow();
   }
+  @Test
+  @DisplayName("deleteById - 등록된 모든 Emitter 연결이 삭제된다")
+  void deleteById_shouldDeleteAllRegisteredEmitters() {
+    // given
+    UUID userId = UUID.randomUUID();
+    String emitterId1 = userId + "_conn1";
+    String emitterId2 = userId + "_conn2";
 
+    // 두 개의 emitter 가 등록돼 있다고 가정
+    SseEmitter dummy1 = new SseEmitter();
+    SseEmitter dummy2 = new SseEmitter();
+    given(emitterRepository.findAllEmittersByUserIdPrefix(userId.toString()))
+        .willReturn(Map.of(emitterId1, dummy1, emitterId2, dummy2));
+
+    // when
+    emitterService.deleteById(userId);
+
+    // then
+    // cleanupExistingConnections() 내부에서 deleteEmitterById(emitterId) 가 호출돼야 한다
+    verify(emitterRepository, times(1)).deleteEmitterById(emitterId1);
+    verify(emitterRepository, times(1)).deleteEmitterById(emitterId2);
+  }
 
 }
