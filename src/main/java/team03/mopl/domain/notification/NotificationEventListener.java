@@ -61,7 +61,7 @@ public class NotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onPlaylistSubscribed(PlaylistSubscribedEvent event) {
     // 알림 내용은 필요에 따라 가공
-    String content = "당신의 플레이리스트가 새로운 구독자를 얻었습니다.";
+    String content = "당신의 "+event.title()+" 플레이리스트에 새로운 구독자가 등록되었습니다.";
     notificationService.sendNotification(
         new NotificationDto(event.ownerId(), NotificationType.PLAYLIST_SUBSCRIBED, content)
     );

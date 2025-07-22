@@ -56,9 +56,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .build();
     Subscription savedSubscription = subscriptionRepository.save(subscription);
 
+    // 플레이리스트가 구독되면 플레이리스트 소유자에게 알림
     eventPublisher.publishEvent(new PlaylistSubscribedEvent(
         playlist.getId(),
         playlist.getUser().getId(),
+        playlist.getName(),
         user.getId()
     ));
 

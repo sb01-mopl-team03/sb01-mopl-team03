@@ -84,9 +84,9 @@ class NotificationEventListenerTest {
     UUID playlistId   = UUID.randomUUID();
     UUID ownerId      = UUID.randomUUID();
     UUID subscriberId = UUID.randomUUID();
-
+    String title = "title";
     PlaylistSubscribedEvent event =
-        new PlaylistSubscribedEvent(playlistId, ownerId, subscriberId);
+        new PlaylistSubscribedEvent(playlistId, ownerId, title, subscriberId);
 
     // when
     listener.onPlaylistSubscribed(event);
