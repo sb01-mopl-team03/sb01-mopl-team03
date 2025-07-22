@@ -125,7 +125,7 @@ public class EmitterService {
   /**
    * 더 안전한 Emitter 종료 - 상태 확인 포함
    */
-  private void safelyCloseEmitterWithCheck(SseEmitter emitter) {
+ /* private void safelyCloseEmitterWithCheck(SseEmitter emitter) {
     if (emitter == null) {
       return;
     }
@@ -149,12 +149,12 @@ public class EmitterService {
       // 연결이 끊어진 상태 - 리소스만 정리
       log.debug("Emitter 연결 끊어짐, 리소스 정리: {}", e.getMessage());
     }
-  }
+  }*/
 
   /**
    * 안전한 Emitter 종료 - 응답 상태 확인 후 처리
    */
-  private void safelyCloseEmitter(SseEmitter emitter, String message) {
+  /*private void safelyCloseEmitter(SseEmitter emitter, String message) {
     try {
       // 먼저 간단한 테스트 메시지를 보내서 연결 상태 확인
       emitter.send(SseEmitter.event().comment("connection-test"));
@@ -178,7 +178,7 @@ public class EmitterService {
         log.debug("강제 종료도 실패 (정상): {}", ex.getMessage());
       }
     }
-  }
+  }*/
 
   /**
    * 토큰 검증을 포함한 Heartbeat 스케줄링
@@ -388,6 +388,7 @@ public class EmitterService {
           emitter.send(SseEmitter.event().id(cacheKey).data(entry.getValue()));
           resendCount++;
         }
+        //전송 성공하면 캐시 비우는 로직 추가??
       } catch (Exception e) {
         log.warn("누락된 알림 재전송 실패: cacheKey = {}, 에러 = {}", cacheKey, e.getMessage());
       }
