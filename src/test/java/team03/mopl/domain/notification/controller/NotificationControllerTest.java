@@ -1,39 +1,51 @@
 package team03.mopl.domain.notification.controller;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team03.mopl.common.dto.Cursor;
@@ -60,6 +72,9 @@ class NotificationControllerTest {
   @Mock
   private EmitterService emitterService;
 
+  @InjectMocks
+  private NotificationController notificationController;
+
   @Autowired
   NotificationService notificationService;
   private UUID receiverId;
@@ -67,6 +82,17 @@ class NotificationControllerTest {
   @BeforeEach
   void setUp() {
     receiverId = UUID.randomUUID();
+  }
+
+  private CustomUserDetails principal(UUID userId) {
+    User user = User.builder()
+        .id(userId)
+        .email("test@test.com")
+        .name("tester")
+        .password("pw")
+        .role(Role.USER)
+        .build();
+    return new CustomUserDetails(user);
   }
 
   @TestConfiguration
@@ -107,19 +133,74 @@ class NotificationControllerTest {
     mockMvc.perform(get("/api/notifications/subscribe").with(authentication(authToken))).andExpect(status().isOk());
   }
 
-  /*@Test
-  @DisplayName("인증되지 않은 사용자의 SSE 구독 시도")
-  void subscribe_UnauthorizedUser_ShouldReturnErrorStream() throws Exception {
-    mockMvc.perform(get("/subscribe")
-            .header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE))
-        .andExpect(status().isOk()) // 상태는 200이지만...
-        .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
-        .andExpect(result -> {
-          String content = result.getResponse().getContentAsString();
-          // SSE 포맷이지만 에러 메시지가 들어갔는지 확인
-          assertTrue(content.contains("Unauthorized"), "응답에 Unauthorized 메시지가 포함되어야 합니다.");
-        });
-  }*/
+  @Test
+  @DisplayName("subscribe – 인증 정보 없을 때, 즉시 에러 상태의 SseEmitter 반환")
+  void subscribe_whenUserIsNull_shouldReturnErrorEmitter() throws Exception {
+    // given: 인증 정보(null), Last-Event-ID 도 null
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    // when
+    SseEmitter emitter = notificationController.subscribe(null, null, response);
+
+    // then: completeWithError(new RuntimeException("Unauthorized: 인증이 필요합니다")) 경로로 빠졌으므로,
+    // 실패한 emitter는 테스트에서 인위적으로 send() 호출 시 이미 완료된 상태라 IllegalStateException을 던진다.
+    IllegalStateException ex = assertThrows(IllegalStateException.class,
+        () -> emitter.send(SseEmitter.event().name("test")),
+        "인증 실패 시 send()는 IllegalStateException을 발생시켜야 합니다");
+
+    // 에러 메시지에 “Unauthorized” 포함 여부도 확인
+    assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"),
+        "에러 메시지에 'Unauthorized'가 포함되어야 합니다");
+  }
+
+
+  @Test
+  @DisplayName("case1 : emitter != null 인 상태에서 예외")
+  void subscribe_whenErrorAfterEmitterCreated_callsCompleteWithError_andReturnsSameEmitter() {
+    // given
+    String lastEventId = "abc";
+    SseEmitter spyEmitter = Mockito.spy(new SseEmitter());
+    when(emitterService.subscribe(eq(receiverId), eq(lastEventId))).thenReturn(spyEmitter);
+
+    // sendInitNotification에서 예외 유발 → catch 진입
+    doThrow(new RuntimeException("SSE 구독 중 예외 발생")).when(emitterService).sendInitNotification(spyEmitter);
+
+    // when
+    SseEmitter returned = notificationController.subscribe(principal(receiverId), lastEventId, new MockHttpServletResponse());
+
+    // then
+    assertSame(spyEmitter, returned);
+    verify(spyEmitter).completeWithError(any(Throwable.class));
+  }
+
+  @Test
+  @DisplayName("subscribe - subscribe 중 예외로 emitter가 null인 경우: 새 emitter 생성 후 completeWithError")
+  void subscribe_errorBeforeEmitterCreated_returnsNewCompletedEmitter() {
+    // given
+    UUID userId = UUID.randomUUID();
+    User user = User.builder()
+        .id(userId)
+        .email("u@test.com").name("u").password("pw").role(Role.USER)
+        .build();
+    CustomUserDetails principal = new CustomUserDetails(user);
+    String lastEventId = "abc";
+
+    // subscribe 호출 자체에서 예외 발생 -> emitter는 null로 남음
+    when(emitterService.subscribe(eq(userId), eq(lastEventId))).thenThrow(new RuntimeException("subscribe fail"));
+
+    // when
+    SseEmitter returned = notificationController.subscribe(principal, lastEventId, new MockHttpServletResponse());
+
+    // then
+    Assertions.assertNotNull(returned);
+    System.out.println("returned = " + returned);
+
+    // 이미 completeWithError 된 상태이므로 send하면 예외가 난다
+    assertThrows(IllegalStateException.class,
+        () -> returned.send(SseEmitter.event().comment("won't send")));
+  }
+
+
   @Test
   @WithMockUser
   void testGetNotifications() throws Exception {
@@ -129,7 +210,8 @@ class NotificationControllerTest {
     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
         customUserDetails.getAuthorities());
 
-    NotificationDto dto = new NotificationDto(notificationId, user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED, LocalDateTime.of(2025, 7, 1, 12, 0));
+    NotificationDto dto = new NotificationDto(notificationId, user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED,
+        LocalDateTime.of(2025, 7, 1, 12, 0));
 
     List<NotificationDto> notifications = List.of(dto);
 
@@ -155,7 +237,8 @@ class NotificationControllerTest {
     LocalDateTime now = LocalDateTime.now();
     UUID notificationId = UUID.randomUUID();
     for (int i = 0; i < 30; i++) {
-      NotificationDto notificationDto = new NotificationDto(notificationId, receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED, now.minusSeconds(30 - i));
+      NotificationDto notificationDto = new NotificationDto(notificationId, receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED,
+          now.minusSeconds(30 - i));
       if (i < 20) {
         firstPageData.add(notificationDto);
       } else {
@@ -201,36 +284,40 @@ class NotificationControllerTest {
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-  /*@Test
-  @DisplayName("유저의 읽은 알림 전체 삭제 API - 정상 동작")
-  void deleteNotificationByUserId() throws Exception {
+  @Test
+  @DisplayName("DELETE /api/notifications/{id} : 특정 알림 삭제 -> 204, 서비스 호출 확인")
+  void deleteNotification_success() throws Exception {
     // given
-    User user = User.builder()
-        .id(UUID.randomUUID())
-        .email("testuser@example.com")
-        .password("password")
-        .role(Role.USER)
-        .build();
-
-    CustomUserDetails customUserDetails = new CustomUserDetails(user);
-    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-        customUserDetails,
-        null,
-        customUserDetails.getAuthorities()
-    );
-    SecurityContextHolder.getContext().setAuthentication(authToken);
+    UUID notifId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    var auth = new UsernamePasswordAuthenticationToken(principal(userId), null,
+        principal(userId).getAuthorities());
 
     // when & then
-    mockMvc.perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .delete("/api/notifications/userId")
-                .with(authentication(authToken))
-                .with(csrf())
-        )
+    mockMvc.perform(delete("/api/notifications/{notificationId}", notifId)
+            .with(csrf())
+            .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
         .andExpect(status().isNoContent());
 
-    verify(notificationService).deleteNotificationByUserId(user.getId());
-  }*/
+    then(notificationService).should().deleteNotification(eq(notifId));
+  }
+
+  @Test
+  @DisplayName("DELETE /api/notifications : 본인 알림 전체 삭제 -> 204, 서비스 호출 확인")
+  void deleteNotificationByUser_success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    var details = principal(userId);
+    var auth = new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities());
+
+    // when & then
+    mockMvc.perform(delete("/api/notifications")
+            .with(csrf())
+            .with(SecurityMockMvcRequestPostProcessors.authentication(auth)))
+        .andExpect(status().isNoContent());
+
+    then(notificationService).should().deleteNotificationByUserId(eq(userId));
+  }
 
 
 }
