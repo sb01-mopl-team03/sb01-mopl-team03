@@ -1,6 +1,8 @@
 package team03.mopl.domain.follow.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -16,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,7 +27,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.user.Role;
@@ -61,20 +63,51 @@ class FollowControllerTest {
         .role(Role.USER) // 또는 Role.ADMIN
         .build();
     CustomUserDetails principal = new CustomUserDetails(follower);
-    FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(post("/api/follows")
+    mockMvc.perform(post("/api/follows/{followingId}", followingId)
             .with(csrf())
             .with(user(principal))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(new ObjectMapper().writeValueAsString(request)))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
+
     verify(followService).follow(followerId, followingId);
+  }
+  
+  @Test
+  @WithMockUser(roles = "USER")
+  @DisplayName("팔로우하는 사람과 팔로우 대상이 같다")
+  void follow_BadRequestFollowingException() throws Exception {
+    // Arrange
+    UUID userId = UUID.randomUUID(); // 로그인된 사용자 ID
+    String followingId = userId.toString(); // 자기 자신 팔로우 시도
+
+    User user = User.builder()
+        .id(userId)
+        .email("test@example.com")
+        .name("self-follower")
+        .password("encoded_pw")
+        .role(Role.USER)
+        .build();
+
+    CustomUserDetails principal = new CustomUserDetails(user);
+
+    // Act & Assert
+    mockMvc.perform(post("/api/follows/{followingId}", followingId)
+            .with(csrf())
+            .with(user(principal))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("BAD_REQUEST_FOLLOWING"))
+        .andExpect(jsonPath("$.message").value("로그인된 사람과 팔로우하는 사람이 다릅니다"));
+
+    // followService는 호출되면 안됨
+    verify(followService, never()).follow(any(), any());
   }
 
 
   @Test
+  @WithMockUser(roles = "USER")
   void testUnfollow() throws Exception {
     UUID followerId = UUID.randomUUID();
     UUID followingId = UUID.randomUUID();
@@ -86,18 +119,46 @@ class FollowControllerTest {
         .role(Role.USER) // 또는 Role.ADMIN
         .build();
     CustomUserDetails principal = new CustomUserDetails(follower);
-    FollowRequest request = new FollowRequest(followerId, followingId);
 
-    mockMvc.perform(delete("/api/follows")
+    mockMvc.perform(delete("/api/follows/{followingId}", followingId)
             .with(csrf())
             .with(user(principal))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(new ObjectMapper().writeValueAsString(request)))
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
     verify(followService).unfollow(followerId, followingId);
   }
 
+  @Test
+  @WithMockUser(roles = "USER")
+  @DisplayName("언팔로우하는 사람과 언팔로우 대상이 같다")
+  void unfollow_BadRequestFollowingException() throws Exception {
+    // Arrange
+    UUID userId = UUID.randomUUID(); // 로그인된 사용자 ID
+    String followingId = userId.toString(); // 자기 자신 팔로우 시도
+
+    User user = User.builder()
+        .id(userId)
+        .email("test@example.com")
+        .name("self-follower")
+        .password("encoded_pw")
+        .role(Role.USER)
+        .build();
+
+    CustomUserDetails principal = new CustomUserDetails(user);
+
+    // Act & Assert
+    mockMvc.perform(delete("/api/follows/{followingId}", followingId)
+            .with(csrf())
+            .with(user(principal))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("BAD_REQUEST_FOLLOWING"))
+        .andExpect(jsonPath("$.message").value("로그인된 사람과 팔로우하는 사람이 다릅니다"));
+
+    // followService는 호출되면 안됨
+    verify(followService, never()).follow(any(), any());
+  }
 
   @Test
   @WithMockUser(username = "testuser", roles = "USER")

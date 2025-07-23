@@ -1,13 +1,9 @@
 package team03.mopl.api;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
@@ -48,10 +44,6 @@ public interface UserApi {
   @Operation(summary = "전체 사용자 조회")
   @GetMapping
   ResponseEntity<List<UserResponse>> findAll();
-
-  @Operation(summary = "기본 프로필 이미지 목록 조회")
-  @GetMapping("/profiles")
-  ResponseEntity<List<String>> getProfileImages();
 
   @Operation(summary = "사용자 리뷰 목록 조회")
   @GetMapping("/{userId}/reviews")

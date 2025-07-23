@@ -30,11 +30,6 @@ public class ContentController implements ContentApi {
   private final ContentService contentService;
   private final ReviewService reviewService;
 
-//  @GetMapping
-//  public ResponseEntity<List<ContentDto>> getAll() {
-//    return ResponseEntity.ok(contentService.getAll());
-//  }
-
   @Override
   @GetMapping("/{contentId}")
   public ResponseEntity<ContentDto> getContent(@PathVariable("contentId") UUID id) {
