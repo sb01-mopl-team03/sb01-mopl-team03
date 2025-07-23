@@ -71,6 +71,11 @@ public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content>
     if (item.getStrVideo() != null) {
       strVideo = item.getStrVideo();
     }
+
+    if (strVideo.isEmpty()) {
+      log.debug("YouTube URL 부재로 스킵: item.getStrFilename()={}", item.getStrFilename());
+      return null;
+    }
     log.debug("비디오 URL 확인: strVideo={}", strVideo);
 
     // 5. content 객체 생성및 반환
