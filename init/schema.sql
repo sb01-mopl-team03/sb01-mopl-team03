@@ -79,12 +79,13 @@ CREATE TABLE "reviews"
 -- 플레이리스트 테이블
 CREATE TABLE "playlists"
 (
-    "id"         UUID PRIMARY KEY        NOT NULL,
-    "creator_id" UUID                    NOT NULL,
-    "name"       VARCHAR(100)            NULL,
-    "is_public"  BOOLEAN                 NOT NULL,
-    "created_at" TIMESTAMP DEFAULT now() NOT NULL,
-    "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
+    "id"                UUID PRIMARY KEY        NOT NULL,
+    "creator_id"        UUID                    NOT NULL,
+    "name"              VARCHAR(100)            NULL,
+    "name_normalized"   VARCHAR(100)            NULL,
+    "is_public"         BOOLEAN                 NOT NULL,
+    "created_at"        TIMESTAMP DEFAULT now() NOT NULL,
+    "updated_at"        TIMESTAMP DEFAULT now() NOT NULL,
     FOREIGN KEY ("creator_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.domain.user.*;
@@ -15,6 +16,7 @@ import team03.mopl.domain.review.dto.ReviewDto;
 import team03.mopl.domain.subscription.dto.SubscriptionDto;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
+import team03.mopl.jwt.CustomUserDetails;
 
 @Tag(name = "User API", description = "사용자 관리 및 사용자 관련 정보 조회 API")
 @RequestMapping("/api/users")
@@ -55,7 +57,9 @@ public interface UserApi {
 
   @Operation(summary = "사용자 재생목록 목록 조회")
   @GetMapping("/{userId}/playlists")
-  ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId);
+  ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(
+      @PathVariable UUID userId,
+      @AuthenticationPrincipal CustomUserDetails userDetails);
 
   @Operation(summary = "사용자 구독 채널 목록 조회")
   @GetMapping("/{userId}/subscriptions")
