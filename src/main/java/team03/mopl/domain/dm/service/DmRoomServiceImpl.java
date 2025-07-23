@@ -184,12 +184,14 @@ public class DmRoomServiceImpl implements DmRoomService {
     //나간 유저 리스트에 송수신자가 모두 포함된다면 방과 메시지 삭제 로직 실행
 
     Set<UUID> outUsers = dmRoom.getOutUsers();
+    System.out.println("outUsers = " + outUsers);
     if( outUsers.contains(dmRoom.getSenderId()) && outUsers.contains(dmRoom.getReceiverId()) ) {
       log.info("deleteRoom - 아무도 남지 않아 방과 메시지 전체 삭제: roomId={}", roomId);
       List<Dm> messages = dmRoom.getMessages();
       for (Dm message : messages) {
         log.info("deleteRoom - 메시지 삭제: messageId={}", message.getId());
         dmService.deleteDm(message.getId());
+        System.out.println("DmRoomServiceImpl.deleteRoom");
       }
       dmRoomRepository.delete(dmRoom);
     }
