@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.domain.content.dto.ContentDto;
+import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 
 @Slf4j
@@ -85,6 +86,20 @@ public class CursorCodecUtil {
     }
     Cursor cursor = new Cursor(lastValue, lastId);
 
+    return encodeNextCursor(cursor);
+  }
+
+  /**
+   * 커서 페이지네이션의 마지막 데이터를 인코딩하여 반환합니다.
+   * 다른 서비스에서 호출됩니다.
+   *
+   * @param lastItem NotificationDto 타입의 아이템
+   */
+  public String encodeNextCursor(NotificationDto lastItem) {
+    Cursor cursor = new Cursor(
+        lastItem.getCreatedAt().toString(),
+        lastItem.getId().toString()
+    );
     return encodeNextCursor(cursor);
   }
 
