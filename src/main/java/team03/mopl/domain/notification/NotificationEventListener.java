@@ -39,7 +39,7 @@ public class NotificationEventListener {
     UUID playlistId = event.playlistId();
     List<Subscription> subs = subscriptionRepository.findByPlaylistId(playlistId);
     if (subs.isEmpty()) {
-      log.info("구독자가 없어 알림 전송 없음: playlistId={}", playlistId);
+      log.debug("구독자가 없어 알림 전송 없음: playlistId={}", playlistId);
       return;
     }
 

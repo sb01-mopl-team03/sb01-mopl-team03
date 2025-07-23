@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.domain.notification.dto.NotificationDto;
-import team03.mopl.domain.notification.entity.Notification;
 import team03.mopl.domain.notification.entity.NotificationType;
 import team03.mopl.domain.notification.events.FollowingPostedPlaylistEvent;
 import team03.mopl.domain.notification.events.PlaylistSubscribedEvent;
