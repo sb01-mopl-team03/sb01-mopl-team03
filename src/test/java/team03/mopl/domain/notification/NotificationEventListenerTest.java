@@ -28,6 +28,7 @@ import team03.mopl.domain.notification.service.EmitterService;
 import team03.mopl.domain.notification.service.NotificationService;
 import team03.mopl.domain.subscription.Subscription;
 import team03.mopl.domain.subscription.SubscriptionRepository;
+import team03.mopl.domain.user.User;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationEventListenerTest {
@@ -42,39 +43,38 @@ class NotificationEventListenerTest {
 
   @DisplayName("플레이리스트 업데이트 시 구독자에게 알림 전송")
   @Test
-  void handlePlaylistUpdated_withSubscribers() {
+  void handlePlaylistUpdated_withSubscribers_shouldSendNotifications() {
     // given
     UUID playlistId = UUID.randomUUID();
     UUID ownerId = UUID.randomUUID();
-    String title = "테스트 플레이리스트";
+    UUID userId1 = UUID.randomUUID();
+    UUID userId2 = UUID.randomUUID();
 
-    UUID subUserId = UUID.randomUUID();
-    Subscription sub = mock(Subscription.class, RETURNS_DEEP_STUBS);
-    when(sub.getUser().getId()).thenReturn(subUserId);
+    PlaylistUpdatedEvent event = new PlaylistUpdatedEvent(playlistId, ownerId, "업데이트된 플리제목");
 
-    when(subscriptionRepository.findByPlaylistId(playlistId))
-        .thenReturn(List.of(sub));
-    when(notificationRepository.saveAll(anyList()))
-        .thenAnswer(inv -> inv.getArgument(0));
+    // Mock user and subscription
+    User user1 = mock(User.class);
+    User user2 = mock(User.class);
+    when(user1.getId()).thenReturn(userId1);
+    when(user2.getId()).thenReturn(userId2);
 
-    PlaylistUpdatedEvent event = new PlaylistUpdatedEvent(playlistId, ownerId, title);
+    Subscription sub1 = mock(Subscription.class);
+    Subscription sub2 = mock(Subscription.class);
+    when(sub1.getUser()).thenReturn(user1);
+    when(sub2.getUser()).thenReturn(user2);
+
+    List<Subscription> subs = List.of(sub1, sub2);
+    when(subscriptionRepository.findByPlaylistId(playlistId)).thenReturn(subs);
 
     // when
     listener.handlePlaylistUpdated(event);
 
     // then
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-    verify(notificationRepository).saveAll(captor.capture());
-    List<Notification> saved = captor.getValue();
-
-    assertThat(saved).hasSize(1);
-    Notification n = saved.get(0);
-    assertThat(n.getReceiverId()).isEqualTo(subUserId);
-    assertThat(n.getType()).isEqualTo(NotificationType.PLAYLIST_UPDATED); // 필드명 확인!
-    assertThat(n.getContent()).contains(title);
-
-    verify(emitterService).sendNotificationToMember(eq(subUserId), any(Notification.class));
+    verify(notificationService, times(2)).sendNotification(argThat(dto ->
+        dto.getNotificationType() == NotificationType.PLAYLIST_SUBSCRIBED &&
+            dto.getContent().contains("업데이트되었습니다") &&
+            (dto.getReceiverId().equals(userId1) || dto.getReceiverId().equals(userId2))
+    ));
   }
 
   @DisplayName("플레이리스트가 구독되면 플레이리스트 소유자에게 알림을 보낸다")
@@ -98,7 +98,7 @@ class NotificationEventListenerTest {
     NotificationDto dto = captor.getValue();
     assertThat(dto.getReceiverId()).isEqualTo(ownerId);
     assertThat(dto.getNotificationType()).isEqualTo(NotificationType.PLAYLIST_SUBSCRIBED);
-    assertThat(dto.getContent()).contains("당신의 플레이리스트가 새로운 구독자를 얻었습니다."); // 메시지 검증
+    assertThat(dto.getContent()).contains("플레이리스트에 새로운 구독자가 등록되었습니다."); // 메시지 검증
 
     // 다른 상호작용 없는지
     verifyNoMoreInteractions(notificationService);
@@ -109,15 +109,15 @@ class NotificationEventListenerTest {
   void onFollowingPostedPlaylist_public_playlist_sends_notifications() {
     // given
     UUID creatorId = UUID.randomUUID();
-    String creatorName = "creator";
     UUID playlistId = UUID.randomUUID();
     String playlistName = "새 플리!";
+    String creatorName = "creator";
     FollowingPostedPlaylistEvent event =
         new FollowingPostedPlaylistEvent(creatorId, creatorName, playlistId, playlistName, true);
 
     FollowResponse follower1 = new FollowResponse(UUID.randomUUID(), "user1", "img1", null, null);
     FollowResponse follower2 = new FollowResponse(UUID.randomUUID(), "user2", "img2", null, null);
-    when(followService.getFollowing(creatorId)).thenReturn(List.of(follower1, follower2));
+    when(followService.getFollowers(creatorId)).thenReturn(List.of(follower1, follower2));
 
     // when
     listener.onFollowingPostedPlaylist(event);
@@ -133,7 +133,7 @@ class NotificationEventListenerTest {
     assertThat(dtos).allSatisfy(dto -> {
       assertThat(dto.getNotificationType()).isEqualTo(NotificationType.FOLLOWING_POSTED_PLAYLIST);
       assertThat(dto.getContent()).contains(playlistName);
-      assertThat(dto.getContent()).contains(creatorId.toString());
+      assertThat(dto.getContent()).contains(creatorName);
     });
 
     verifyNoMoreInteractions(notificationService);
@@ -165,13 +165,13 @@ class NotificationEventListenerTest {
     FollowingPostedPlaylistEvent event =
         new FollowingPostedPlaylistEvent(creatorId, creatorName, UUID.randomUUID(), "empty world", true);
 
-    when(followService.getFollowing(creatorId)).thenReturn(List.of());
+    when(followService.getFollowers(creatorId)).thenReturn(List.of());
 
     // when
     listener.onFollowingPostedPlaylist(event);
 
     // then
-    verify(followService).getFollowing(creatorId);
+    verify(followService).getFollowers(creatorId);
     verifyNoInteractions(notificationService);
   }
 }
