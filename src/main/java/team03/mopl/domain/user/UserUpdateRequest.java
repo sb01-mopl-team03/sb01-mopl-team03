@@ -13,7 +13,10 @@ public record UserUpdateRequest(
     String newName,
 
     @Schema(description = "현재 비밀번호 (변경 확인용)", example = "mopl1234!")
-    @NotBlank(message = "비밀번호는 필수입니다.")
+    @NotBlank(message = "현재 비밀번호는 필수입니다.")
+    String currentPassword,
+
+    @Schema(description = "새 비밀번호", example = "newPassword123!")
     @Size(min = 8, max = 60, message = "비밀번호는 8자이상 60자 이하입니다.")
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*]).{8,}$",
         message = "비밀번호는 최소 8자 이상, 숫자, 문자, 특수문자를 포함해야 합니다")
