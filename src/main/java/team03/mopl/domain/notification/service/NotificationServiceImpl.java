@@ -12,6 +12,7 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.notification.NotificationNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.dto.NotificationPagingDto;
@@ -26,8 +27,7 @@ public class NotificationServiceImpl implements NotificationService{
   private final NotificationRepository notificationRepository;
   private final NotificationRepositoryCustom notificationRepositoryCustom;
   private final EmitterService emitterService;
-  private final ObjectMapper objectMapper;
-
+  private final CursorCodecUtil cursorCodecUtil;
   @Override
   @Transactional
   public UUID sendNotification(NotificationDto notificationDto) {
@@ -44,6 +44,7 @@ public class NotificationServiceImpl implements NotificationService{
   }
 
   @Override
+  @Transactional(readOnly = true)
   public CursorPageResponseDto<NotificationDto> getNotifications(NotificationPagingDto notificationPagingDto, UUID receiverId) {
     log.info("getNotifications - 알림 내역 조회: receiverId={}", receiverId);
     String cursor = notificationPagingDto.getCursor();
@@ -51,12 +52,12 @@ public class NotificationServiceImpl implements NotificationService{
     String mainCursorValue = null;
     String subCursorValue = null;
     if (cursor != null && !cursor.isEmpty()) {
-      decodeCursor = decodeCursor(cursor);
+      decodeCursor = cursorCodecUtil.decodeCursor(cursor);
       mainCursorValue = decodeCursor.lastValue();
       subCursorValue = decodeCursor.lastId();
     }
     int size = notificationPagingDto.getSize();
-    long totalElements = notificationRepository.count();
+    long totalElements = notificationRepository.countByReceiverId(receiverId);
     List<Notification> list = notificationRepositoryCustom.findByCursor(receiverId, size+1, mainCursorValue, subCursorValue);
     boolean hasNext = list.size() > size;
 
@@ -66,7 +67,8 @@ public class NotificationServiceImpl implements NotificationService{
     String nextCursor = null;
     if (hasNext) {
       //더 보낼게 있는 것들
-      nextCursor = dtoList.get(dtoList.size() - 1).getCreatedAt().toString();
+      //nextCursor = dtoList.get(dtoList.size() - 1).getCreatedAt().toString();
+      nextCursor = cursorCodecUtil.encodeNextCursor(dtoList.get(dtoList.size()-1));
       dtoList = dtoList.subList(0, size); //20개가 넘치니 자름
     }
     log.info("getNotifications - 알림 내역 조회 완료: receiverId={}, 알림 수={}", receiverId, dtoList.size());
@@ -76,16 +78,6 @@ public class NotificationServiceImpl implements NotificationService{
         .size(dtoList.size())
         .totalElements(totalElements)
         .hasNext(hasNext).build();
-  }
-
-  private Cursor decodeCursor(String base64) {
-    try {
-      String json = new String(Base64.getDecoder().decode(base64));
-      return objectMapper.readValue(json, Cursor.class);
-    } catch (Exception e) {
-      log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
-      throw new IllegalArgumentException("잘못된 커서 형식입니다.");
-    }
   }
 
   @Override

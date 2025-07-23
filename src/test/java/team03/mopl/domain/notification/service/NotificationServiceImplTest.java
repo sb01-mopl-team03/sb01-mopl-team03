@@ -35,6 +35,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.notification.NotificationNotFoundException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.dto.NotificationPagingDto;
 import team03.mopl.domain.notification.entity.Notification;
@@ -61,15 +62,18 @@ class NotificationServiceImplTest {
   private UUID receiverId;
   private ObjectMapper objectMapper;
 
+  @Mock
+  private CursorCodecUtil cursorCodecUtil;
+
   @BeforeEach
   void setUp() {
     objectMapper = new ObjectMapper();
-
+    cursorCodecUtil = new CursorCodecUtil(objectMapper);
     notificationService = new NotificationServiceImpl(
         notificationRepository,
         notificationRepositoryCustom,
         emitterService,
-        objectMapper
+        cursorCodecUtil
     );
   }
   @Test
@@ -100,7 +104,7 @@ class NotificationServiceImplTest {
     Notification n2 = new Notification(receiverId, NotificationType.DM_RECEIVED, "DM 알림");
 
     // 커서 없이 20개 요청, 반환은 2개 (hasNext = false)
-    when(notificationRepository.count()).thenReturn(2L);
+    when(notificationRepository.countByReceiverId(receiverId)).thenReturn(2L);
     when(notificationRepositoryCustom.findByCursor(receiverId, 21, null, null)) // size + 1
         .thenReturn(List.of(n1, n2));
 
@@ -136,7 +140,7 @@ class NotificationServiceImplTest {
         .toList();
 
     // Mock repository
-    when(notificationRepository.count()).thenReturn((long) total);
+    when(notificationRepository.countByReceiverId(receiverId)).thenReturn((long) total);
     List<Integer> list = new ArrayList<>();
     // Custom repo 커서 로직 mock (페이지마다 커서 조건에 맞는 리스트 리턴)
     int pageCount = (int) Math.ceil((double) total / pageSize);
