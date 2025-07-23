@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
@@ -18,6 +19,7 @@ import team03.mopl.domain.watchroom.entity.QWatchRoom;
 import team03.mopl.domain.watchroom.entity.QWatchRoomParticipant;
 import team03.mopl.domain.content.QContent;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantRepositoryCustom {
@@ -112,6 +114,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
         break;
       default: //시청자 수
+        log.warn("applyCursorCondition - 지원하지 않는 정렬 형식");
         Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
         applyParticipantCountCursor(whereClause, cursorParticipantCount, UUID.fromString(cursor.lastId()), isDesc);
         break;
