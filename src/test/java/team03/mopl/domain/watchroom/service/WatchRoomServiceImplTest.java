@@ -308,7 +308,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
@@ -356,7 +356,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
@@ -401,7 +401,7 @@ class WatchRoomServiceImplTest {
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       // when
       CursorPageResponseDto<WatchRoomDto> result = watchRoomService.getAll(request);
@@ -409,7 +409,8 @@ class WatchRoomServiceImplTest {
       // then
       assertEquals(2, result.data().size());
       // 디코딩 시 예와 발생 검증
-      assertThrows(IllegalArgumentException.class, () -> Base64.getUrlDecoder().decode(invalidCursor));
+      assertThrows(IllegalArgumentException.class,
+          () -> Base64.getUrlDecoder().decode(invalidCursor));
       // 예외 발생했지만 정상 조회 검증
       verify(watchRoomParticipantRepository).getAllWatchRoomContentWithHeadcountDtoPaginated(
           argThat(dto -> dto.getCursor() != null && dto.getCursor().lastId() == null)
@@ -436,7 +437,7 @@ class WatchRoomServiceImplTest {
           .thenReturn(queryResult);
 
       when(watchRoomParticipantRepository
-        .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
+          .countWatchRoomContentWithHeadcountDto("테스트")).thenReturn(2L);
 
       when(objectMapper.writeValueAsString(any(Cursor.class)))
           .thenReturn("{\"lastValue\":\"1\",\"lastId\":\"test-id\"}");
@@ -531,6 +532,8 @@ class WatchRoomServiceImplTest {
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
           .title("테스트용 시청방")
+          .playTime(1.0)
+          .isPlaying(true)
           .owner(user)
           .content(content)
           .build();
@@ -545,6 +548,8 @@ class WatchRoomServiceImplTest {
 
       WatchRoomInfoDto expected = WatchRoomInfoDto.builder()
           .id(chatRoomId)
+          .playTime(1.0)
+          .isPlaying(true)
           .content(ContentDto.from(content))
           .participantsInfoDto(participantsInfoDto)
           .build();
@@ -556,6 +561,8 @@ class WatchRoomServiceImplTest {
           .thenReturn(false);
       when(watchRoomParticipantRepository.findByWatchRoom(watchRoom))
           .thenReturn(watchRoomParticipant);
+      when(watchRoomParticipantRepository.save(any(WatchRoomParticipant.class))).thenReturn(
+          watchRoomParticipant.get(0));
 
       //when
       WatchRoomInfoDto watchRoomInfoDto = watchRoomService
@@ -563,6 +570,8 @@ class WatchRoomServiceImplTest {
 
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.content().title(), watchRoomInfoDto.content().title());
+      assertTrue(watchRoomInfoDto.isPlaying());
+      assertEquals(1.0, watchRoomInfoDto.playTime());
       assertEquals(expected.participantsInfoDto().participantCount(),
           watchRoomInfoDto.participantsInfoDto().participantCount());
 
