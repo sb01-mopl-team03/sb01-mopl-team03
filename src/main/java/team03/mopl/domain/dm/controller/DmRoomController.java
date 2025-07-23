@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,6 +58,17 @@ public class DmRoomController implements DmRoomApi {
   ) {
     UUID userId = userDetails.getId();
     dmRoomService.deleteRoom(userId, roomId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  @PatchMapping("/{roomId}/reenter")
+  public ResponseEntity<Void> reenterRoom(
+      @PathVariable UUID roomId,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    UUID userId = userDetails.getId();
+    dmRoomService.reenterRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }
 }
