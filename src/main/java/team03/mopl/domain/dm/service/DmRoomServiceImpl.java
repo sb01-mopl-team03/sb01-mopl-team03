@@ -89,7 +89,7 @@ public class DmRoomServiceImpl implements DmRoomService {
     }
     Optional<DmRoom> optional = dmRoomRepository.findByRoomBetweenUsers(userA, userB);
     if (optional.isPresent()) {
-      DmRoom room = optional.get();
+      DmRoom room = optional.orElseThrow(DmRoomNotFoundException::new);
       // 둘 중 하나라도 outUsers에 포함되어 있으면?
       if (room.isOut(userA) || room.isOut(userB)) {
         throw new OutUserFromDmRoomException();
