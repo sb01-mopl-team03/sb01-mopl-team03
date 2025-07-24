@@ -1,28 +1,32 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -369,6 +373,29 @@ class DmRoomServiceImplTest {
     assertTrue(dmRoom.getOutUsers().contains(senderId)); // 자동 추가됨
     assertTrue(dmRoom.getOutUsers().contains(receiverId)); // receiver도 나감
     verify(dmRoomRepository).save(dmRoom);
+  }
+
+  @Test
+  @DisplayName("나간 유저가 findOrCreateRoom 호출 시 reenterRoom 통해 재진입된다")
+  void reenterAfterOut() {
+    // given
+    DmRoom room = new DmRoom(senderId, receiverId);
+    room.addOutUser(senderId); // A가 나간 상태라고 가정
+
+    when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+    when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
+    when(dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId)).thenReturn(Optional.of(room));
+    when(dmRoomRepository.findById(room.getId())).thenReturn(Optional.of(room));
+    // Spy를 써서 reenterRoom 호출 여부/동작 확인
+    DmRoomServiceImpl spyService = Mockito.spy(dmRoomService);
+
+    // when
+    DmRoomDto dto = spyService.findOrCreateRoom(senderId, receiverId);
+
+    // then
+    verify(spyService).reenterRoom(eq(senderId), eq(room.getId()));
+    assertFalse(room.isOut(senderId));                          // outUsers 에서 제거됐는지
+    Assertions.assertEquals(room.getId(), dto.getId());        // 기존 방 재사용 확인
   }
 
 }
