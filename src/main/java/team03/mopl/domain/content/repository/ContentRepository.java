@@ -21,6 +21,14 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
       countQuery = "SELECT count(c) FROM Content c")
   Page<Content> findAllContents(Pageable pageable);
 
+  // 배치 처리를 위한 페이징 조회
+  @Query(value = """
+        SELECT * FROM contents c 
+        ORDER BY c.id 
+        LIMIT :limit OFFSET :offset
+        """, nativeQuery = true)
+  List<Content> findAllWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+
   // 최근 TMDB 콘텐츠 조회 (예: 최근 1시간 내)
   @Query("SELECT c FROM Content c WHERE c.createdAt >= :since AND c.contentType IN ('MOVIE', 'TV')")
   List<Content> findRecentTmdbContents(@Param("since") LocalDateTime since);
@@ -38,4 +46,16 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
   }
 
   List<Content> findByTitleNormalizedContaining(String normalizedKeyword);
+
+  @Query("SELECT c FROM Content c WHERE c.createdAt >= :since")
+  List<Content> findRecentContents(@Param("since") LocalDateTime since);
+
+  default List<Content> findRecentContents(int daysBack) {
+    return findRecentContents(LocalDateTime.now().minusDays(daysBack));
+  }
+
+  @Query("SELECT c FROM Content c ORDER BY c.id LIMIT :limit OFFSET :offset")
+  List<Content> findAllWithOffset(@Param("offset") int offset, @Param("limit") int limit);
+
+  boolean existsByTitle(String title);
 }

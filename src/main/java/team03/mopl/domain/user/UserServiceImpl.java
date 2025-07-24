@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.common.exception.auth.InvalidPasswordException;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.follow.service.FollowService;
@@ -78,6 +79,12 @@ public class UserServiceImpl implements UserService {
 
     User user= userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
+
+    log.debug("입력된 현재 비밀번호: {}", request.currentPassword());
+    log.debug("DB 저장된 비밀번호: {}", user.getPassword());
+    if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+      throw new InvalidPasswordException();
+    }
 
     String encodedPassword = null;
     if(request.newPassword() != null){

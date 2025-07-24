@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.playlist.PlaylistContentAlreadyExistsException;
@@ -18,6 +19,8 @@ import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.util.NormalizerUtil;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.notification.events.FollowingPostedPlaylistEvent;
+import team03.mopl.domain.notification.events.PlaylistUpdatedEvent;
 import team03.mopl.domain.playlist.dto.PlaylistCreateRequest;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
 import team03.mopl.domain.playlist.dto.PlaylistUpdateRequest;
@@ -36,6 +39,7 @@ public class PlaylistServiceImpl implements PlaylistService {
   private final PlaylistRepository playlistRepository;
   private final UserRepository userRepository;
   private final ContentRepository contentRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   @Transactional
@@ -43,14 +47,26 @@ public class PlaylistServiceImpl implements PlaylistService {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
 
+    String nameNormalized = NormalizerUtil.normalize(request.name());
     Playlist playlist = Playlist.builder()
         .name(request.name())
+        .nameNormalized(nameNormalized)
         .user(user)
         .isPublic(request.isPublic())
         .build();
 
     Playlist savedPlaylist = playlistRepository.save(playlist);
     log.info("create - 플레이리스트 저장: 플레이리스트 생성자 ID = {}, 플레이리트스 ID = {}", userId, playlist.getId());
+
+    //해당 유저를 구독하고 있던 유저들에게 알림 전송
+    eventPublisher.publishEvent(new FollowingPostedPlaylistEvent(
+        userId,
+        user.getName(),
+        savedPlaylist.getId(),
+        savedPlaylist.getName(),
+        savedPlaylist.isPublic()
+    ));
+
     return PlaylistDto.from(savedPlaylist);
   }
 
@@ -81,26 +97,34 @@ public class PlaylistServiceImpl implements PlaylistService {
     return playlists.stream().map(PlaylistDto::from).toList();
   }
 
-  // TODO: 검색 속도 리팩토링
   @Override
   @Transactional(readOnly = true)
-  public List<PlaylistDto> getAllByKeyword(String keyword) {
-    // 검색어를 정규화
-    String normalizedSearchName = NormalizerUtil.normalize(keyword);
+  public List<PlaylistDto> searchPlaylists(String keyword, UUID currentUserId) {
+    String normalizedKeyword = NormalizerUtil.normalize(keyword);
 
-    // 모든 플레이리스트를 가져와서 이름으로 필터링
-    List<Playlist> allPlaylists = playlistRepository.findAll();
-
-    List<Playlist> matchingPlaylists = allPlaylists.stream()
-        .filter(playlist -> {
-          String normalizedPlaylistName = NormalizerUtil.normalize(playlist.getName());
-          return normalizedPlaylistName.contains(normalizedSearchName);
-        })
-        .toList();
+    List<Playlist> matchingPlaylists = playlistRepository
+        .searchPlaylistsWithNormalizedKeyword(normalizedKeyword, currentUserId);
 
     return matchingPlaylists.stream()
         .map(PlaylistDto::from)
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<PlaylistDto> getUserPlaylists(UUID targetUserId, UUID currentUserId) {
+    log.info("getUserPlaylists - targetUserId: {}, currentUserId: {}", targetUserId, currentUserId);
+
+    List<Playlist> playlists;
+
+    if (targetUserId.equals(currentUserId)) {
+      playlists = playlistRepository.findAllByUserId(targetUserId);
+    } else {
+      playlists = playlistRepository.findPublicPlaylistsByUserId(targetUserId);
+    }
+
+    log.info("getUserPlaylists - 조회된 플레이리스트 수: {}", playlists.size());
+    return playlists.stream().map(PlaylistDto::from).toList();
   }
 
   @Override
@@ -174,6 +198,13 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     // 8. Playlist 저장 (cascade로 PlaylistContent도 자동 저장)
     playlistRepository.save(playlist);
+
+    // 9. Playlist를 구독하고 있던 유저에게 알림 전송
+    eventPublisher.publishEvent(new PlaylistUpdatedEvent(
+        playlist.getId(),
+        playlist.getUser().getId(),
+        playlist.getName()
+    ));
   }
 
   @Override

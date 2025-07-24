@@ -16,7 +16,9 @@ public interface PlaylistService {
 
   List<PlaylistDto> getAllByUser(UUID userId);
 
-  List<PlaylistDto> getAllByKeyword(String keyword);
+  List<PlaylistDto> searchPlaylists(String keyword, UUID currentUserId);
+
+  List<PlaylistDto> getUserPlaylists(UUID targetUserId, UUID currentUserId);
 
   PlaylistDto update(UUID playlistId, PlaylistUpdateRequest request, UUID userId);
 

@@ -58,9 +58,11 @@ public class PlaylistController implements PlaylistApi {
   @Override
   @GetMapping("/search")
   public ResponseEntity<List<PlaylistDto>> getPlaylistsByKeyword(
-      @RequestParam(required = true) String keyword) {
+      @RequestParam(required = true) String keyword,
+      CustomUserDetails userDetails) {
 
-    List<PlaylistDto> playlistDtos = playlistService.getAllByKeyword(keyword);
+    UUID currentUserId = userDetails.getId();
+    List<PlaylistDto> playlistDtos = playlistService.searchPlaylists(keyword, currentUserId);
     return ResponseEntity.ok(playlistDtos);
   }
 
