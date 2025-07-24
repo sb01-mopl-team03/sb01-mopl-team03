@@ -22,12 +22,11 @@ public record UserCreateRequest(
 
     @Schema(description = "비밀번호", example = "mopl1234!")
     @NotBlank(message = "비밀번호는 필수입니다.")
-    //@Size(min = 8, max = 60, message = "비밀번호는 8자이상 60자 이하입니다.")
-    //@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*]).{8,}$",
-    //    message = "비밀번호는 최소 8자 이상, 숫자, 문자, 특수문자를 포함해야 합니다")
+    @Size(min = 8, max = 60, message = "비밀번호는 8자이상 60자 이하입니다.")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*]).{8,}$",
+        message = "비밀번호는 최소 8자 이상, 숫자, 문자, 특수문자를 포함해야 합니다")
     String password,
 
-    //String profileImage// /static/profile/woody.png
     @Schema(description = "프로필 이미지 파일 (선택)", type = "string", format = "binary")
     MultipartFile profile
 ) {

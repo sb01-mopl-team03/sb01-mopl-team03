@@ -53,7 +53,7 @@ public class UserController implements UserApi {
   @Override
   @PutMapping("/{userId}")
   public ResponseEntity<UserResponse> update(@PathVariable UUID userId,
-      @RequestPart UserUpdateRequest request,
+      @RequestPart("request") UserUpdateRequest request,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
     return ResponseEntity.ok(userService.update(userId,request,profile));
   }

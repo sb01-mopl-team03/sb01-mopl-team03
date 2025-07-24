@@ -33,6 +33,9 @@ public enum ErrorCode {
   DM_CONTENT_TOO_LONG(HttpStatus.BAD_REQUEST, "DM_002", "메시지 길이가 255자를 초과할 수 없습니다."),
   NO_ONE_MATCH_IN_DM_ROOM(HttpStatus.BAD_REQUEST, "DM_003", "채팅 방의 소속된 유저가 아닙니다."),
   DM_DECODING_ERROR(HttpStatus.BAD_REQUEST, "DM_004", "DM 디코딩 중 오류가 발생했습니다."),
+  OUT_USER_FROM_DM_ROOM(HttpStatus.BAD_REQUEST, "DM_005", "두 유저의 채팅방이 존재하며 한 유저가 남아있습니다."),
+  ALREADY_DM_ROOM_EXIST(HttpStatus.BAD_REQUEST, "DM_006", "두 유저의 채팅방이 이미 존재합니다."),
+  CANNOT_CREATE_DM_ROOM_SELF(HttpStatus.BAD_REQUEST, "DM_007", "자기 자신과 채팅방을 만들 수 없습니다."),
   //Follow
   FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "FOLLOW_001", "존재하지 않는 팔로우입니다."),
   ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_002", "이미 팔로우하고 있습니다."),
