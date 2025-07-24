@@ -31,10 +31,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 
 @DataJpaTest
 @Import({WatchRoomParticipantRepositoryImpl.class, QueryDslConfig.class})
-@TestPropertySource(properties = {
-    "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
-    "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
-})
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("시청방-사용자 레포지토리 단위 테스트")
 class WatchRoomParticipantRepositoryTest {
 
