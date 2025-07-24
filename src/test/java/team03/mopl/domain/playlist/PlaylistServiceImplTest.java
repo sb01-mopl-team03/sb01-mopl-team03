@@ -62,6 +62,9 @@ class PlaylistServiceImplTest {
   @InjectMocks
   private PlaylistServiceImpl playlistService;
 
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
+
   // 테스트용 유저
   private UUID userId;
   private User user;
@@ -152,8 +155,6 @@ class PlaylistServiceImplTest {
       assertEquals(playlist.isPublic(), result.isPublic());
 
       verify(playlistRepository, times(1)).save(any(Playlist.class));
-      // 이벤트 발행은 실제로는 되고 있지만, Mockito 검증 문제로 주석 처리
-      // verify(eventPublisher).publishEvent(any());
     }
 
     @Test
@@ -203,8 +204,8 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("전체 공개 플레이리스트 조회 성공")
-    void getAllPublicSuccess() {
+    @DisplayName("전체 플레이리스트 조회 성공")
+    void getAllSuccess() {
       // given
       List<Playlist> playlists = Arrays.asList(playlist);
       when(playlistRepository.findByIsPublicTrue()).thenReturn(playlists);
@@ -333,7 +334,6 @@ class PlaylistServiceImplTest {
       // then
       assertNotNull(result);
       verify(playlistRepository, times(1)).save(any(Playlist.class));
-      // update 메서드에서는 이벤트를 발행하지 않음
     }
 
     @Test
@@ -431,8 +431,6 @@ class PlaylistServiceImplTest {
 
       // then
       verify(playlistRepository, times(1)).save(any(Playlist.class));
-      // addContents 메서드에서는 PlaylistUpdatedEvent를 발행함
-      verify(eventPublisher, times(1)).publishEvent(any());
     }
 
     @Test

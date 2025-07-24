@@ -6,7 +6,7 @@ import team03.mopl.common.exception.ErrorCode;
 public class PrivatePlaylistSubscriptionException extends SubscriptionException {
 
   public PrivatePlaylistSubscriptionException() {
-    super(ErrorCode.REVIEW_NOT_FOUND);
+    super(ErrorCode.PRIVATE_PLAYLIST_SUBSCRIPTION_NOT_ALLOWED);
   }
 
   public PrivatePlaylistSubscriptionException(ErrorCode errorCode, Throwable cause) {
