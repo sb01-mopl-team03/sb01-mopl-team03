@@ -91,8 +91,10 @@ public class DmRoomServiceImpl implements DmRoomService {
     if (optional.isPresent()) {
       DmRoom room = optional.orElseThrow(DmRoomNotFoundException::new);
       // 둘 중 하나라도 outUsers에 포함되어 있으면?
-      if (room.isOut(userA) || room.isOut(userB)) {
-        throw new OutUserFromDmRoomException();
+      if (room.isOut(userA)) {
+        reenterRoom(userA, room.getId());
+      }else if (room.isOut(userB)) {
+        reenterRoom(userB, room.getId());
       }
       return DmRoomDto.from(sender.getName(), receiver.getName(), room);
     }
@@ -191,15 +193,6 @@ public class DmRoomServiceImpl implements DmRoomService {
       }
       dmRoomRepository.delete(dmRoom);
     }
-    /*if (dmRoom.nobodyInRoom()) {
-      log.info("deleteRoom - 아무도 남지 않아 방과 메시지 전체 삭제: roomId={}", roomId);
-      List<Dm> messages = dmRoom.getMessages();
-      for (Dm message : messages) {
-        log.info("deleteRoom - 메시지 삭제: messageId={}", message.getId());
-        dmService.deleteDm(message.getId());
-      }
-      dmRoomRepository.delete(dmRoom);
-    }*/
   }
 
 }

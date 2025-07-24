@@ -60,15 +60,4 @@ public class DmRoomController implements DmRoomApi {
     dmRoomService.deleteRoom(userId, roomId);
     return ResponseEntity.noContent().build();
   }
-
-  @Override
-  @PatchMapping("/{roomId}/reenter")
-  public ResponseEntity<Void> reenterRoom(
-      @PathVariable UUID roomId,
-      @AuthenticationPrincipal CustomUserDetails userDetails
-  ) {
-    UUID userId = userDetails.getId();
-    dmRoomService.reenterRoom(userId, roomId);
-    return ResponseEntity.ok().build();
-  }
 }
