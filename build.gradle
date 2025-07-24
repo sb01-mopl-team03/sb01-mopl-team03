@@ -81,9 +81,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    // OpenSearch Client (AWS용)
-    implementation 'org.opensearch.client:opensearch-java:2.8.0'
-    implementation 'org.opensearch.client:opensearch-rest-client:2.8.0'
+//    // OpenSearch Client (AWS용)
+//    implementation 'org.opensearch.client:opensearch-java:2.8.0'
+//    implementation 'org.opensearch.client:opensearch-rest-client:2.8.0'
 
     // AWS SDK v2 dependencies
     implementation 'software.amazon.awssdk:auth:2.20.+'
@@ -105,6 +105,13 @@ dependencies {
 
     // AWS S3
     implementation 'software.amazon.awssdk:s3:2.31.7'
+
+    // AWS SDK 1.x (더 간단함)
+    implementation 'com.amazonaws:aws-java-sdk-core:1.12.565'
+    implementation 'com.amazonaws:aws-java-sdk-opensearch:1.12.565'
+
+    // HTTP Client
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
