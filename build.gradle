@@ -73,6 +73,26 @@ dependencies {
     }
     implementation 'com.github.shin285:KOMORAN:3.3.9'
 
+    // AWS SDK v2를 사용한 요청 서명 라이브러리 (권장)
+    implementation 'software.amazon.awssdk:auth'
+    implementation 'org.apache.httpcomponents:httpclient' // RestClient가 내부적으로 사용
+
+    // Elasticsearch Client (로컬용)
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // OpenSearch Client (AWS용)
+    implementation 'org.opensearch.client:opensearch-java:2.8.0'
+    implementation 'org.opensearch.client:opensearch-rest-client:2.8.0'
+
+    // AWS SDK v2 dependencies
+    implementation 'software.amazon.awssdk:auth:2.20.+'
+    implementation 'software.amazon.awssdk:regions:2.20.+'
+    implementation 'software.amazon.awssdk:url-connection-client:2.20.+'  // 이게 중요!
+
+    // Jackson for JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.+'
+
     // Jakarta JAXB - 최신 버전 명시적 추가
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'
