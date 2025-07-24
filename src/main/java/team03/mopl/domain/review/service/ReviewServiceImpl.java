@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.content.ContentNotFoundException;
+import team03.mopl.common.exception.review.DuplicateReviewException;
 import team03.mopl.common.exception.review.ReviewDeleteDeniedException;
 import team03.mopl.common.exception.review.ReviewNotFoundException;
 import team03.mopl.common.exception.review.ReviewUpdateDeniedException;
@@ -44,6 +45,11 @@ public class ReviewServiceImpl implements ReviewService {
           log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", request.contentId());
           return new ContentNotFoundException();
         });
+
+    reviewRepository.findByUserId(user.getId()).ifPresent(review -> {
+      log.warn("이미 리뷰를 작성한 사용자입니다. 사용자 ID: {}", user.getId());
+      throw new DuplicateReviewException();
+    });
 
     Review review = Review.builder()
         .user(user)
