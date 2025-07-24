@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import team03.mopl.common.config.QueryDslConfig;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.domain.content.Content;
@@ -29,9 +30,11 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 
 @DataJpaTest
-@ActiveProfiles("test")
 @Import({WatchRoomParticipantRepositoryImpl.class, QueryDslConfig.class})
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // H2로 변경 방지
+@TestPropertySource(properties = {
+    "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
+    "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
+})
 @DisplayName("시청방-사용자 레포지토리 단위 테스트")
 class WatchRoomParticipantRepositoryTest {
 
