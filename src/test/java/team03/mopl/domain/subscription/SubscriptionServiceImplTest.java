@@ -17,9 +17,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
 import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
 import team03.mopl.common.exception.subscription.AlreadySubscribedException;
+import team03.mopl.common.exception.subscription.PrivatePlaylistSubscriptionException;
 import team03.mopl.common.exception.subscription.SelfSubscriptionNotAllowedException;
 import team03.mopl.common.exception.subscription.SubscriptionDeleteDeniedException;
 import team03.mopl.common.exception.subscription.SubscriptionNotFoundException;
@@ -34,6 +37,7 @@ import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("구독 서비스 테스트")
 class SubscriptionServiceImplTest {
 
@@ -62,6 +66,8 @@ class SubscriptionServiceImplTest {
 
   // 테스트용 플레이리스트
   private UUID playlistId;
+
+  @Mock
   private Playlist playlist;
 
   // 테스트용 구독
@@ -89,12 +95,12 @@ class SubscriptionServiceImplTest {
         .build();
 
     playlistId = UUID.randomUUID();
-    playlist = Playlist.builder()
-        .id(playlistId)
-        .name("테스트 플레이리스트")
-        .user(playlistOwnerUser)
-        .createdAt(LocalDateTime.now())
-        .build();
+
+    // 공통 Mock 설정
+    when(playlist.getId()).thenReturn(playlistId);
+    when(playlist.getName()).thenReturn("테스트 플레이리스트");
+    when(playlist.getUser()).thenReturn(playlistOwnerUser);
+    when(playlist.isPublic()).thenReturn(true);
 
     subscriptionId = UUID.randomUUID();
     subscription = Subscription.builder()
@@ -188,6 +194,22 @@ class SubscriptionServiceImplTest {
 
       // when & then
       assertThrows(AlreadySubscribedException.class,
+          () -> subscriptionService.subscribe(subscriberUserId, playlistId));
+
+      verify(subscriptionRepository, never()).save(any(Subscription.class));
+      verify(eventPublisher, never()).publishEvent(any(PlaylistSubscribedEvent.class));
+    }
+
+    @Test
+    @DisplayName("비공개 플레이리스트 구독 시도")
+    void failsWhenPrivatePlaylist() {
+      // given
+      when(playlist.isPublic()).thenReturn(false); // 비공개 플레이리스트로 설정
+      when(userRepository.findById(subscriberUserId)).thenReturn(Optional.of(subscriberUser));
+      when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
+
+      // when & then
+      assertThrows(PrivatePlaylistSubscriptionException.class,
           () -> subscriptionService.subscribe(subscriberUserId, playlistId));
 
       verify(subscriptionRepository, never()).save(any(Subscription.class));
