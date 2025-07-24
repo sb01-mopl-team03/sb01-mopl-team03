@@ -31,10 +31,6 @@ import team03.mopl.domain.content.Content;
 @Table(name = "keyword_contents",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"keyword_id", "content_id"})
-    },
-    indexes = {
-        @Index(name = "idx_keyword_score", columnList = "keyword_id, score DESC, content_id"),
-        @Index(name = "idx_content_updated", columnList = "content_id, updated_at")
     })
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

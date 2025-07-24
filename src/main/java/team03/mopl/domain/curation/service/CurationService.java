@@ -3,12 +3,9 @@ package team03.mopl.domain.curation.service;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
-import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
-import team03.mopl.domain.curation.dto.CursorPageRequest;
 import team03.mopl.domain.curation.dto.KeywordDto;
-import team03.mopl.domain.curation.entity.Keyword;
 
 public interface CurationService {
 
@@ -18,11 +15,9 @@ public interface CurationService {
 
   // 메인 추천 조회 메서드
   @Transactional(readOnly = true)
-  CursorPageResponseDto<ContentDto> getRecommendationsByKeyword(
+  List<ContentDto> getRecommendationsByKeyword(
       UUID keywordId,
-      UUID userId,
-      CursorPageRequest request
-  );
+      UUID userId);
 
   List<KeywordDto> getKeywordsByUser(UUID userId);
 

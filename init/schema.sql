@@ -21,7 +21,7 @@ CREATE TABLE "contents"
     "id"               UUID PRIMARY KEY                  NOT NULL,
     "title"            VARCHAR(255)                      NOT NULL,
     "title_normalized" VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
-    "data_id"          varchar(255)                      NULL,
+    "data_id"          VARCHAR(255)                      NULL,
     "description"      TEXT                              NULL,
     "content_type"     VARCHAR(50)                       NOT NULL,
     "release_date"     TIMESTAMP                         NOT NULL,
@@ -57,8 +57,8 @@ CREATE TABLE "keyword_contents"
     FOREIGN KEY ("keyword_id") REFERENCES "keywords" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id") ON DELETE CASCADE
 );
-CREATE INDEX idx_keyword_score ON keyword_contents(keyword_id, score DESC, content_id);
-CREATE INDEX idx_content_updated ON keyword_contents(content_id, updated_at);
+CREATE INDEX idx_keyword_content_keyword_score
+    ON keyword_contents (keyword_id, score DESC, content_id ASC);
 
 -- 리뷰 테이블
 CREATE TABLE "reviews"
@@ -79,12 +79,13 @@ CREATE TABLE "reviews"
 -- 플레이리스트 테이블
 CREATE TABLE "playlists"
 (
-    "id"         UUID PRIMARY KEY        NOT NULL,
-    "creator_id" UUID                    NOT NULL,
-    "name"       VARCHAR(100)            NULL,
-    "is_public"  BOOLEAN                 NOT NULL,
-    "created_at" TIMESTAMP DEFAULT now() NOT NULL,
-    "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
+    "id"                UUID PRIMARY KEY        NOT NULL,
+    "creator_id"        UUID                    NOT NULL,
+    "name"              VARCHAR(100)            NULL,
+    "name_normalized"   VARCHAR(100)            NULL,
+    "is_public"         BOOLEAN                 NOT NULL,
+    "created_at"        TIMESTAMP DEFAULT now() NOT NULL,
+    "updated_at"        TIMESTAMP DEFAULT now() NOT NULL,
     FOREIGN KEY ("creator_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 
@@ -220,6 +221,14 @@ CREATE TABLE "dm_read_users"
     "user_id" UUID NOT NULL,
     PRIMARY KEY ("dm_id", "user_id"),
     FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
+);
+
+CREATE TABLE dm_room_out_users (
+    dm_room_id UUID NOT NULL,
+    user_id    UUID NOT NULL,
+    PRIMARY KEY (dm_room_id, user_id),
+    FOREIGN KEY (dm_room_id) REFERENCES dm_rooms (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES users (id)        ON DELETE CASCADE
 );
 
 -- 소셜 계정 테이블

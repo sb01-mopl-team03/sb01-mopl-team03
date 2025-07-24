@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
@@ -18,6 +19,7 @@ import team03.mopl.domain.watchroom.entity.QWatchRoom;
 import team03.mopl.domain.watchroom.entity.QWatchRoomParticipant;
 import team03.mopl.domain.content.QContent;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantRepositoryCustom {
@@ -47,13 +49,20 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
       WatchRoomSearchInternalDto request) {
 
     BooleanBuilder whereClause = new BooleanBuilder();
+    BooleanBuilder havingClause = new BooleanBuilder();
 
     // 검색어 조건
     applySearchKeywordCondition(whereClause, request.getSearchKeyword());
 
     // 커서 조건
-    applyCursorCondition(whereClause, request.getCursor(),
-        request.getDirection(), request.getSortBy());
+    if ("createdAt".equalsIgnoreCase(request.getSortBy()) || "title".equalsIgnoreCase(
+        request.getSortBy())) {
+      applyCursorCondition(whereClause, request.getCursor(),
+          request.getDirection(), request.getSortBy());
+    } else {
+      applyParticipantCountCursor(havingClause, request.getCursor(),
+          request.getDirection());
+    }
 
     // 정렬 조건
     OrderSpecifier<?>[] orderSpecifier = getOrderSpecifier(request.getSortBy(),
@@ -66,9 +75,11 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
             qWatchRoomParticipant.countDistinct()))
         .from(qWatchRoom)
         .leftJoin(qWatchRoomParticipant).on(qWatchRoomParticipant.watchRoom.eq(qWatchRoom))
-        .join(qWatchRoom.content, qContent)
+        .join(qWatchRoom.content, qContent).fetchJoin()
+        .join(qWatchRoom.owner).fetchJoin()
         .where(whereClause)
-        .groupBy(qWatchRoom.id, qContent.id)
+        .groupBy(qWatchRoom.id, qContent.id,qWatchRoom.owner.id)
+        .having(havingClause)
         .orderBy(orderSpecifier)
         .limit(request.getSize() + 1)
         .fetch();
@@ -111,33 +122,37 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
       case "title":  //시청방 이름
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
         break;
-      case "participantcount":  //시청자 수
-        Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
-        applyParticipantCountCursor(whereClause, cursorParticipantCount, UUID.fromString(cursor.lastId()), isDesc);
+      default: //시청자 수
+        //별도로 having으로 처리
         break;
-      default:
-        throw new IllegalArgumentException("지원하지 않는 정렬 조건: " + sortBy);
     }
   }
 
   // 참여자수 커서 적용
-  private void applyParticipantCountCursor(BooleanBuilder whereClause,
-      Long cursorParticipantCount, UUID lastId, boolean isDesc) {
+  private void applyParticipantCountCursor(BooleanBuilder havingClause,
+      Cursor cursor, String direction) {
+
+    if (cursor == null || cursor.lastId() == null || cursor.lastValue() == null) {
+      return;
+    }
+
+    UUID lastId = UUID.fromString(cursor.lastId());
+    Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
+    boolean isDesc = direction.equalsIgnoreCase("desc");
 
     if (isDesc) {
-      whereClause.and(
+      havingClause.and(
           qWatchRoomParticipant.countDistinct().lt(cursorParticipantCount)
               .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
                   .and(qWatchRoom.id.lt(lastId)))
       );
-      return;
+    } else {
+      havingClause.and(
+          qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
+              .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
+                  .and(qWatchRoom.id.gt(lastId)))
+      );
     }
-    whereClause.and(
-        qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
-            .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
-                .and(qWatchRoom.id.gt(lastId)))
-    );
-
   }
 
   // 제목 정렬 커서 적용
@@ -183,9 +198,8 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
     OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
       case "title" -> isDesc ? qWatchRoom.title.desc() : qWatchRoom.title.asc();
-      case "participantcount" -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
+      default -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
           : qWatchRoomParticipant.countDistinct().asc();
-      default -> throw new IllegalArgumentException("Unsupported sort field: " + sortBy);
     };
 
     OrderSpecifier<?> secondarySort = isDesc ? qWatchRoom.id.desc() : qWatchRoom.id.asc();

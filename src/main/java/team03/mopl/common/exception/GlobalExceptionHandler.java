@@ -1,9 +1,13 @@
 package team03.mopl.common.exception;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -97,4 +101,35 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse = new ErrorResponse(e, HttpStatus.BAD_REQUEST.value());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<?> handleTypeMismatchException(MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+    log.error("MethodArgumentTypeMismatchException occurred: {}", e.getMessage(), e);
+
+    Map<String, Object> details = new HashMap<>();
+    details.put("parameterName", e.getName());
+    details.put("providedValue", e.getValue());
+    details.put("expectedType", e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "unknown");
+
+    ErrorResponse errorResponse = new ErrorResponse(
+        Instant.now(),
+        "MethodArgumentTypeMismatch",
+        "요청 파라미터 '" + e.getName() + "'가 잘못된 형식입니다.",
+        details,
+        e.getClass().getSimpleName(),
+        HttpStatus.BAD_REQUEST.value()
+    );
+
+    // SSE 요청인지 확인
+    String acceptHeader = request.getHeader("Accept");
+    if (acceptHeader != null && acceptHeader.contains("text/event-stream")) {
+      return ResponseEntity
+          .status(HttpStatus.BAD_REQUEST)
+          .contentType(MediaType.TEXT_PLAIN)
+          .body("SSE type mismatch error: " + e.getMessage());
+    }
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
 }

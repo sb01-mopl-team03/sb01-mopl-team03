@@ -41,8 +41,7 @@ public class EmitterService {
   // 각 emitter의 heartbeat 작업을 추적하기 위한 맵
   private final ConcurrentHashMap<String, ScheduledFuture<?>> heartbeatTasks = new ConcurrentHashMap<>();
 
-  public SseEmitter subscribe(UUID userId, String lastNotificationId ) {
-
+  public SseEmitter subscribe(UUID userId, String lastNotificationId) {
 
     // 기존 연결 정리 먼저 수행
     cleanupExistingConnections(userId);
@@ -126,7 +125,7 @@ public class EmitterService {
   /**
    * 더 안전한 Emitter 종료 - 상태 확인 포함
    */
-  private void safelyCloseEmitterWithCheck(SseEmitter emitter) {
+ /* private void safelyCloseEmitterWithCheck(SseEmitter emitter) {
     if (emitter == null) {
       return;
     }
@@ -150,12 +149,12 @@ public class EmitterService {
       // 연결이 끊어진 상태 - 리소스만 정리
       log.debug("Emitter 연결 끊어짐, 리소스 정리: {}", e.getMessage());
     }
-  }
+  }*/
 
   /**
    * 안전한 Emitter 종료 - 응답 상태 확인 후 처리
    */
-  private void safelyCloseEmitter(SseEmitter emitter, String message) {
+  /*private void safelyCloseEmitter(SseEmitter emitter, String message) {
     try {
       // 먼저 간단한 테스트 메시지를 보내서 연결 상태 확인
       emitter.send(SseEmitter.event().comment("connection-test"));
@@ -179,7 +178,7 @@ public class EmitterService {
         log.debug("강제 종료도 실패 (정상): {}", ex.getMessage());
       }
     }
-  }
+  }*/
 
   /**
    * 토큰 검증을 포함한 Heartbeat 스케줄링
@@ -235,7 +234,7 @@ public class EmitterService {
   /**
    * 토큰 만료 처리
    */
-  private void handleTokenExpired(String emitterId, SseEmitter emitter) {
+  /*private void handleTokenExpired(String emitterId, SseEmitter emitter) {
     try {
       // 토큰 만료 알림 전송
       emitter.send(SseEmitter.event()
@@ -251,7 +250,7 @@ public class EmitterService {
       cancelHeartbeatTask(emitterId);
       safeDeleteEmitter(emitterId);
     }
-  }
+  }*/
 
   /**
    * Heartbeat 작업 취소
@@ -321,7 +320,7 @@ public class EmitterService {
                 safeDeleteEmitter(emitterId);
                 failCount++;
               }
-            } catch (Exception e) {
+            } catch (IOException e) {
               log.warn("SSE 알림 전송 실패: emitterId={}, 에러={}", emitterId, e.getMessage());
               safeDeleteEmitter(emitterId);
               failCount++;
@@ -389,6 +388,7 @@ public class EmitterService {
           emitter.send(SseEmitter.event().id(cacheKey).data(entry.getValue()));
           resendCount++;
         }
+        //전송 성공하면 캐시 비우는 로직 추가??
       } catch (Exception e) {
         log.warn("누락된 알림 재전송 실패: cacheKey = {}, 에러 = {}", cacheKey, e.getMessage());
       }
@@ -397,13 +397,12 @@ public class EmitterService {
     log.info("누락된 알림 재전송 완료: userId = {}, 재전송 수 = {}", userId, resendCount);
   }
 
-  public void sendInitNotification(SseEmitter emitter, UUID notificationId, NotificationDto notificationDto) {
+  public void sendInitNotification(SseEmitter emitter) {
     try {
       emitter.send(SseEmitter.event()
-          .id(notificationId.toString())
           .name(NotificationType.CONNECTED.getNotificationName())
-          .data(notificationDto));
-      log.info("초기 연결 알림 전송 완료: notificationId = {}", notificationId);
+          .data("연결됨"));
+      log.info("초기 연결 알림 전송 완료");
     } catch (Exception e) {
       log.warn("초기 연결 알림 전송 실패: 에러={}", e.getMessage());
     }

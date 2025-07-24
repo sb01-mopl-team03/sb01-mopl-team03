@@ -17,7 +17,7 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   // 배치 처리를 위한 페이징 조회
   @Query(value = """
-        SELECT * FROM content c 
+        SELECT * FROM contents c 
         ORDER BY c.id 
         LIMIT :limit OFFSET :offset
         """, nativeQuery = true)
@@ -48,4 +48,6 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   @Query("SELECT c FROM Content c ORDER BY c.id LIMIT :limit OFFSET :offset")
   List<Content> findAllWithOffset(@Param("offset") int offset, @Param("limit") int limit);
+
+  boolean existsByTitle(String title);
 }

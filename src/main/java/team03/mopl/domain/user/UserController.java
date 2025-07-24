@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,6 +25,7 @@ import team03.mopl.domain.review.service.ReviewService;
 import org.springframework.web.multipart.MultipartFile;
 import team03.mopl.domain.subscription.dto.SubscriptionDto;
 import team03.mopl.domain.subscription.service.SubscriptionService;
+import team03.mopl.jwt.CustomUserDetails;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,7 +33,6 @@ import team03.mopl.domain.subscription.service.SubscriptionService;
 public class UserController implements UserApi {
 
   private final UserService userService;
-  private final ProfileImageService profileImageService;
   private final ReviewService reviewService;
   private final SubscriptionService subscriptionService;
   private final PlaylistService playlistService;
@@ -52,7 +53,7 @@ public class UserController implements UserApi {
   @Override
   @PutMapping("/{userId}")
   public ResponseEntity<UserResponse> update(@PathVariable UUID userId,
-      @RequestPart UserUpdateRequest request,
+      @RequestPart("request") UserUpdateRequest request,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
     return ResponseEntity.ok(userService.update(userId,request,profile));
   }
@@ -71,12 +72,6 @@ public class UserController implements UserApi {
   }
 
   @Override
-  @GetMapping("/profiles")
-  public ResponseEntity<List<String>> getProfileImages() {
-    return ResponseEntity.ok(profileImageService.getProfileImages());
-  }
-
-  @Override
   @GetMapping("/{userId}/reviews")
   public ResponseEntity<List<ReviewDto>> getAllReviewByUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
@@ -90,8 +85,11 @@ public class UserController implements UserApi {
 
   @Override
   @GetMapping("/{userId}/playlists")
-  public ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId) {
-    return ResponseEntity.ok(playlistService.getAllByUser(userId));
+  public ResponseEntity<List<PlaylistDto>> getAllPlaylistByUser(@PathVariable UUID userId,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    UUID currentUserId = userDetails.getId();
+    return ResponseEntity.ok(playlistService.getUserPlaylists(userId, currentUserId));
   }
 
   @Override

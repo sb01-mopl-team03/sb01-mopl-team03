@@ -18,7 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   private final RestTemplate restTemplate;
-  private final List<SportsApiRequestInfo> apiRequestInfos;
+  private List<SportsApiRequestInfo> apiRequestInfos;
   private final String baseUrl;
   private int nextRequestIndex = 0;
   private List<SportsItemDto> sportsItemDtos;
@@ -26,7 +26,6 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   public SportsApiReader(RestTemplate restTemplate, String baseUrl) {
     this.restTemplate = restTemplate;
-    this.apiRequestInfos = buildApiRequestInfo();
     this.baseUrl = baseUrl;
     this.sportsItemDtos = new ArrayList<>();
   }
@@ -38,15 +37,20 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
     while (true) {
       // 1. 읽을 Item이 있는지 확인
       if (sportsItemDtos == null || nextItemIndex >= sportsItemDtos.size()) {
+        log.debug("아이템 소진, API 데이터 패칭 시작");
         // 2. 다음 API가 없다면 false 반환
         if (!fetchSportsFromApi()) {
+          log.debug("모든 API 요청 처리 완료, ItemReader 종료");
           // 2*. null을 반환한다.
           return null;
         }
       }
       if (!sportsItemDtos.isEmpty() && nextItemIndex < sportsItemDtos.size()) {
+        SportsItemDto itemDto = sportsItemDtos.get(nextItemIndex++);
+        String itemTitle = itemDto.getStrFilename();
+        log.debug("아이템 읽기 성공: itemTitle={}", itemTitle);
         // 3. Item 을 반환한다.
-        return sportsItemDtos.get(nextItemIndex++);
+        return itemDto;
       }
     }
   }
@@ -64,6 +68,7 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
     SportsApiRequestInfo info = apiRequestInfos.get(nextRequestIndex);
     nextRequestIndex++;
 
+    log.debug("API 데이터 패칭 시작: leagueId={}, season={}", info.getLeagueId(), info.getSeason());
     // 3. info 객체 정보로 API URL 생성한다.
     URI uri = UriComponentsBuilder
         .fromUriString(baseUrl)
@@ -71,7 +76,8 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
         .queryParam("d", info.getDate())
         .queryParam("l", info.getLeagueName())
         .build("123");
-    log.info("uri={}", uri);
+
+    log.debug("SPORTS API 요청하기: url={}", uri);
 
     // 4. RestTemplate으로 API를 호출하고 SportsApiResponse 객체로 받는다.
     SportsApiResponse response = restTemplate.getForObject(uri, SportsApiResponse.class);
@@ -94,7 +100,7 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
   private List<SportsApiRequestInfo> buildApiRequestInfo() {
     List<SportsApiRequestInfo> requestInfos = new ArrayList<>();
     String yesterday = LocalDate.now().minusDays(1).toString();
-    log.info("yesterday={}", yesterday);
+    log.debug("적재할 SPORTS 경기 일자: yesterday={}", yesterday);
     List<String> leagues = List.of("MLB", "Korean KBO League");
     for (String league : leagues) {
       requestInfos.add(SportsApiRequestInfo.builder()
@@ -112,12 +118,14 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
    */
   @Override
   public void open(ExecutionContext executionContext) throws ItemStreamException {
+    this.apiRequestInfos = buildApiRequestInfo();
     if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
-      log.info("Job 재시작: " + this.nextRequestIndex + "번째 요청부터 다시 시작합니다.");
+      log.info("SportsApiReader - SPORTS API 데이터 읽기 재시작: nextRequestIndex={}",
+          this.nextRequestIndex);
     } else {
       this.nextRequestIndex = 0;
-      log.info("Job 신규 시작");
+      log.info("SportsApiReader - SPORTS API 데이터 읽기 신규 시작");
     }
 
     if (executionContext.containsKey("nextItemIndex")) {
@@ -134,10 +142,12 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
   public void update(ExecutionContext executionContext) throws ItemStreamException {
     executionContext.putInt("nextRequestIndex", this.nextRequestIndex);
     executionContext.putInt("nextItemIndex", this.nextItemIndex);
+    log.debug("ExecutionContext 업데이트 중: nextRequestIndex={}, nextItemIndex={}",
+        this.nextRequestIndex, this.nextItemIndex);
   }
 
   @Override
   public void close() throws ItemStreamException {
-    log.info("InitialTmdbApiReader 종료");
+    log.info("SportsApiReader - SPORTS API 리더 리소스 정리 완료 (Step 종료 시 호출)");
   }
 }

@@ -31,7 +31,11 @@ public enum ErrorCode {
   DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM_001", "존재하지 않는 다이렉트 메시지입니다."),
   DM_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM_001", "존재하지 않는 채팅방입니다."),
   DM_CONTENT_TOO_LONG(HttpStatus.BAD_REQUEST, "DM_002", "메시지 길이가 255자를 초과할 수 없습니다."),
-
+  NO_ONE_MATCH_IN_DM_ROOM(HttpStatus.BAD_REQUEST, "DM_003", "채팅 방의 소속된 유저가 아닙니다."),
+  DM_DECODING_ERROR(HttpStatus.BAD_REQUEST, "DM_004", "DM 디코딩 중 오류가 발생했습니다."),
+  OUT_USER_FROM_DM_ROOM(HttpStatus.BAD_REQUEST, "DM_005", "두 유저의 채팅방이 존재하며 한 유저가 남아있습니다."),
+  ALREADY_DM_ROOM_EXIST(HttpStatus.BAD_REQUEST, "DM_006", "두 유저의 채팅방이 이미 존재합니다."),
+  CANNOT_CREATE_DM_ROOM_SELF(HttpStatus.BAD_REQUEST, "DM_007", "자기 자신과 채팅방을 만들 수 없습니다."),
   //Follow
   FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "FOLLOW_001", "존재하지 않는 팔로우입니다."),
   ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW_002", "이미 팔로우하고 있습니다."),
@@ -42,7 +46,8 @@ public enum ErrorCode {
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다."),
 
   KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_001", "해당 사용자의 키워드를 찾을 수 없습니다."),
-  KEYWORD_DELETE_DENIED_EXCEPTION(HttpStatus.FORBIDDEN, "KEYWORD_002", "본인의 키워드만 삭제할 수 있습니다."),
+  KEYWORD_DELETE_DENIED(HttpStatus.FORBIDDEN, "KEYWORD_002", "본인의 키워드만 삭제할 수 있습니다."),
+  KEYWORD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "KEYWORD_003", "요청한 키워드에 접근할 수 없습니다."),
 
   INVALID_SCORE_RANGE(HttpStatus.BAD_REQUEST, "CURATION_001", "점수 범위가 올바르지 않습니다."),
 
@@ -50,6 +55,7 @@ public enum ErrorCode {
   ALREADY_SUBSCRIBED(HttpStatus.CONFLICT, "SUBSCRIPTION_002", "이미 구독 중인 플레이리스트입니다."),
   SELF_SUBSCRIPTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_003", "자신의 플레이리스트는 구독할 수 없습니다."),
   SUBSCRIPTION_DELETE_DENIED(HttpStatus.FORBIDDEN, "SUBSCRIPTION_004", "구독자만 구독을 취소할 수 있습니다."),
+  PRIVATE_PLAYLIST_SUBSCRIPTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_005", "비공개 플레이리스트는 구독할 수 없습니다."),
 
   PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_001", "존재하지 않는 플레이리스트입니다."),
   PLAYLIST_DENIED(HttpStatus.FORBIDDEN, "PLAYLIST_002", "플레이리스트에 권한이 없습니다."),

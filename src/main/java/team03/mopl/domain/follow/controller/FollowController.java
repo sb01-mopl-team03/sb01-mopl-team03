@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.common.exception.follow.BadRequestFollowingException;
 import team03.mopl.api.FollowApi;
-import team03.mopl.domain.follow.dto.FollowRequest;
 import team03.mopl.domain.follow.dto.FollowResponse;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.jwt.CustomUserDetails;
@@ -29,24 +28,24 @@ public class FollowController implements FollowApi {
   private final FollowService followService;
 
   @Override
-  @PostMapping("/follow")
-  public ResponseEntity<Void> follow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
+  @PostMapping("/{followingId}")
+  public ResponseEntity<Void> follow(@AuthenticationPrincipal CustomUserDetails user, @PathVariable("followingId") String followingId) {
     //로그인된 사람과 팔로우하려는 사람과 같은지 확인
-    if (!user.getId().toString().equals(request.getFollowerId().toString())) {
+    if (user.getId().toString().equals(followingId)) {
       throw new BadRequestFollowingException();
     }
-    followService.follow(request.getFollowerId(), request.getFollowingId());
+    followService.follow(user.getId(), UUID.fromString(followingId));
     return ResponseEntity.ok().build();
   }
 
   @Override
-  @DeleteMapping("/unfollow")
-  public ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails user, @RequestBody FollowRequest request) {
+  @DeleteMapping("/{followingId}")
+  public ResponseEntity<Void> unfollow(@AuthenticationPrincipal CustomUserDetails user, @PathVariable("followingId") String followingId) {
     //로그인된 사람과 언팔하려는 사람 같은지 확인
-    if (!user.getId().toString().equals(request.getFollowerId().toString())) {
+    if (user.getId().toString().equals(followingId)) {
       throw new BadRequestFollowingException();
     }
-    followService.unfollow(request.getFollowerId(), request.getFollowingId());
+    followService.unfollow(user.getId(), UUID.fromString(followingId));
     return ResponseEntity.ok().build();
   }
 

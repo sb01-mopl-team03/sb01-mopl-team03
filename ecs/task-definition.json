@@ -17,7 +17,12 @@
         }
       ],
       "essential": true,
-      "environment": [],
+      "environment": [
+        {
+          "name": "OPENSEARCH_ENDPOINT",
+          "value": "https://vpc-mopl-search-domain-axi4bgbebjqschluvclyxi5ymu.ap-northeast-2.es.amazonaws.com"
+        }
+      ],
       "environmentFiles": [
         {
           "value": "arn:aws:s3:::mopl-03-bucket/mopl.env",
@@ -41,6 +46,7 @@
     }
   ],
   "family": "mopl-app-task",
+  "taskRoleArn": "arn:aws:iam::112555930244:role/MoplAppTaskRole",
   "executionRoleArn": "arn:aws:iam::112555930244:role/ecsTaskExecutionRole",
   "networkMode": "bridge",
   "revision": 2,

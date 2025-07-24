@@ -10,6 +10,8 @@ public record WatchRoomInfoDto (
     UUID id,
     String title,
     UUID newUserId,
+    Double playTime,
+    boolean isPlaying,
     ParticipantsInfoDto participantsInfoDto,
     ContentDto content){
 

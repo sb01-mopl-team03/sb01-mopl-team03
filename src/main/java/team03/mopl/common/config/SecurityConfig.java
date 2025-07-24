@@ -40,7 +40,8 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/oauth2/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/oauth2/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/login/oauth2/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/change-password").permitAll()
@@ -49,14 +50,18 @@ public class SecurityConfig {
             .requestMatchers("/ws/**").permitAll()
             .requestMatchers("/swagger-ui*/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
             .requestMatchers("/actuator/health").permitAll()
+            .requestMatchers("/actuator/prometheus").permitAll()
+            .requestMatchers("/actuator/info", "/actuator/metrics", "/actuator/loggers")
+            .hasRole("ADMIN")
             .requestMatchers("/error").permitAll()
             // SSE 엔드포인트를 permitAll로 설정
-            .requestMatchers("/api/notifications/subscribe").permitAll()
             .anyRequest().hasRole("USER")
         )
         .exceptionHandling(ex -> ex
             .authenticationEntryPoint(((request, response, authException) -> {
-              if (response.isCommitted()) return;
+              if (response.isCommitted()) {
+                return;
+              }
               response.setStatus(401);
               response.setContentType("application/json;charset=utf-8");
               try {
@@ -66,7 +71,9 @@ public class SecurityConfig {
               }
             }))
             .accessDeniedHandler(((request, response, accessDeniedException) -> {
-              if (response.isCommitted()) return;
+              if (response.isCommitted()) {
+                return;
+              }
               response.setStatus(403);
               response.setContentType("application/json;charset=utf-8");
               try {
