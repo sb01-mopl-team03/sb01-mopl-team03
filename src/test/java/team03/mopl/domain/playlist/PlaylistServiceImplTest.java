@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import team03.mopl.common.exception.playlist.PlaylistContentAlreadyExistsException;
 import team03.mopl.common.exception.playlist.PlaylistContentEmptyException;
 import team03.mopl.common.exception.playlist.PlaylistContentRemoveEmptyException;
@@ -53,6 +54,9 @@ class PlaylistServiceImplTest {
 
   @InjectMocks
   private PlaylistServiceImpl playlistService;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
 
   // 테스트용 유저
   private UUID userId;
