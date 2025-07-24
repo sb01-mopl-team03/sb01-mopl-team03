@@ -1,4 +1,4 @@
-package team03.mopl.common.util; // 적절한 패키지 경로
+package team03.mopl.common.util;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+// TODO: service 단으로 리팩토링
 @Component
 public class SpringApplicationContext implements ApplicationContextAware {
 

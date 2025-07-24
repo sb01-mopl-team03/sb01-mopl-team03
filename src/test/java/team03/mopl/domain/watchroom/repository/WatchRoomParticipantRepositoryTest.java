@@ -18,8 +18,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import team03.mopl.common.config.JpaConfig;
 import team03.mopl.common.config.QueryDslConfig;
 import team03.mopl.common.dto.Cursor;
+import team03.mopl.common.util.SpringApplicationContext;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.domain.user.Role;
@@ -30,7 +32,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 
 @DataJpaTest
-@Import({WatchRoomParticipantRepositoryImpl.class, QueryDslConfig.class})
+@Import({QueryDslConfig.class, JpaConfig.class, SpringApplicationContext.class}) // 임시방편으로 SpringApplicationContext도 import (0724)
 @TestPropertySource(properties = {
     "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
     "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
