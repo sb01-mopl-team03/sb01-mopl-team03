@@ -27,25 +27,30 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.dto.DmPagingDto;
+import team03.mopl.domain.dm.service.DmRoomService;
 import team03.mopl.domain.dm.service.DmService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.jwt.CustomUserDetails;
 
-@WebMvcTest(DmController.class)
+@WebMvcTest(DmRoomController.class)
 @WithMockUser(roles = "USER")
-class DmControllerTest {
+class DmRoomControllerTestWithDm {
 
   @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private DmService dmService;
+  @MockitoBean
+  DmRoomService dmRoomService;
+
+  @MockitoBean
+  DmService dmService;
 
   private UUID roomId;
   private UUID userId;
@@ -104,7 +109,7 @@ class DmControllerTest {
     );
 
     // when & then
-    mockMvc.perform(get("/api/dm/{roomId}", roomId))
+    mockMvc.perform(get("/api/dmRooms/{roomId}/dms", roomId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data[0].content").value("안녕 DM"))
         .andExpect(jsonPath("$.data[0].senderId").value(userId.toString()))
@@ -173,14 +178,14 @@ class DmControllerTest {
     );
 
     // when & then (1st page)
-    mockMvc.perform(get("/api/dm/{roomId}", roomId))
+    mockMvc.perform(get("/api/dmRooms/{roomId}/dms", roomId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.length()").value(20))
         .andExpect(jsonPath("$.hasNext").value(true))
         .andExpect(jsonPath("$.size").value(20));
 
     // when & then (2nd page)
-    mockMvc.perform(get("/api/dm/{roomId}?cursor={cursor}", roomId, encodedCursor))
+    mockMvc.perform(get("/api/dmRooms/{roomId}/dms?cursor={cursor}", roomId, encodedCursor))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.length()").value(10))
         .andExpect(jsonPath("$.hasNext").value(false))
