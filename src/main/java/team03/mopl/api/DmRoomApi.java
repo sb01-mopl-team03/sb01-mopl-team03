@@ -64,7 +64,7 @@ public interface DmRoomApi {
       @ApiResponse(responseCode = "403", description = "권한 없음"),
       @ApiResponse(responseCode = "404", description = "DM 방 또는 메시지 없음")
   })
-  @GetMapping("/{roomId}")
+  @GetMapping("/{roomId}/dms")
   ResponseEntity<CursorPageResponseDto<DmDto>> getDm(
       @Parameter(description = "DM 방 ID") @PathVariable("roomId") UUID roomId,
       @ParameterObject @ModelAttribute DmPagingDto dmPagingDto,
