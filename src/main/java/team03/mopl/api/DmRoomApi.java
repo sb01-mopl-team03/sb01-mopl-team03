@@ -57,7 +57,7 @@ public interface DmRoomApi {
       description = "나갔던(out) DM 방에 다시 참여합니다."
   )
   @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "재입장 성공"),
+      @ApiResponse(responseCode = "200", description = "재입장 성공"),
       @ApiResponse(responseCode = "403", description = "권한 없음"),
       @ApiResponse(responseCode = "404", description = "DM 방 없음")
   })

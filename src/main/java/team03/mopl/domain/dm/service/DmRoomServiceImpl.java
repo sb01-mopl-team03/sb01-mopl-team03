@@ -136,7 +136,7 @@ public class DmRoomServiceImpl implements DmRoomService {
   @Override
   @Transactional
   public void reenterRoom(UUID userId, UUID roomId) {
-    log.info("reenterRoom - roomId={}, userId={}", roomId, userId);
+    log.info("reenterRoom - 방 재진입 시도: roomId={}, userId={}", roomId, userId);
     DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
       log.warn("reenterRoom - 방 없음: {}", roomId);
       return new DmRoomNotFoundException();
@@ -148,7 +148,7 @@ public class DmRoomServiceImpl implements DmRoomService {
   @Transactional
   public void deleteRoom(UUID userId, UUID roomId) { //파라미터 변경! ( 삭제하고자 하는 룸의 유저가 삭제가능 )
     // 둘 다 나가기 전까지는 채팅이 살아있어야 함
-    log.info("deleteRoom - 유저 {} 가 방 {} 삭제 시도", userId, roomId);
+    log.info("deleteRoom - 채팅 방 삭제 시도: userId={}, roomId={}", userId, roomId);
     DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
       log.warn("deleteRoom - 방 없음: {}", roomId);
       return new DmRoomNotFoundException();
@@ -158,11 +158,11 @@ public class DmRoomServiceImpl implements DmRoomService {
     UUID senderId   = dmRoom.getSenderId();
     UUID receiverId = dmRoom.getReceiverId();
     if (senderId != null && !userRepository.existsById(senderId)) {
-      log.info("deleteRoom - 유저 {} 가 존재하지 않아 방 {} 에서 나감 처리", senderId, roomId);
+      log.info("deleteRoom - 존재하지 않는 유저 나감 처리: sender={}, roomId={}", senderId, roomId);
       dmRoom.addOutUser(senderId);
     }
     if (receiverId != null && !userRepository.existsById(receiverId)) {
-      log.info("deleteRoom - 유저 {} 가 존재하지 않아 방 {} 에서 나감 처리", receiverId, roomId);
+      log.info("deleteRoom - 존재하지 않는 유저 나감 처리: sender={}, roomId={}", senderId, roomId);
       dmRoom.addOutUser(receiverId);
     }
 
@@ -171,13 +171,11 @@ public class DmRoomServiceImpl implements DmRoomService {
       log.info("deleteRoom - senderId 제거: {}", userId);
       //dmRoom.setSenderId(null);
       dmRoom.addOutUser(userId);
-      System.out.println("dmRoom = " + dmRoom.getOutUsers());
       dmRoomRepository.save(dmRoom);
     } else if (dmRoom.getReceiverId() != null && dmRoom.getReceiverId().equals(userId)) {
       log.info("deleteRoom - receiverId 제거: {}", userId);
       //dmRoom.setReceiverId(null);
       dmRoom.addOutUser(userId);
-      System.out.println("dmRoom = " + dmRoom.getOutUsers());
       dmRoomRepository.save(dmRoom);
     }
 

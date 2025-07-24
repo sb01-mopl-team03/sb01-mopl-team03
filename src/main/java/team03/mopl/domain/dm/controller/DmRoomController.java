@@ -69,6 +69,6 @@ public class DmRoomController implements DmRoomApi {
   ) {
     UUID userId = userDetails.getId();
     dmRoomService.reenterRoom(userId, roomId);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 }
