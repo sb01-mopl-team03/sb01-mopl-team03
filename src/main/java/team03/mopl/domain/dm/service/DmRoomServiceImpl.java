@@ -84,7 +84,7 @@ public class DmRoomServiceImpl implements DmRoomService {
     User sender = userRepository.findById(userA).orElseThrow(UserNotFoundException::new);
     User receiver = userRepository.findById(userB).orElseThrow(UserNotFoundException::new);
     if( userA.toString().equals(userB.toString()) ) {
-      log.warn("findOrCreateRoom - 자기 자신 {} 과의 채팅방을 생성 시도", userA);
+      log.warn("findOrCreateRoom - 자기 자신과의 채팅방을 생성 시도: userId={}", userA);
       throw new CannotCreateDmRoomSelfException();
     }
     Optional<DmRoom> optional = dmRoomRepository.findByRoomBetweenUsers(userA, userB);
