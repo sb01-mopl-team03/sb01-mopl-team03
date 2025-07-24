@@ -5,7 +5,7 @@ import team03.mopl.common.exception.ErrorCode;
 
 public class KeywordDeleteDeniedException extends CurationException {
   public KeywordDeleteDeniedException() {
-    super(ErrorCode.KEYWORD_DELETE_DENIED_EXCEPTION);
+    super(ErrorCode.KEYWORD_DELETE_DENIED);
   }
 
   public KeywordDeleteDeniedException(ErrorCode errorCode, Throwable cause) {
