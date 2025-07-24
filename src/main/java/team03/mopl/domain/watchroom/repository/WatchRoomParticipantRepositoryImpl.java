@@ -49,13 +49,20 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
       WatchRoomSearchInternalDto request) {
 
     BooleanBuilder whereClause = new BooleanBuilder();
+    BooleanBuilder havingClause = new BooleanBuilder();
 
     // 검색어 조건
     applySearchKeywordCondition(whereClause, request.getSearchKeyword());
 
     // 커서 조건
-    applyCursorCondition(whereClause, request.getCursor(),
-        request.getDirection(), request.getSortBy());
+    if ("createdAt".equalsIgnoreCase(request.getSortBy()) || "title".equalsIgnoreCase(
+        request.getSortBy())) {
+      applyCursorCondition(whereClause, request.getCursor(),
+          request.getDirection(), request.getSortBy());
+    } else {
+      applyParticipantCountCursor(havingClause, request.getCursor(),
+          request.getDirection());
+    }
 
     // 정렬 조건
     OrderSpecifier<?>[] orderSpecifier = getOrderSpecifier(request.getSortBy(),
@@ -71,6 +78,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         .join(qWatchRoom.content, qContent)
         .where(whereClause)
         .groupBy(qWatchRoom.id, qContent.id)
+        .having(havingClause)
         .orderBy(orderSpecifier)
         .limit(request.getSize() + 1)
         .fetch();
@@ -114,32 +122,36 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
         break;
       default: //시청자 수
-        log.warn("applyCursorCondition - 지원하지 않는 정렬 형식");
-        Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
-        applyParticipantCountCursor(whereClause, cursorParticipantCount, UUID.fromString(cursor.lastId()), isDesc);
+        //별도로 having으로 처리
         break;
-
     }
   }
 
   // 참여자수 커서 적용
-  private void applyParticipantCountCursor(BooleanBuilder whereClause,
-      Long cursorParticipantCount, UUID lastId, boolean isDesc) {
+  private void applyParticipantCountCursor(BooleanBuilder havingClause,
+      Cursor cursor, String direction) {
+
+    if (cursor == null || cursor.lastId() == null || cursor.lastValue() == null) {
+      return;
+    }
+
+    UUID lastId = UUID.fromString(cursor.lastId());
+    Long cursorParticipantCount = Long.parseLong(cursor.lastValue());
+    boolean isDesc = direction.equalsIgnoreCase("desc");
 
     if (isDesc) {
-      whereClause.and(
+      havingClause.and(
           qWatchRoomParticipant.countDistinct().lt(cursorParticipantCount)
               .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
                   .and(qWatchRoom.id.lt(lastId)))
       );
-      return;
+    } else {
+      havingClause.and(
+          qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
+              .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
+                  .and(qWatchRoom.id.gt(lastId)))
+      );
     }
-    whereClause.and(
-        qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
-            .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
-                .and(qWatchRoom.id.gt(lastId)))
-    );
-
   }
 
   // 제목 정렬 커서 적용
