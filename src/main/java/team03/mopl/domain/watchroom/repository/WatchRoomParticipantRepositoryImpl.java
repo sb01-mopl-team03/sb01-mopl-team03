@@ -55,14 +55,13 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
     applySearchKeywordCondition(whereClause, request.getSearchKeyword());
 
     // 커서 조건
-    if ("participantcount".equals(request.getSortBy().toLowerCase())) {
-      // 참가자 수 커서를 HAVING에 적용
-      applyParticipantCountCursor(havingClause, request.getCursor(),
-          request.getDirection());
-    } else {
-      // 다른 커서 조건은 WHERE에 적용
+    if ("createdAt".equalsIgnoreCase(request.getSortBy()) || "title".equalsIgnoreCase(
+        request.getSortBy())) {
       applyCursorCondition(whereClause, request.getCursor(),
           request.getDirection(), request.getSortBy());
+    } else {
+      applyParticipantCountCursor(havingClause, request.getCursor(),
+          request.getDirection());
     }
 
     // 정렬 조건
