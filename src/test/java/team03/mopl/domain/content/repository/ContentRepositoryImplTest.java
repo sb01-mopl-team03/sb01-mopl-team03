@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import team03.mopl.common.config.JpaConfig;
 import team03.mopl.common.config.QueryDslConfig;
+import team03.mopl.common.util.SpringApplicationContext;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 
@@ -28,7 +29,7 @@ import team03.mopl.domain.content.ContentType;
  *
  * @TestPropertySource: application.yaml 보다 높은 우선순위를 가지고 설정 덮어씁니다.
  */
-@Import({QueryDslConfig.class, JpaConfig.class})
+@Import({QueryDslConfig.class, JpaConfig.class, SpringApplicationContext.class}) // 임시방편으로 SpringApplicationContext도 import (0724)
 //@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
 @TestPropertySource(properties = {

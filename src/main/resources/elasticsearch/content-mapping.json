@@ -1,0 +1,52 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "title": {
+      "type": "text",
+      "analyzer": "korean_analyzer",
+      "fields": {
+        "raw": {
+          "type": "keyword"
+        },
+        "english": {
+          "type": "text",
+          "analyzer": "english_analyzer"
+        }
+      }
+    },
+    "description": {
+      "type": "text",
+      "analyzer": "korean_analyzer",
+      "fields": {
+        "english": {
+          "type": "text",
+          "analyzer": "english_analyzer"
+        }
+      }
+    },
+    "contentType": {
+      "type": "keyword"
+    },
+    "releaseDate": {
+      "type": "date",
+      "format": "yyyy-MM-dd'T'HH:mm:ss"
+    },
+    "avgRating": {
+      "type": "double"
+    },
+    "youtubeUrl": {
+      "type": "keyword",
+      "index": false
+    },
+    "thumbnailUrl": {
+      "type": "keyword",
+      "index": false
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd'T'HH:mm:ss"
+    }
+  }
+}

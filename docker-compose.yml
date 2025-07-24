@@ -13,6 +13,8 @@ services:
         condition: service_healthy
       kafka: # kafka가 먼저 실행되도록 의존성 추가
         condition: service_started
+      elasticsearch:
+        condition: service_healthy
     env_file:
       - ./.env
     environment:
@@ -27,6 +29,8 @@ services:
       - SPRING_REDIS_PORT=6379
       # kafka
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      # elasticsearch
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
 
   # Database: PostgreSQL
   db:
@@ -56,6 +60,35 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
+  # Search Engine: Elasticsearch with Nori (커스텀 이미지)
+  elasticsearch:
+    container_name: elasticsearch
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - cluster.name=mopl-cluster
+      - node.name=mopl-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - TZ=Asia/Seoul
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
 
   # Message Broker: Kafka (KRaft Mode)
   kafka:
@@ -93,3 +126,4 @@ volumes:
   postgres-data:
   redis_data:
   kafka_data:
+  elasticsearch-data:
