@@ -46,7 +46,8 @@ public enum ErrorCode {
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "존재하지 않는 알림입니다."),
 
   KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_001", "해당 사용자의 키워드를 찾을 수 없습니다."),
-  KEYWORD_DELETE_DENIED_EXCEPTION(HttpStatus.FORBIDDEN, "KEYWORD_002", "본인의 키워드만 삭제할 수 있습니다."),
+  KEYWORD_DELETE_DENIED(HttpStatus.FORBIDDEN, "KEYWORD_002", "본인의 키워드만 삭제할 수 있습니다."),
+  KEYWORD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "KEYWORD_003", "요청한 키워드에 접근할 수 없습니다."),
 
   INVALID_SCORE_RANGE(HttpStatus.BAD_REQUEST, "CURATION_001", "점수 범위가 올바르지 않습니다."),
 
