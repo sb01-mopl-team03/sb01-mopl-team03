@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 
 // AWS SDK 1.x 방식 import
 import com.amazonaws.auth.AWS4Signer;
@@ -39,7 +41,7 @@ public class SearchEngineConfig {
   // ===== 로컬 개발환경용 (Elasticsearch) =====
   @Bean
   @Profile("dev")
-  public ElasticsearchClient localElasticsearchClient() {
+  public ElasticsearchClient elasticsearchClient() {
     log.info("=== DEV용 ElasticsearchClient 빈을 생성합니다 ===");
 
     RestClient restClient = RestClient.builder(HttpHost.create(elasticsearchUrl))
@@ -50,6 +52,21 @@ public class SearchEngineConfig {
     );
 
     return new ElasticsearchClient(transport);
+  }
+
+  @Bean
+  @Profile("dev")
+  public ElasticsearchOperations elasticsearchOperations() {
+    log.info("=== DEV용 ElasticsearchOperations 빈을 생성합니다 ===");
+    return new ElasticsearchTemplate(elasticsearchClient());
+  }
+
+  // elasticsearchTemplate 별명도 추가
+  @Bean
+  @Profile("dev")
+  public ElasticsearchOperations elasticsearchTemplate() {
+    log.info("=== DEV용 ElasticsearchTemplate 빈을 생성합니다 ===");
+    return elasticsearchOperations();
   }
 
   // ===== AWS 환경용 (Elasticsearch with IAM 서명) =====
@@ -67,7 +84,7 @@ public class SearchEngineConfig {
 
       // AWS4 서명자 설정
       AWS4Signer signer = new AWS4Signer();
-      signer.setServiceName("es");  // Elasticsearch/OpenSearch 서비스
+      signer.setServiceName("es");
       signer.setRegionName(awsRegion);
       log.info("AWS4 서명자 설정 완료 - 서비스: es, 리전: {}", awsRegion);
 
@@ -115,5 +132,20 @@ public class SearchEngineConfig {
       log.error("PROD용 ElasticsearchClient 생성 중 오류 발생: {}", e.getMessage(), e);
       throw new RuntimeException("ElasticsearchClient 생성 실패", e);
     }
+  }
+
+  @Bean
+  @Profile("prod")
+  public ElasticsearchOperations prodElasticsearchOperations() {
+    log.info("=== PROD용 ElasticsearchOperations 빈을 생성합니다 ===");
+    return new ElasticsearchTemplate(awsElasticsearchClient());
+  }
+
+  // ContentSearchRepository가 찾는 elasticsearchTemplate 빈
+  @Bean
+  @Profile("prod")
+  public ElasticsearchOperations prodElasticsearchTemplate() {
+    log.info("=== PROD용 ElasticsearchTemplate 빈을 생성합니다 ===");
+    return prodElasticsearchOperations();
   }
 }
