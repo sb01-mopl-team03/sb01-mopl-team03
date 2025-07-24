@@ -55,7 +55,7 @@ public class SearchEngineConfig {
   // ===== AWS 환경용 (Elasticsearch with IAM 서명) =====
   @Bean
   @Profile("prod")
-  public ElasticsearchClient awsElasticsearchClient() {
+  public ElasticsearchClient elasticsearchClient() {  // 메서드명을 표준으로 변경
     log.info("=== PROD용 ElasticsearchClient 빈을 생성합니다 ===");
     log.info("Elasticsearch URL: {}", elasticsearchUrl);
     log.info("AWS Region: {}", awsRegion);
