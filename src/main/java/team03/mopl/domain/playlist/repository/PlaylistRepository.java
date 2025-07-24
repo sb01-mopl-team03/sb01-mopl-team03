@@ -19,6 +19,8 @@ public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
       @Param("currentUserId") UUID currentUserId
   );
 
+  List<Playlist> findByIsPublicTrue();
+
   @Query("SELECT p FROM Playlist p WHERE p.user.id = :userId ORDER BY p.createdAt DESC")
   List<Playlist> findAllByUserId(@Param("userId") UUID userId);
 

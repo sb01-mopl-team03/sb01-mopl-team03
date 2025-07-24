@@ -197,49 +197,6 @@ class PlaylistControllerTest {
   }
 
   @Nested
-  @DisplayName("사용자별 플레이리스트 조회 요청")
-  class GetPlaylistByUser {
-
-    @Test
-    @DisplayName("성공")
-    void success() {
-      // given
-      UUID userId = UUID.randomUUID();
-      UUID playlistId = UUID.randomUUID();
-      LocalDateTime createdAt = LocalDateTime.now();
-
-      PlaylistDto mockPlaylist = new PlaylistDto(playlistId, "테스트 플레이리스트",
-          userId, "테스트유저", true, createdAt, List.of(), List.of());
-      List<PlaylistDto> mockResponse = List.of(mockPlaylist);
-
-      when(userDetails.getId()).thenReturn(userId);
-      when(playlistService.getAllByUser(userId)).thenReturn(mockResponse);
-
-      // when
-      ResponseEntity<List<PlaylistDto>> response = playlistController.getPlaylistByUser(userDetails);
-
-      // then
-      assertNotNull(response.getBody());
-      assertEquals(1, response.getBody().size());
-      assertEquals(mockPlaylist.name(), response.getBody().get(0).name());
-      verify(playlistService).getAllByUser(userId);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 유저")
-    void failsWhenUserNotFound() {
-      // given
-      UUID userId = UUID.randomUUID();
-
-      when(userDetails.getId()).thenReturn(userId);
-      when(playlistService.getAllByUser(userId)).thenThrow(new UserNotFoundException());
-
-      // when & then
-      assertThrows(UserNotFoundException.class, () -> playlistController.getPlaylistByUser(userDetails));
-    }
-  }
-
-  @Nested
   @DisplayName("플레이리스트 단건 조회 요청")
   class GetPlaylist {
 
