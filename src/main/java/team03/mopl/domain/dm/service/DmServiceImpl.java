@@ -41,6 +41,7 @@ public class DmServiceImpl implements DmService {
   private final DmRepositoryCustom dmRepositoryCustom;
 
   @Override
+  @Transactional
   public DmDto sendDm(SendDmDto sendDmDto) {
     log.info("sendDm - DM 전송 시도: senderId={}, roomId={}, content={}", sendDmDto.getSenderId(), sendDmDto.getRoomId(), sendDmDto.getContent());
     DmRoom dmRoom = dmRoomRepository.findById(sendDmDto.getRoomId()).orElseThrow(() -> {
@@ -53,16 +54,22 @@ public class DmServiceImpl implements DmService {
 
     // 알림 전송 추가
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
+      UUID senderId = sendDmDto.getSenderId();
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      dm.readDm(senderId);
     } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
+      UUID senderId = sendDmDto.getSenderId();
       UUID receiverId = dmRoom.getSenderId();
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      dm.readDm(senderId);
+      readAll(dmRoom.getId(), senderId);
     } else {
       throw new NoOneMatchInDmRoomException();
     }
 
     Dm savedDm = dmRepository.save(dm);
+
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
