@@ -102,6 +102,7 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<ReviewDto> getAllByContent(UUID contentId) {
     if (!contentRepository.existsById(contentId)) {
       log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", contentId);

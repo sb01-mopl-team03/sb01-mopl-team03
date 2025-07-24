@@ -1,5 +1,6 @@
 package team03.mopl.domain.curation.elasticsearch;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

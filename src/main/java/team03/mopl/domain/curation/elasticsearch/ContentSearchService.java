@@ -3,6 +3,7 @@ package team03.mopl.domain.curation.elasticsearch;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import java.io.IOException;
@@ -79,7 +80,8 @@ public class ContentSearchService {
           .sort(sort -> sort.score(sc -> sc.order(SortOrder.Desc)))
       );
 
-      SearchResponse<ContentSearch> response = elasticsearchClient.search(searchRequest, ContentSearch.class);
+      SearchResponse<ContentSearch> response = elasticsearchClient.search(searchRequest,
+          ContentSearch.class);
 
       // ContentSearch에서 Content ID만 추출해서 DB에서 조회
       List<String> contentIds = response.hits().hits().stream()
@@ -95,7 +97,8 @@ public class ContentSearchService {
         log.info("스코어: {}, 제목: '{}', 설명: '{}'",
             hit.score(),
             content.getTitle(),
-            content.getDescription().substring(0, Math.min(50, content.getDescription().length())) + "..."
+            content.getDescription().substring(0, Math.min(50, content.getDescription().length()))
+                + "..."
         );
       });
 
@@ -123,7 +126,7 @@ public class ContentSearchService {
     }
   }
 
-  private List<Content> fallbackSearch(String keyword) {
+    private List<Content> fallbackSearch(String keyword) {
     log.info("DB 폴백 검색 - 키워드: '{}'", keyword);
     return contentRepository.findByKeyword(keyword)
         .stream()
@@ -132,7 +135,25 @@ public class ContentSearchService {
   }
 
   public void indexContent(Content content) {
-    ContentSearch searchContent = ContentSearch.from(content);
-    contentSearchRepository.save(searchContent);
+    try {
+      ContentSearch searchContent = ContentSearch.from(content);
+      contentSearchRepository.save(searchContent);
+      log.info("Elasticsearch 인덱싱 성공 - ID: {}, 제목: '{}'", content.getId(), content.getTitle());
+    } catch (Exception e) {
+      log.error("Elasticsearch 인덱싱 실패 - ID: {}, 제목: '{}', 오류: {}",
+          content.getId(), content.getTitle(), e.getMessage(), e);
+      // 예외 처리 로직 추가 (예: 재시도, 실패 알림 등)
+    }
+  }
+
+  public void deleteContent(UUID contentId) {
+    try {
+      contentSearchRepository.deleteById(contentId.toString()); // String ID로 삭제
+      log.info("Elasticsearch 문서 삭제 성공: ID '{}'", contentId);
+    } catch (Exception e) {
+      log.error("Elasticsearch 문서 삭제 실패 - ID: '{}', 오류: {}",
+          contentId, e.getMessage(), e);
+      // TODO: 예외 처리 로직 추가
+    }
   }
 }

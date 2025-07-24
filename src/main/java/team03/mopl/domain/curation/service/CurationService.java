@@ -10,6 +10,7 @@ import team03.mopl.common.exception.curation.KeywordNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
+import team03.mopl.domain.content.repository.ContentRepository;
 import team03.mopl.domain.curation.elasticsearch.ContentSearchService;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.entity.Keyword;
@@ -26,13 +27,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CurationService {
 
   private final KeywordRepository keywordRepository;
   private final KeywordContentRepository keywordContentRepository;
   private final UserRepository userRepository;
   private final ContentSearchService contentSearchService; // Elasticsearch 검색 서비스
+  private final ContentRepository contentRepository;
 
   /**
    * 새로운 콘텐츠들을 기존 키워드들과 매칭하는 배치 큐레이션
@@ -143,6 +144,7 @@ public class CurationService {
     return title.contains(keywordLower) || description.contains(keywordLower);
   }
 
+  @Transactional
   public KeywordDto registerKeyword(UUID userId, String keywordText) {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
@@ -176,6 +178,7 @@ public class CurationService {
     // Elasticsearch로 관련 콘텐츠 검색
     List<Content> relatedContents = contentSearchService.findContentsByKeyword(keywordText);
 
+    log.info("findAndMapRelatedContents - relatedCOntents 개수 = {}", relatedContents.size());
     if (relatedContents.isEmpty()) {
       log.info("키워드 '{}'와 관련된 콘텐츠가 없습니다.", keywordText);
       return;
@@ -191,6 +194,7 @@ public class CurationService {
         .collect(Collectors.toList());
 
     // 데이터베이스에 저장
+    log.info("키워드 개수", keywordContents.size());
     keywordContentRepository.saveAll(keywordContents);
 
     log.info("키워드 '{}' - {}개의 관련 콘텐츠 매핑 완료", keywordText, keywordContents.size());
@@ -273,7 +277,7 @@ public class CurationService {
 
       List<KeywordDto> keywordDtos = keywords.stream()
           .map(KeywordDto::from)
-          .collect(Collectors.toList());
+          .toList();
 
       log.info("getKeywordsByUser - 사용자 {}의 키워드 {}개 조회 완료", userId, keywordDtos.size());
       return keywordDtos;
@@ -282,5 +286,21 @@ public class CurationService {
       log.warn("사용자 키워드 조회 실패: userId={}, error={}", userId, e.getMessage());
       throw new KeywordNotFoundException();
     }
+  }
+
+  @Transactional(readOnly = true)
+  public void reindexAllContentsToElasticsearch() {
+    log.info("Elasticsearch 전체 재색인 시작...");
+    List<Content> allContents = contentRepository.findAll(); // 모든 콘텐츠를 DB에서 가져옴
+    log.info("DB에서 {}개의 콘텐츠 조회. Elasticsearch에 인덱싱 시작.", allContents.size());
+
+    for (Content content : allContents) {
+      try {
+        contentSearchService.indexContent(content);
+      } catch (Exception e) {
+        log.error("Elasticsearch 인덱싱 실패: ID={}, 제목={}", content.getId(), content.getTitle(), e);
+      }
+    }
+    log.info("Elasticsearch 전체 재색인 완료.");
   }
 }

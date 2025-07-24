@@ -10,6 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,6 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import team03.mopl.common.util.SpringApplicationContext;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.review.entity.Review;
 
@@ -85,4 +89,13 @@ public class Content {
     this.avgRating = avgRating;
   }
 
+  @PostPersist
+  private void onContentSaveOrUpdate() {
+    SpringApplicationContext.getApplicationEventPublisher().publishEvent(new ContentChangeEvent(this, this));
+  }
+
+  @PostRemove
+  private void onContentDelete() {
+    SpringApplicationContext.getApplicationEventPublisher().publishEvent(new ContentChangeEvent(this, this.id));
+  }
 }
