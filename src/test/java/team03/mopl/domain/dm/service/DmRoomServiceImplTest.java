@@ -1,24 +1,35 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.dm.dto.DmRoomDto;
@@ -283,38 +294,108 @@ class DmRoomServiceImplTest {
     assertThat(dto2.getNewMessageCount()).isEqualTo(1L);
   }
 
-
-
   @Test
-  @DisplayName("deleteRoom - sender가 나가고, 이후 receiver도 나가서 방이 삭제된다")
-  void deleteRoom() {
+  @DisplayName("sender 먼저 나가고 receiver는 남아있어 방유지")
+  void deleteSender () {
     // given
     UUID roomId = UUID.randomUUID();
-
-    // 메시지
-    UUID messageId = UUID.randomUUID();
-    Dm message = new Dm(messageId, senderId, "테스트 메시지");
-
-    // 방
     DmRoom dmRoom = new DmRoom(roomId, senderId, receiverId);
-    dmRoom.getMessages().add(message);
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.of(dmRoom));
+    when(userRepository.existsById(senderId)).thenReturn(true);
+    when(userRepository.existsById(receiverId)).thenReturn(true);
 
-    // 방 조회
-    given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom));
-
-    // 첫번째: sender가 나감
+    // when
     dmRoomService.deleteRoom(senderId, roomId);
 
-    // senderId가 null이 됐는지 확인
-    assertThat(dmRoom.getSenderId()).isNull();
-    assertThat(dmRoom.getReceiverId()).isEqualTo(receiverId);
+    // then
+    assertTrue(dmRoom.getOutUsers().contains(senderId));
+    assertFalse(dmRoom.getOutUsers().contains(receiverId));
+    verify(dmRoomRepository, never()).delete(any());
+    verify(dmService, never()).deleteDm(any());
+    // 변경 flush/save 확인
+    verify(dmRoomRepository).save(dmRoom);
+  }
 
-    // 두번째: receiver도 나감
+  @Test
+      @DisplayName("둘다_나가면_방과_DM_모두_삭제된다")
+  void NobodyInRoom() {
+    // GIVEN
+    Dm dm1 = mock(Dm.class);
+    UUID dm1Id = UUID.randomUUID();
+    when(dm1.getId()).thenReturn(dm1Id);
+
+    Dm dm2 = mock(Dm.class);
+    UUID dm2Id = UUID.randomUUID();
+    when(dm2.getId()).thenReturn(dm2Id);
+
+    // 실제 엔티티에 메시지 추가
+    UUID roomId = UUID.randomUUID();
+    DmRoom dmRoom = new DmRoom(roomId, senderId, receiverId);
+    ReflectionTestUtils.setField(dmRoom, "id", roomId); // id만 세팅
+    dmRoom.getMessages().add(dm1);
+    dmRoom.getMessages().add(dm2);
+
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.of(dmRoom));
+    when(userRepository.existsById(any())).thenReturn(true);
+
+    // WHEN: sender 먼저 나감 → receiver 나감
+    dmRoomService.deleteRoom(senderId, roomId);
     dmRoomService.deleteRoom(receiverId, roomId);
 
-    // 이제 둘 다 null → nobodyInRoom → 삭제
-    then(dmService).should().deleteDm(messageId);
-    then(dmRoomRepository).should().delete(dmRoom);
+    // THEN: 메시지 삭제 로직이 호출되어야 함
+    verify(dmService).deleteDm(dm1Id);
+    verify(dmService).deleteDm(dm2Id);
+    verify(dmRoomRepository).delete(dmRoom);
+  }
+  @Test
+  @DisplayName("방없음_=>_예외")
+  void CannotFindRoom() {
+    UUID roomId = UUID.randomUUID();
+    DmRoom dmRoom = new DmRoom(roomId, senderId, receiverId);
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.empty());
+    assertThrows(DmRoomNotFoundException.class,
+        () -> dmRoomService.deleteRoom(senderId, roomId));
+  }
+  @Test
+  @DisplayName("sender가_DB에존재하지않으면_outUsers에_추가된다")
+  void DoesntExistSenderWillPutInOutUsers() {
+    // given
+    UUID roomId = UUID.randomUUID();
+    DmRoom dmRoom = new DmRoom(roomId, senderId, receiverId);
+    when(dmRoomRepository.findById(roomId)).thenReturn(Optional.of(dmRoom));
+    when(userRepository.existsById(senderId)).thenReturn(false); // 존재 X
+    when(userRepository.existsById(receiverId)).thenReturn(true);
+
+    // when
+    dmRoomService.deleteRoom(receiverId, roomId);
+
+    // then
+    assertTrue(dmRoom.getOutUsers().contains(senderId)); // 자동 추가됨
+    assertTrue(dmRoom.getOutUsers().contains(receiverId)); // receiver도 나감
+    verify(dmRoomRepository).save(dmRoom);
+  }
+
+  @Test
+  @DisplayName("나간 유저가 findOrCreateRoom 호출 시 reenterRoom 통해 재진입된다")
+  void reenterAfterOut() {
+    // given
+    DmRoom room = new DmRoom(senderId, receiverId);
+    room.addOutUser(senderId); // A가 나간 상태라고 가정
+
+    when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+    when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
+    when(dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId)).thenReturn(Optional.of(room));
+    when(dmRoomRepository.findById(room.getId())).thenReturn(Optional.of(room));
+    // Spy를 써서 reenterRoom 호출 여부/동작 확인
+    DmRoomServiceImpl spyService = Mockito.spy(dmRoomService);
+
+    // when
+    DmRoomDto dto = spyService.findOrCreateRoom(senderId, receiverId);
+
+    // then
+    verify(spyService).reenterRoom(eq(senderId), eq(room.getId()));
+    assertFalse(room.isOut(senderId));                          // outUsers 에서 제거됐는지
+    Assertions.assertEquals(room.getId(), dto.getId());        // 기존 방 재사용 확인
   }
 
 }

@@ -48,4 +48,6 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   @Query("SELECT c FROM Content c ORDER BY c.id LIMIT :limit OFFSET :offset")
   List<Content> findAllWithOffset(@Param("offset") int offset, @Param("limit") int limit);
+
+  boolean existsByTitle(String title);
 }

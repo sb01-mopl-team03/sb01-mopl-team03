@@ -62,7 +62,7 @@ class PlaylistServiceImplTest {
   @InjectMocks
   private PlaylistServiceImpl playlistService;
 
-  // Test users
+  // 테스트용 유저
   private UUID userId;
   private User user;
   private UUID otherUserId;
