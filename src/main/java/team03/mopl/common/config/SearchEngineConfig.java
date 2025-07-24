@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
@@ -40,6 +41,7 @@ public class SearchEngineConfig {
 
   // ===== 로컬 개발환경용 (Elasticsearch) =====
   @Bean
+  @Primary
   @Profile("dev")
   public ElasticsearchClient elasticsearchClient() {
     log.info("=== DEV용 ElasticsearchClient 빈을 생성합니다 ===");
@@ -54,23 +56,17 @@ public class SearchEngineConfig {
     return new ElasticsearchClient(transport);
   }
 
-  @Bean
-  @Profile("dev")
-  public ElasticsearchOperations elasticsearchOperations() {
-    log.info("=== DEV용 ElasticsearchOperations 빈을 생성합니다 ===");
-    return new ElasticsearchTemplate(elasticsearchClient());
-  }
-
-  // elasticsearchTemplate 별명도 추가
-  @Bean
+  @Bean(name = {"elasticsearchTemplate", "elasticsearchOperations"})
+  @Primary
   @Profile("dev")
   public ElasticsearchOperations elasticsearchTemplate() {
-    log.info("=== DEV용 ElasticsearchTemplate 빈을 생성합니다 ===");
-    return elasticsearchOperations();
+    log.info("=== DEV용 elasticsearchTemplate 빈을 생성합니다 ===");
+    return new ElasticsearchTemplate(elasticsearchClient());
   }
 
   // ===== AWS 환경용 (Elasticsearch with IAM 서명) =====
   @Bean
+  @Primary
   @Profile("prod")
   public ElasticsearchClient awsElasticsearchClient() {
     log.info("=== PROD용 ElasticsearchClient 빈을 생성합니다 ===");
@@ -134,18 +130,11 @@ public class SearchEngineConfig {
     }
   }
 
-  @Bean
-  @Profile("prod")
-  public ElasticsearchOperations prodElasticsearchOperations() {
-    log.info("=== PROD용 ElasticsearchOperations 빈을 생성합니다 ===");
-    return new ElasticsearchTemplate(awsElasticsearchClient());
-  }
-
-  // ContentSearchRepository가 찾는 elasticsearchTemplate 빈
-  @Bean
+  @Bean(name = {"elasticsearchTemplate", "elasticsearchOperations"})
+  @Primary
   @Profile("prod")
   public ElasticsearchOperations prodElasticsearchTemplate() {
-    log.info("=== PROD용 ElasticsearchTemplate 빈을 생성합니다 ===");
-    return prodElasticsearchOperations();
+    log.info("=== PROD용 elasticsearchTemplate 빈을 생성합니다 ===");
+    return new ElasticsearchTemplate(awsElasticsearchClient());
   }
 }
