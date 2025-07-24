@@ -35,6 +35,10 @@ public class SearchEngineConfig {
   @Value("${spring.elasticsearch.region:ap-northeast-2}")
   private String awsRegion;
 
+  // 공유할 RestClient 필드
+  private RestClient sharedRestClient;
+  private ElasticsearchClient sharedElasticsearchClient;
+
   public SearchEngineConfig() {
     log.info("=== SearchEngineConfig 클래스가 생성되었습니다 ===");
   }
@@ -43,12 +47,18 @@ public class SearchEngineConfig {
   @Bean
   @Primary
   @Profile("dev")
+  public RestClient devRestClient() {
+    log.info("=== DEV용 RestClient 빈을 생성합니다 ===");
+    return RestClient.builder(HttpHost.create(elasticsearchUrl)).build();
+  }
+
+  @Bean
+  @Primary
+  @Profile("dev")
   public ElasticsearchClient elasticsearchClient() {
     log.info("=== DEV용 ElasticsearchClient 빈을 생성합니다 ===");
 
-    RestClient restClient = RestClient.builder(HttpHost.create(elasticsearchUrl))
-        .build();
-
+    RestClient restClient = devRestClient();
     ElasticsearchTransport transport = new RestClientTransport(
         restClient, new JacksonJsonpMapper()
     );
@@ -68,8 +78,8 @@ public class SearchEngineConfig {
   @Bean
   @Primary
   @Profile("prod")
-  public ElasticsearchClient awsElasticsearchClient() {
-    log.info("=== PROD용 ElasticsearchClient 빈을 생성합니다 ===");
+  public RestClient awsRestClient() {
+    log.info("=== PROD용 AWS 서명 RestClient 빈을 생성합니다 ===");
     log.info("Elasticsearch URL: {}", elasticsearchUrl);
     log.info("AWS Region: {}", awsRegion);
 
@@ -98,7 +108,7 @@ public class SearchEngineConfig {
 
       log.info("연결 정보 - 호스트: {}, 포트: {}", hostname, port);
 
-      // RestClient 생성 (AWS 서명 포함)
+      // RestClient 생성 (AWS 서명 포함) - 이것이 모든 곳에서 공유됨
       RestClient restClient = RestClient.builder(new HttpHost(hostname, port, "https"))
           .setHttpClientConfigCallback(httpClientBuilder ->
               httpClientBuilder.addInterceptorLast(interceptor)
@@ -110,24 +120,40 @@ public class SearchEngineConfig {
           )
           .build();
 
-      log.info("RestClient 생성 완료");
+      log.info("AWS 서명 RestClient 생성 완료");
 
-      // ElasticsearchTransport 생성
-      ElasticsearchTransport transport = new RestClientTransport(
-          restClient, new JacksonJsonpMapper()
-      );
+      // 필드에 저장하여 다른 빈에서도 같은 인스턴스 사용
+      this.sharedRestClient = restClient;
 
-      log.info("ElasticsearchTransport 생성 완료");
-
-      ElasticsearchClient client = new ElasticsearchClient(transport);
-      log.info("=== PROD용 ElasticsearchClient 빈 생성 완료! ===");
-
-      return client;
+      return restClient;
 
     } catch (Exception e) {
-      log.error("PROD용 ElasticsearchClient 생성 중 오류 발생: {}", e.getMessage(), e);
-      throw new RuntimeException("ElasticsearchClient 생성 실패", e);
+      log.error("PROD용 AWS RestClient 생성 중 오류 발생: {}", e.getMessage(), e);
+      throw new RuntimeException("AWS RestClient 생성 실패", e);
     }
+  }
+
+  @Bean
+  @Primary
+  @Profile("prod")
+  public ElasticsearchClient awsElasticsearchClient() {
+    log.info("=== PROD용 ElasticsearchClient 빈을 생성합니다 ===");
+
+    // 같은 RestClient 인스턴스 사용
+    RestClient restClient = awsRestClient();
+
+    // ElasticsearchTransport 생성
+    ElasticsearchTransport transport = new RestClientTransport(
+        restClient, new JacksonJsonpMapper()
+    );
+
+    ElasticsearchClient client = new ElasticsearchClient(transport);
+    log.info("=== PROD용 ElasticsearchClient 빈 생성 완료! ===");
+
+    // 필드에 저장
+    this.sharedElasticsearchClient = client;
+
+    return client;
   }
 
   @Bean(name = {"elasticsearchTemplate", "elasticsearchOperations"})
@@ -135,6 +161,13 @@ public class SearchEngineConfig {
   @Profile("prod")
   public ElasticsearchOperations prodElasticsearchTemplate() {
     log.info("=== PROD용 elasticsearchTemplate 빈을 생성합니다 ===");
-    return new ElasticsearchTemplate(awsElasticsearchClient());
+
+    // 같은 ElasticsearchClient 인스턴스 사용
+    ElasticsearchClient client = awsElasticsearchClient();
+    ElasticsearchTemplate template = new ElasticsearchTemplate(client);
+
+    log.info("=== PROD용 elasticsearchTemplate 빈 생성 완료 (AWS 서명 포함) ===");
+
+    return template;
   }
 }
