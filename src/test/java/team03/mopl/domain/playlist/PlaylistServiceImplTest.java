@@ -35,12 +35,13 @@ import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.playlist.entity.PlaylistContent;
 import team03.mopl.domain.playlist.repository.PlaylistRepository;
 import team03.mopl.domain.playlist.service.PlaylistServiceImpl;
+import team03.mopl.domain.subscription.SubscriptionRepository;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("플레이리스트 서비스 테스트")
+@DisplayName("Playlist Service Test")
 class PlaylistServiceImplTest {
 
   @Mock
@@ -52,11 +53,14 @@ class PlaylistServiceImplTest {
   @Mock
   private ContentRepository contentRepository;
 
-  @InjectMocks
-  private PlaylistServiceImpl playlistService;
-
   @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  @Mock
+  private SubscriptionRepository subscriptionRepository;
+
+  @InjectMocks
+  private PlaylistServiceImpl playlistService;
 
   // 테스트용 유저
   private UUID userId;
@@ -64,11 +68,11 @@ class PlaylistServiceImplTest {
   private UUID otherUserId;
   private User otherUser;
 
-  // 테스트용 플레이리스트
+  // Test playlist
   private UUID playlistId;
   private Playlist playlist;
 
-  // 테스트용 콘텐츠
+  // Test contents
   private UUID contentId1;
   private UUID contentId2;
   private Content content1;
@@ -76,10 +80,13 @@ class PlaylistServiceImplTest {
 
   @BeforeEach
   void setUp() {
+    // Initialize Mock objects
+    reset(eventPublisher);
+
     userId = UUID.randomUUID();
     user = User.builder()
         .id(userId)
-        .name("테스트유저")
+        .name("Test User")
         .email("test@test.com")
         .password("test")
         .role(Role.USER)
@@ -88,7 +95,7 @@ class PlaylistServiceImplTest {
     otherUserId = UUID.randomUUID();
     otherUser = User.builder()
         .id(otherUserId)
-        .name("다른유저")
+        .name("Other User")
         .email("other@test.com")
         .password("test")
         .role(Role.USER)
@@ -97,8 +104,8 @@ class PlaylistServiceImplTest {
     playlistId = UUID.randomUUID();
     playlist = Playlist.builder()
         .id(playlistId)
-        .name("테스트 플레이리스트")
-        .nameNormalized("테스트플레이리스트")
+        .name("Test Playlist")
+        .nameNormalized("testplaylist")
         .user(user)
         .isPublic(true)
         .playlistContents(new ArrayList<>())
@@ -107,8 +114,8 @@ class PlaylistServiceImplTest {
     contentId1 = UUID.randomUUID();
     content1 = Content.builder()
         .id(contentId1)
-        .title("테스트 콘텐츠 1")
-        .description("테스트용 콘텐츠 1입니다.")
+        .title("Test Content 1")
+        .description("Test content 1 description")
         .contentType(ContentType.TV)
         .releaseDate(LocalDateTime.now())
         .build();
@@ -116,22 +123,22 @@ class PlaylistServiceImplTest {
     contentId2 = UUID.randomUUID();
     content2 = Content.builder()
         .id(contentId2)
-        .title("테스트 콘텐츠 2")
-        .description("테스트용 콘텐츠 2입니다.")
+        .title("Test Content 2")
+        .description("Test content 2 description")
         .contentType(ContentType.MOVIE)
         .releaseDate(LocalDateTime.now())
         .build();
   }
 
   @Nested
-  @DisplayName("플레이리스트 생성")
+  @DisplayName("Create Playlist")
   class CreatePlaylist {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("Success")
     void success() {
       // given
-      PlaylistCreateRequest request = new PlaylistCreateRequest("새 플레이리스트", null, true);
+      PlaylistCreateRequest request = new PlaylistCreateRequest("New Playlist", null, true);
 
       when(userRepository.findById(userId)).thenReturn(Optional.of(user));
       when(playlistRepository.save(any(Playlist.class))).thenReturn(playlist);
@@ -148,11 +155,11 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 유저")
+    @DisplayName("Fails when user not found")
     void failsWhenUserNotFound() {
       // given
       UUID randomUserId = UUID.randomUUID();
-      PlaylistCreateRequest request = new PlaylistCreateRequest("새 플레이리스트", null, true);
+      PlaylistCreateRequest request = new PlaylistCreateRequest("New Playlist", null, true);
 
       when(userRepository.findById(randomUserId)).thenReturn(Optional.empty());
 
@@ -164,11 +171,11 @@ class PlaylistServiceImplTest {
   }
 
   @Nested
-  @DisplayName("플레이리스트 조회")
+  @DisplayName("Get Playlist")
   class GetPlaylist {
 
     @Test
-    @DisplayName("ID로 조회 성공")
+    @DisplayName("Get by ID success")
     void getByIdSuccess() {
       // given
       when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
@@ -183,7 +190,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플레이리스트 조회")
+    @DisplayName("Fails when playlist not found")
     void failsWhenPlaylistNotFound() {
       // given
       UUID randomPlaylistId = UUID.randomUUID();
@@ -194,14 +201,14 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("전체 플레이리스트 조회 성공")
-    void getAllSuccess() {
+    @DisplayName("Get all public playlists success")
+    void getAllPublicSuccess() {
       // given
       List<Playlist> playlists = Arrays.asList(playlist);
-      when(playlistRepository.findAll()).thenReturn(playlists);
+      when(playlistRepository.findByIsPublicTrue()).thenReturn(playlists);
 
       // when
-      List<PlaylistDto> result = playlistService.getAll();
+      List<PlaylistDto> result = playlistService.getAllPublic();
 
       // then
       assertNotNull(result);
@@ -210,7 +217,23 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("유저별 플레이리스트 조회 성공")
+    @DisplayName("Get all subscribed playlists success")
+    void getAllSubscribedSuccess() {
+      // given
+      List<Playlist> playlists = Arrays.asList(playlist);
+      when(subscriptionRepository.findPlaylistsByUserId(userId)).thenReturn(playlists);
+
+      // when
+      List<PlaylistDto> result = playlistService.getAllSubscribed(userId);
+
+      // then
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertEquals(playlist.getName(), result.get(0).name());
+    }
+
+    @Test
+    @DisplayName("Get all playlists by user success")
     void getAllByUserSuccess() {
       // given
       List<Playlist> playlists = Arrays.asList(playlist);
@@ -227,7 +250,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 유저의 플레이리스트 조회")
+    @DisplayName("Get all by user fails when user not found")
     void getAllByUserFailsWhenUserNotFound() {
       // given
       UUID randomUserId = UUID.randomUUID();
@@ -238,10 +261,10 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("플레이리스트 검색 성공")
+    @DisplayName("Search playlists success")
     void searchPlaylistsSuccess() {
       // given
-      String keyword = "테스트";
+      String keyword = "test";
       List<Playlist> playlists = Arrays.asList(playlist);
       when(playlistRepository.searchPlaylistsWithNormalizedKeyword(any(String.class), eq(userId)))
           .thenReturn(playlists);
@@ -256,7 +279,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("유저 플레이리스트 조회 - 본인")
+    @DisplayName("Get user playlists for self success")
     void getUserPlaylistsForSelfSuccess() {
       // given
       List<Playlist> playlists = Arrays.asList(playlist);
@@ -273,7 +296,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("유저 플레이리스트 조회 - 다른 유저")
+    @DisplayName("Get user playlists for other success")
     void getUserPlaylistsForOtherSuccess() {
       // given
       List<Playlist> publicPlaylists = Arrays.asList(playlist);
@@ -291,14 +314,14 @@ class PlaylistServiceImplTest {
   }
 
   @Nested
-  @DisplayName("플레이리스트 수정")
+  @DisplayName("Update Playlist")
   class UpdatePlaylist {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("Success")
     void success() {
       // given
-      PlaylistUpdateRequest request = new PlaylistUpdateRequest("수정된 플레이리스트", false);
+      PlaylistUpdateRequest request = new PlaylistUpdateRequest("Updated Playlist", false);
       when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
       when(playlistRepository.save(any(Playlist.class))).thenReturn(playlist);
 
@@ -311,11 +334,11 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플레이리스트")
+    @DisplayName("Fails when playlist not found")
     void failsWhenPlaylistNotFound() {
       // given
       UUID randomPlaylistId = UUID.randomUUID();
-      PlaylistUpdateRequest request = new PlaylistUpdateRequest("수정된 플레이리스트", false);
+      PlaylistUpdateRequest request = new PlaylistUpdateRequest("Updated Playlist", false);
       when(playlistRepository.findById(randomPlaylistId)).thenReturn(Optional.empty());
 
       // when & then
@@ -326,10 +349,10 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("권한이 없는 사용자의 수정 시도")
+    @DisplayName("Fails when not playlist owner")
     void failsWhenNotPlaylistOwner() {
       // given
-      PlaylistUpdateRequest request = new PlaylistUpdateRequest("수정된 플레이리스트", false);
+      PlaylistUpdateRequest request = new PlaylistUpdateRequest("Updated Playlist", false);
       when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
 
       // when & then
@@ -341,11 +364,11 @@ class PlaylistServiceImplTest {
   }
 
   @Nested
-  @DisplayName("플레이리스트 삭제")
+  @DisplayName("Delete Playlist")
   class DeletePlaylist {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("Success")
     void success() {
       // given
       when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
@@ -358,7 +381,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플레이리스트")
+    @DisplayName("Fails when playlist not found")
     void failsWhenPlaylistNotFound() {
       // given
       UUID randomPlaylistId = UUID.randomUUID();
@@ -372,7 +395,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("권한이 없는 사용자의 삭제 시도")
+    @DisplayName("Fails when not playlist owner")
     void failsWhenNotPlaylistOwner() {
       // given
       when(playlistRepository.findById(playlistId)).thenReturn(Optional.of(playlist));
@@ -386,11 +409,11 @@ class PlaylistServiceImplTest {
   }
 
   @Nested
-  @DisplayName("플레이리스트 콘텐츠 추가")
+  @DisplayName("Add Contents")
   class AddContents {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("Success")
     void success() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1, contentId2);
@@ -408,7 +431,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("빈 콘텐츠 리스트로 추가 시도")
+    @DisplayName("Fails when content IDs empty")
     void failsWhenContentIdsEmpty() {
       // given
       List<UUID> emptyContentIds = Arrays.asList();
@@ -421,7 +444,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("null 콘텐츠 리스트로 추가 시도")
+    @DisplayName("Fails when content IDs null")
     void failsWhenContentIdsNull() {
       // when & then
       assertThrows(PlaylistContentEmptyException.class,
@@ -431,7 +454,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플레이리스트")
+    @DisplayName("Fails when playlist not found")
     void failsWhenPlaylistNotFound() {
       // given
       UUID randomPlaylistId = UUID.randomUUID();
@@ -447,7 +470,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("권한이 없는 사용자의 콘텐츠 추가 시도")
+    @DisplayName("Fails when not playlist owner")
     void failsWhenNotPlaylistOwner() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
@@ -462,7 +485,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 콘텐츠들만 있는 경우")
+    @DisplayName("Fails when no valid contents")
     void failsWhenNoValidContents() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
@@ -479,13 +502,13 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("이미 존재하는 콘텐츠만 추가 시도")
+    @DisplayName("Fails when all contents already exist")
     void failsWhenAllContentsAlreadyExist() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
       List<Content> contents = Arrays.asList(content1);
 
-      // 이미 플레이리스트에 있는 콘텐츠 설정
+      // Add existing content to playlist
       PlaylistContent existingPlaylistContent = PlaylistContent.builder()
           .playlist(playlist)
           .content(content1)
@@ -504,16 +527,16 @@ class PlaylistServiceImplTest {
   }
 
   @Nested
-  @DisplayName("플레이리스트 콘텐츠 삭제")
+  @DisplayName("Delete Contents")
   class DeleteContents {
 
     @Test
-    @DisplayName("성공")
+    @DisplayName("Success")
     void success() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
 
-      // 플레이리스트에 콘텐츠 추가
+      // Add content to playlist
       PlaylistContent playlistContent = PlaylistContent.builder()
           .playlist(playlist)
           .content(content1)
@@ -531,7 +554,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("빈 콘텐츠 리스트로 삭제 시도")
+    @DisplayName("Fails when content IDs empty")
     void failsWhenContentIdsEmpty() {
       // given
       List<UUID> emptyContentIds = Arrays.asList();
@@ -544,7 +567,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("null 콘텐츠 리스트로 삭제 시도")
+    @DisplayName("Fails when content IDs null")
     void failsWhenContentIdsNull() {
       // when & then
       assertThrows(PlaylistContentRemoveEmptyException.class,
@@ -554,7 +577,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 플레이리스트")
+    @DisplayName("Fails when playlist not found")
     void failsWhenPlaylistNotFound() {
       // given
       UUID randomPlaylistId = UUID.randomUUID();
@@ -570,7 +593,7 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("권한이 없는 사용자의 콘텐츠 삭제 시도")
+    @DisplayName("Fails when not playlist owner")
     void failsWhenNotPlaylistOwner() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
@@ -585,11 +608,11 @@ class PlaylistServiceImplTest {
     }
 
     @Test
-    @DisplayName("삭제할 콘텐츠가 플레이리스트에 없는 경우")
+    @DisplayName("Fails when no contents to remove")
     void failsWhenNoContentsToRemove() {
       // given
       List<UUID> contentIds = Arrays.asList(contentId1);
-      // 플레이리스트에 해당 콘텐츠가 없는 상태
+      // Playlist has no such content
 
       when(playlistRepository.findByIdWithContents(playlistId)).thenReturn(Optional.of(playlist));
 

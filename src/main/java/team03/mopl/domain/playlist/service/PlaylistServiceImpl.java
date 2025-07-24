@@ -27,6 +27,8 @@ import team03.mopl.domain.playlist.dto.PlaylistUpdateRequest;
 import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.playlist.entity.PlaylistContent;
 import team03.mopl.domain.playlist.repository.PlaylistRepository;
+import team03.mopl.domain.subscription.Subscription;
+import team03.mopl.domain.subscription.SubscriptionRepository;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
 
@@ -40,6 +42,7 @@ public class PlaylistServiceImpl implements PlaylistService {
   private final UserRepository userRepository;
   private final ContentRepository contentRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final SubscriptionRepository subscriptionRepository;
 
   @Override
   @Transactional
@@ -80,8 +83,15 @@ public class PlaylistServiceImpl implements PlaylistService {
 
   @Override
   @Transactional
-  public List<PlaylistDto> getAll() {
-    List<Playlist> playlists = playlistRepository.findAll();
+  public List<PlaylistDto> getAllPublic() {
+    List<Playlist> playlists = playlistRepository.findByIsPublicTrue();
+    return playlists.stream().map(PlaylistDto::from).toList();
+  }
+
+  @Override
+  @Transactional
+  public List<PlaylistDto> getAllSubscribed(UUID userId) {
+    List<Playlist> playlists = subscriptionRepository.findPlaylistsByUserId(userId);
     return playlists.stream().map(PlaylistDto::from).toList();
   }
 
