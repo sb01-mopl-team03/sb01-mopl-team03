@@ -17,6 +17,4 @@ public interface DmRoomService {
 
   void deleteRoom(UUID userId, UUID roomId);
 
-  void reenterRoom(UUID userId, UUID roomId);
-
 }

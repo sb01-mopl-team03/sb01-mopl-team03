@@ -66,21 +66,28 @@ public class PlaylistController implements PlaylistApi {
     return ResponseEntity.ok(playlistDtos);
   }
 
-  @Override
-  @GetMapping
-  public ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
+//  @Override
+//  @GetMapping
+//  public ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
+//      @AuthenticationPrincipal CustomUserDetails userDetails) {
+//
+//    UUID userId = userDetails.getId();
+//    List<PlaylistDto> playlistDtos = playlistService.getAllByUser(userId);
+//    return ResponseEntity.ok(playlistDtos);
+//  }
 
-    UUID userId = userDetails.getId();
-    List<PlaylistDto> playlistDtos = playlistService.getAllByUser(userId);
+  @GetMapping
+  public ResponseEntity<List<PlaylistDto>> getAllPublic() {
+    List<PlaylistDto> playlistDtos = playlistService.getAllPublic();
     return ResponseEntity.ok(playlistDtos);
   }
 
-//  @GetMapping
-//  public ResponseEntity<List<PlaylistDto>> getAll() {
-//    List<PlaylistDto> playlistDtos = playlistService.getAll();
-//    return ResponseEntity.ok(playlistDtos);
-//  }
+  @GetMapping("/subscribed")
+  public ResponseEntity<List<PlaylistDto>> getAllSubscribed(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    UUID userId = userDetails.getId();
+    List<PlaylistDto> playlistDtos = playlistService.getAllSubscribed(userId);
+    return ResponseEntity.ok(playlistDtos);
+  }
 
   @Override
   @GetMapping("/{playlistId}")

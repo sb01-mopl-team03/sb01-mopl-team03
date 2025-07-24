@@ -73,6 +73,10 @@ dependencies {
     }
     implementation 'com.github.shin285:KOMORAN:3.3.9'
 
+    // Elasticsearch
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     // Jakarta JAXB - 최신 버전 명시적 추가
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'

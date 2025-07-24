@@ -141,7 +141,7 @@ class UserControllerTest {
         "profile", "profile2.png", "image/png", "image-data".getBytes());
     MockMultipartFile jsonPart = new MockMultipartFile(
         "request", "", "application/json",
-        objectMapper.writeValueAsBytes(new UserUpdateRequest("강감찬", "password","newPass123")));
+        objectMapper.writeValueAsBytes(new UserUpdateRequest("강감찬", "newPass123")));
 
     UserResponse response = new UserResponse("hong@naver.com", "강감찬", "user", false, "profile2.png");
 

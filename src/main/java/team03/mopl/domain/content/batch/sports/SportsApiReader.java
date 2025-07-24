@@ -18,7 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   private final RestTemplate restTemplate;
-  private List<SportsApiRequestInfo> apiRequestInfos;
+  private final List<SportsApiRequestInfo> apiRequestInfos;
   private final String baseUrl;
   private int nextRequestIndex = 0;
   private List<SportsItemDto> sportsItemDtos;
@@ -26,6 +26,7 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
 
   public SportsApiReader(RestTemplate restTemplate, String baseUrl) {
     this.restTemplate = restTemplate;
+    this.apiRequestInfos = buildApiRequestInfo();
     this.baseUrl = baseUrl;
     this.sportsItemDtos = new ArrayList<>();
   }
@@ -118,7 +119,6 @@ public class SportsApiReader implements ItemStreamReader<SportsItemDto> {
    */
   @Override
   public void open(ExecutionContext executionContext) throws ItemStreamException {
-    this.apiRequestInfos = buildApiRequestInfo();
     if (executionContext.containsKey("nextRequestIndex")) {
       this.nextRequestIndex = executionContext.getInt("nextRequestIndex");
       log.info("SportsApiReader - SPORTS API 데이터 읽기 재시작: nextRequestIndex={}",

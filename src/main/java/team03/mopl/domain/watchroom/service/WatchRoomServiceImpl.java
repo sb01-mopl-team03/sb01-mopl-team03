@@ -1,9 +1,10 @@
 package team03.mopl.domain.watchroom.service;
 
 
-import java.time.Duration;
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -118,7 +119,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     log.info("getAll - 실시간 시청방 페이지네이션 조회 완료: 전체 검색 결과 수 = {}", totalElements);
     return CursorPageResponseDto.<WatchRoomDto>builder()
         .data(result)
-        .nextCursor(nextCursor == null ? null : codecUtil.encodeNextCursor(nextCursor,
+        .nextCursor(nextCursor == null? null : codecUtil.encodeNextCursor(nextCursor,
             request.getSortBy()))
         .hasNext(hasNext)
         .totalElements(totalElements)
@@ -258,28 +259,12 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   }
 
   private WatchRoomInfoDto getWatchRoomInfoDtoWithNewUser(WatchRoom watchRoom, User user) {
-    log.debug("getWatchRoomInfoDtoWithNewUser - 시청방 정보 조회 및 새 참여자: watchRoomId = {}",
-        watchRoom.getId());
-
-    if (!watchRoom.getIsPlaying()) {
-      return WatchRoomInfoDto.builder()
-          .id(watchRoom.getId())
-          .newUserId(user.getId())
-          .playTime(watchRoom.getPlayTime())
-          .isPlaying(watchRoom.getIsPlaying())
-          .content(ContentDto.from(watchRoom.getContent()))
-          .participantsInfoDto(getParticipantsInfoDto(watchRoom))
-          .build();
-    }
-
-    Double nowPlayTime =
-        (double) Duration.between(watchRoom.getVideoStateUpdatedAt(), LocalDateTime.now())
-            .toSeconds() + watchRoom.getPlayTime();
+    log.debug("getWatchRoomInfoDtoWithNewUser - 시청방 정보 조회 및 새 참여자: watchRoomId = {}", watchRoom.getId());
 
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())
         .newUserId(user.getId())
-        .playTime(nowPlayTime)
+        .playTime(watchRoom.getPlayTime())
         .isPlaying(watchRoom.getIsPlaying())
         .content(ContentDto.from(watchRoom.getContent()))
         .participantsInfoDto(getParticipantsInfoDto(watchRoom))

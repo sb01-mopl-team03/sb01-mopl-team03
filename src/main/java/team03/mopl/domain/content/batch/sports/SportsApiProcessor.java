@@ -5,29 +5,19 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.ContentType;
 import team03.mopl.common.util.NormalizerUtil;
-import team03.mopl.domain.content.repository.ContentRepository;
 
 @Slf4j
-@RequiredArgsConstructor
 public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content> {
-
-  private final ContentRepository contentRepository;
 
   @Override
   public Content process(SportsItemDto item) throws Exception {
     log.info("SportsApiProcessor - SPORTS 아이템 → 컨텐츠 변환 시작 : fileName={}",
         item.getStrFilename());
-
-    if (contentRepository.existsByTitle(item.getStrFilename())) {
-      log.debug("이미 존재하는 컨텐츠입니다.: item.getStrFilename()={}", item.getStrFilename());
-      return null;
-    }
 
     // 1. description 생성
     StringBuilder description = new StringBuilder();
@@ -70,11 +60,6 @@ public class SportsApiProcessor implements ItemProcessor<SportsItemDto, Content>
     String strVideo = "";
     if (item.getStrVideo() != null) {
       strVideo = item.getStrVideo();
-    }
-
-    if (strVideo.isEmpty()) {
-      log.debug("YouTube URL 부재로 스킵: item.getStrFilename()={}", item.getStrFilename());
-      return null;
     }
     log.debug("비디오 URL 확인: strVideo={}", strVideo);
 

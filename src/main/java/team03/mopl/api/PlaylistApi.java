@@ -39,10 +39,14 @@ public interface PlaylistApi {
       @RequestParam String keyword,
       @AuthenticationPrincipal CustomUserDetails userDetails);
 
-  @Operation(summary = "내 재생목록 전체 조회")
+//  @Operation(summary = "내 재생목록 전체 조회")
+//  @GetMapping
+//  ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
+//      @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails);
+
+  @Operation(summary = "공개 재생목록 전체 조회")
   @GetMapping
-  ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
-      @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails);
+  ResponseEntity<List<PlaylistDto>> getAllPublic();
 
   @Operation(summary = "재생목록 단일 조회")
   @GetMapping("/{playlistId}")

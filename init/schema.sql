@@ -223,14 +223,6 @@ CREATE TABLE "dm_read_users"
     FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
 );
 
-CREATE TABLE dm_room_out_users (
-    dm_room_id UUID NOT NULL,
-    user_id    UUID NOT NULL,
-    PRIMARY KEY (dm_room_id, user_id),
-    FOREIGN KEY (dm_room_id) REFERENCES dm_rooms (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)    REFERENCES users (id)        ON DELETE CASCADE
-);
-
 -- 소셜 계정 테이블
 -- CREATE TABLE "social_accounts"
 -- (

@@ -3,16 +3,12 @@ package team03.mopl.domain.dm.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team03.mopl.common.exception.dm.AlreadyDmRoomExistException;
-import team03.mopl.common.exception.dm.CannotCreateDmRoomSelfException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
-import team03.mopl.common.exception.dm.OutUserFromDmRoomException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.dm.dto.DmRoomDto;
 import team03.mopl.domain.dm.entity.Dm;
@@ -48,14 +44,6 @@ public class DmRoomServiceImpl implements DmRoomService {
       log.warn("createRoom - 유저(receiverId) 없음: {}", receiverId);
       return new UserNotFoundException();
     });
-
-    dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId).ifPresent(room -> {
-      if (room.isOut(senderId) || room.isOut(receiverId)) {
-        throw new OutUserFromDmRoomException();
-      }
-      throw new AlreadyDmRoomExistException();
-    });
-
     DmRoom dmRoom = dmRoomRepository.save(new DmRoom(senderId, receiverId));
     DmRoomDto roomDto = DmRoomDto.from(sender.getName(), receiver.getName(), dmRoom);
     log.info("createRoom - DM 방 생성 완료: roomId={}", roomDto.getId());
@@ -83,23 +71,8 @@ public class DmRoomServiceImpl implements DmRoomService {
   public DmRoomDto findOrCreateRoom(UUID userA, UUID userB) {
     User sender = userRepository.findById(userA).orElseThrow(UserNotFoundException::new);
     User receiver = userRepository.findById(userB).orElseThrow(UserNotFoundException::new);
-    if( userA.toString().equals(userB.toString()) ) {
-      log.warn("findOrCreateRoom - 자기 자신과의 채팅방을 생성 시도: userId={}", userA);
-      throw new CannotCreateDmRoomSelfException();
-    }
-    Optional<DmRoom> optional = dmRoomRepository.findByRoomBetweenUsers(userA, userB);
-    if (optional.isPresent()) {
-      DmRoom room = optional.orElseThrow(DmRoomNotFoundException::new);
-      // 둘 중 하나라도 outUsers에 포함되어 있으면 재진입 시도
-      if (room.isOut(userA)) {
-        reenterRoom(userA, room.getId());
-      }else if (room.isOut(userB)) {
-        reenterRoom(userB, room.getId());
-      }
-      return DmRoomDto.from(sender.getName(), receiver.getName(), room);
-    }
-    // 기존 방이 없을 때만 생성
-    return createRoom(userA, userB);
+    Optional<DmRoom> optionalDmRoom = dmRoomRepository.findByRoomBetweenUsers(userA, userB);
+    return optionalDmRoom.map(dmRoom -> DmRoomDto.from(sender.getName(), receiver.getName(), dmRoom)).orElseGet(() -> createRoom(userA, userB));
   }
 
   // 유저의 모든 채팅방
@@ -108,9 +81,6 @@ public class DmRoomServiceImpl implements DmRoomService {
     List<DmRoom> dmRooms = dmRoomRepository.findBySenderIdOrReceiverId(userId, userId);
     List<DmRoomDto> dmRoomDtos = new ArrayList<>();
     for (DmRoom dmRoom : dmRooms) {
-      if( dmRoom.isOut(userId) ) {
-        continue;
-      }
       List<Dm> messages = dmRoom.getMessages();
       String content = null;
       if (!messages.isEmpty()) {
@@ -136,55 +106,23 @@ public class DmRoomServiceImpl implements DmRoomService {
   }
 
   @Override
-  @Transactional
-  public void reenterRoom(UUID userId, UUID roomId) {
-    log.info("reenterRoom - 방 재진입 시도: roomId={}, userId={}", roomId, userId);
-    DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
-      log.warn("reenterRoom - 방 없음: {}", roomId);
-      return new DmRoomNotFoundException();
-    });
-    dmRoom.removeOutUser(userId);
-  }
-
-  @Override
-  @Transactional
   public void deleteRoom(UUID userId, UUID roomId) { //파라미터 변경! ( 삭제하고자 하는 룸의 유저가 삭제가능 )
     // 둘 다 나가기 전까지는 채팅이 살아있어야 함
-    log.info("deleteRoom - 채팅 방 삭제 시도: userId={}, roomId={}", userId, roomId);
+    log.info("deleteRoom - 유저 {} 가 방 {} 삭제 시도", userId, roomId);
     DmRoom dmRoom = dmRoomRepository.findById(roomId).orElseThrow(() -> {
       log.warn("deleteRoom - 방 없음: {}", roomId);
       return new DmRoomNotFoundException();
     });
 
-    //한 쪽 유저가 삭제된 경우
-    UUID senderId   = dmRoom.getSenderId();
-    UUID receiverId = dmRoom.getReceiverId();
-    if (senderId != null && !userRepository.existsById(senderId)) {
-      log.info("deleteRoom - 존재하지 않는 유저 나감 처리: sender={}, roomId={}", senderId, roomId);
-      dmRoom.addOutUser(senderId);
-    }
-    if (receiverId != null && !userRepository.existsById(receiverId)) {
-      log.info("deleteRoom - 존재하지 않는 유저 나감 처리: sender={}, roomId={}", senderId, roomId);
-      dmRoom.addOutUser(receiverId);
-    }
-
-    //senderId, ReceiverId 모두 남아있음 <- 한 명은 나가있는데 그 한 명이 다시 채팅방 똑같은 걸 생성하는 걸 방지해야 함
     if (dmRoom.getSenderId() != null && dmRoom.getSenderId().equals(userId)) {
       log.info("deleteRoom - senderId 제거: {}", userId);
-      //dmRoom.setSenderId(null);
-      dmRoom.addOutUser(userId);
-      dmRoomRepository.save(dmRoom);
+      dmRoom.setSenderId(null);
     } else if (dmRoom.getReceiverId() != null && dmRoom.getReceiverId().equals(userId)) {
       log.info("deleteRoom - receiverId 제거: {}", userId);
-      //dmRoom.setReceiverId(null);
-      dmRoom.addOutUser(userId);
-      dmRoomRepository.save(dmRoom);
+      dmRoom.setReceiverId(null);
     }
 
-    //나간 유저 리스트에 송수신자가 모두 포함된다면 방과 메시지 삭제 로직 실행
-
-    Set<UUID> outUsers = dmRoom.getOutUsers();
-    if( outUsers.contains(dmRoom.getSenderId()) && outUsers.contains(dmRoom.getReceiverId()) ) {
+    if (dmRoom.nobodyInRoom()) {
       log.info("deleteRoom - 아무도 남지 않아 방과 메시지 전체 삭제: roomId={}", roomId);
       List<Dm> messages = dmRoom.getMessages();
       for (Dm message : messages) {
