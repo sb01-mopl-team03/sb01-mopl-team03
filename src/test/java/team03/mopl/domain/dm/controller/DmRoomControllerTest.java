@@ -20,9 +20,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.domain.dm.dto.DmRoomDto;
 import team03.mopl.domain.dm.service.DmRoomService;
+import team03.mopl.domain.dm.service.DmService;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.jwt.CustomUserDetails;
@@ -36,6 +38,9 @@ class DmRoomControllerTest {
 
   @Autowired
   private DmRoomService dmRoomService;
+
+  @MockitoBean
+  private DmService dmService;
 
   @TestConfiguration
   static class TestContextConfiguration {
