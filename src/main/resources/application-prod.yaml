@@ -34,6 +34,11 @@ spring:
       ssl:
         enabled: true
 
+  elasticsearch:
+    uris: ${OPENSEARCH_ENDPOINT}
+    connection-timeout: 10s
+    socket-timeout: 60s
+
   batch:
     jdbc:
       initialize-schema: never
