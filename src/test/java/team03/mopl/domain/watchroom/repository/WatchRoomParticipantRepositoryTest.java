@@ -1,6 +1,5 @@
 package team03.mopl.domain.watchroom.repository;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.persistence.EntityManager;
@@ -13,10 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import team03.mopl.common.config.JpaConfig;
 import team03.mopl.common.config.QueryDslConfig;
@@ -411,13 +408,15 @@ class WatchRoomParticipantRepositoryTest {
             .build();
         em.persist(watchRoomParticipant1);
 
+        roomsWith1Participant.add(watchRoomForSearchTest.getId());
+
         if (i == 4) {
           dateCursor = watchRoomForSearchTest.getCreatedAt();
           titleCursor = watchRoomForSearchTest.getTitle();
           cursorId = watchRoomForSearchTest.getId();
         }
 
-        if (i > 6) {
+        if (i >= 7) {
           WatchRoomParticipant watchRoomParticipant2 = WatchRoomParticipant.builder()
               .watchRoom(watchRoomForSearchTest)
               .user(owner)
@@ -428,8 +427,6 @@ class WatchRoomParticipantRepositoryTest {
           if (i == 7) {
             participantCountCursorId = watchRoomForSearchTest.getId();
           }
-        } else {
-          roomsWith1Participant.add(watchRoomForSearchTest.getId());
         }
       }
     }
@@ -455,38 +452,141 @@ class WatchRoomParticipantRepositoryTest {
       //then
       assertEquals(10, result.size());
       assertEquals(1L, result.get(0).getParticipantCount().longValue());
-      assertTrue(result.get(0).getWatchRoom().getOwner().equals(user));
+      assertEquals(result.get(0).getWatchRoom().getOwner(), user);
       assertEquals("테스트시청방0", result.get(0).getWatchRoom().getTitle());
     }
 
-////    todo - 테스트 수정
-////    테스트 할때마다 결과가 달라짐
-//    @Test
-//    @DisplayName("시청방 소유자 이름에 검색어가 있음, participantCount, Desc, Cursor not null, size 10, 결과는 7")
-//    void whenFilteringByParticipantCountCursorDesc() {
-//      //given
-//      String lastValue = "2";
-//      String lastId = participantCountCursorId.toString();
-//
-//      Cursor cursor = new Cursor(lastValue, lastId);
-//
-//      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
-//          .searchKeyword("er")
-//          .sortBy("participantCount")
-//          .direction("desc")
-//          .cursor(cursor)
-//          .size(10)
-//          .build();
-//
-//      //when
-//      List<WatchRoomContentWithParticipantCountDto> result =
-//          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
-//
-//      //then
-//      // 참여자 수가 1인 방의 개수와 결과 개수가 일치해야 함
-//      assertEquals(roomsWith1Participant.size(), result.size());
-//
-//    }
+    @Test
+    @DisplayName("시청방 제목에 검색어가 있음, Title, ASC, Cursor not null, size 20, 결과는 10")
+    void whenWatchRoomTitleContainsKeywordWithTitleCursor() {
+      //given
+      String lastValue = titleCursor;
+      String lastId = cursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("테스")
+          .sortBy("title")
+          .direction("asc")
+          .cursor(cursor)
+          .size(20)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertEquals(5, result.size());
+      assertEquals(1L, result.get(0).getParticipantCount().longValue());
+      assertEquals(result.get(0).getWatchRoom().getOwner(), user);
+      assertEquals("테스트시청방5", result.get(0).getWatchRoom().getTitle());
+    }
+
+    @Test
+    @DisplayName("시청방 제목에 검색어가 있음, Title, Desc, Cursor not null, size 20, 결과는 4")
+    void whenWatchRoomTitleContainsKeywordWithTitleCursorDesc() {
+      //given
+      String lastValue = titleCursor;
+      String lastId = cursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("테스")
+          .sortBy("title")
+          .direction("desc")
+          .cursor(cursor)
+          .size(20)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertEquals(4, result.size());
+      assertEquals(1L, result.get(0).getParticipantCount().longValue());
+      assertEquals(result.get(0).getWatchRoom().getOwner(), user);
+      assertEquals("테스트시청방3", result.get(0).getWatchRoom().getTitle()); //
+    }
+
+    @Test
+    @DisplayName("시청방 제목에 검색어가 있음, createdAt, desc, Cursor not null, size 10, 결과는 5")
+    void whenWatchRoomTitleContainsKeywordSortedByCreatedAt() {
+
+      String lastValue = dateCursor.toString();
+      String lastId = cursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("시청방")
+          .sortBy("createdAt")
+          .direction("desc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertEquals(4, result.size());
+      assertTrue(result.get(0).getWatchRoom().getTitle().contains("시청방"));
+    }
+
+    @Test
+    @DisplayName("시청방 제목에 검색어가 있음, createdAt, asc, Cursor not null, size 10, 결과는 5")
+    void whenWatchRoomTitleContainsKeywordSortedByCreatedAtAsc() {
+
+      String lastValue = dateCursor.toString();
+      String lastId = cursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("시청방")
+          .sortBy("createdAt")
+          .direction("asc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertEquals(5, result.size());
+      assertTrue(result.get(0).getWatchRoom().getTitle().contains("시청방"));
+    }
+
+    @Test
+    @DisplayName("시청방 소유자 이름에 검색어가 있음, participantCount, Desc, Cursor not null, size 10, 결과는 7이상")
+    void whenFilteringByParticipantCountCursorDesc() {
+      //given
+      String lastValue = "2";
+      String lastId = participantCountCursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("er")
+          .sortBy("participantCount")
+          .direction("desc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+      //then
+      assertTrue(result.size() >= 7);
+    }
 
 
     @Test
@@ -498,7 +598,7 @@ class WatchRoomParticipantRepositoryTest {
       WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
           .searchKeyword("use")
           .sortBy("title")
-          .direction("desc")
+          .direction("DESC")
           .cursor(cursor)
           .size(9)
           .build();
@@ -509,7 +609,7 @@ class WatchRoomParticipantRepositoryTest {
 
       //then
       assertEquals(10, result.size());
-      assertTrue(result.get(0).getWatchRoom().getOwner().equals(user));
+      assertEquals(result.get(0).getWatchRoom().getOwner(), user);
       assertEquals("테스트시청방9", result.get(0).getWatchRoom().getTitle());
     }
 
@@ -540,6 +640,54 @@ class WatchRoomParticipantRepositoryTest {
     }
 
     @Test
+    @DisplayName("컨텐츠 제목에 검색어가 있음, participantCount, asc, Cursor not null, size 10, 결과는 3")
+    void whenWatchRoomContentTitleContainsKeywordParticipantAsc() {
+      //given
+      String lastValue = "2";
+      String lastId = participantCountCursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("생")
+          .sortBy("participantCount")
+          .direction("asc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+      //then
+      assertTrue(result.size() <= 3);
+    }
+
+    @Test
+    @DisplayName("컨텐츠 제목에 검색어가 있음, participantCount, asc, Cursor null, size 10, 결과는 10")
+    void whenWatchRoomContentTitleContainsKeywordParticipantAscNullCursor() {
+      //given
+      String lastValue = "2";
+      String lastId = participantCountCursorId.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("생")
+          .sortBy("participantCount")
+          .direction("asc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+      //then
+      assertTrue(result.size() <= 3);
+    }
+
+    @Test
     @DisplayName("시청방 제목, 컨텐츠 제목, 소유자 이름 모두에 키워드가 들어가지 않음")
     void whenNothingContainsKeyword() {
       //given
@@ -548,7 +696,7 @@ class WatchRoomParticipantRepositoryTest {
       WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
           .searchKeyword("안녕")
           .sortBy("createdAt")
-          .direction("asc")
+          .direction("ASC")
           .cursor(cursor)
           .size(10)
           .build();
@@ -559,6 +707,26 @@ class WatchRoomParticipantRepositoryTest {
 
       //then
       assertEquals(0, result.size());
+    }
+
+    @Test
+    @DisplayName("키워드 없음, 정렬 조건 없음, cursor null")
+    void whenNoKeyword() {
+      //given
+      Cursor cursor = new Cursor(null, null);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .direction("asc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertEquals(10, result.size());
     }
   }
 }
