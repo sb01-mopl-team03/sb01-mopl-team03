@@ -1,47 +1,75 @@
 package team03.mopl.common.config;
 
 import org.apache.http.HttpHost;
-import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.json.jackson.JacksonJsonpMapper;
-import org.opensearch.client.transport.rest_client.RestClientTransport;
+import org.apache.http.HttpRequestInterceptor;
 import org.opensearch.client.RestClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.signer.Aws4Signer;
 
-@Profile("dev")
+import java.net.URI;
+
 @Configuration
 public class OpenSearchConfig {
 
-  @Value("${spring.elasticsearch.uris}")
-  private String openSearchUrl;
+  @Value("${AWS_S3_REGION}")
+  private String region;
 
-  // OpenSearch Java Client용 빈 - dev 프로필용
+  @Value("${AWS_S3_ACCESS_KEY}")
+  private String accessKey;
+
+  @Value("${AWS_S3_SECRET_KEY}")
+  private String secretKey;
+
+  @Value("${OPENSEARCH_ENDPOINT}")
+  private String endpoint;
+
   @Bean
   public OpenSearchClient openSearchClient() {
-    try {
-      // RestClient 생성
-      RestClient restClient = RestClient.builder(
-              HttpHost.create(openSearchUrl)
-          )
-          .setRequestConfigCallback(requestConfigBuilder ->
-              requestConfigBuilder
-                  .setConnectTimeout(10000)
-                  .setSocketTimeout(60000))
-          .build();
+    AwsCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+    AwsCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(credentials);
 
-      // Transport 생성 (Jackson JSON 매퍼 사용)
-      RestClientTransport transport = new RestClientTransport(
-          restClient, new JacksonJsonpMapper()
-      );
+    Aws4Signer signer = Aws4Signer.create();
 
-      // OpenSearchClient 생성
-      return new OpenSearchClient(transport);
+    HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(
+        "es", // service name
+        signer,
+        credentialsProvider,
+        region
+    );
 
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to create OpenSearch client for dev profile", e);
+    // URI 파싱하여 HttpHost 생성
+    URI uri = URI.create(ensureProtocol(endpoint));
+    HttpHost httpHost = new HttpHost(
+        uri.getHost(),
+        uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80),
+        uri.getScheme()
+    );
+
+    RestClient restClient = RestClient.builder(httpHost)
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder.addInterceptorLast(interceptor))
+        .build();
+
+    RestClientTransport transport = new RestClientTransport(
+        restClient, new JacksonJsonpMapper());
+
+    return new OpenSearchClient(transport);
+  }
+
+  private String ensureProtocol(String endpoint) {
+    if (!endpoint.startsWith("http://") && !endpoint.startsWith("https://")) {
+      // AWS OpenSearch는 기본적으로 HTTPS 사용
+      return "https://" + endpoint;
     }
+    return endpoint;
   }
 }

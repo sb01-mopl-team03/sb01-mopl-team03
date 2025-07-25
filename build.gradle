@@ -25,8 +25,7 @@ jacoco {
 
 ext {
     queryDslVersion = "5.1.0"
-    awsSdkVersion = "2.20.160" // 안정적인 버전 사용
-    opensearchVersion = "2.10.0"
+    awsSdkVersion = "2.23.0" // 안정적인 버전 사용 (혹시 이 버전에서 문제 생기면 2.17.291 등 시도)
 }
 
 dependencies {
@@ -79,22 +78,18 @@ dependencies {
     implementation 'com.github.shin285:KOMORAN:3.3.9'
 
     // OpenSearch Client (Java 17 호환 버전)
-    // Spring Data OpenSearch - Java 17과 Spring Boot 3.x 호환
-    implementation 'org.opensearch.client:spring-data-opensearch-starter:1.8.1'
+    implementation "org.opensearch.client:opensearch-rest-client:2.11.0"
+    implementation "org.opensearch.client:opensearch-java:2.11.0"
 
-    // OpenSearch Java Client - Java 17 호환 버전
-    implementation 'org.opensearch.client:opensearch-java:2.10.0'
+    // AWS SDK v2 dependencies (필수 모듈들)
+    implementation("software.amazon.awssdk:http-auth-aws")
+    implementation "org.apache.httpcomponents.client5:httpclient5"
+    implementation "software.amazon.awssdk:apache-client"
 
-    // OpenSearch REST Client
-    implementation 'org.opensearch.client:opensearch-rest-client:2.10.0'
-
-    // AWS SDK v2 dependencies
-    implementation "software.amazon.awssdk:auth:$awsSdkVersion"
-    implementation "software.amazon.awssdk:regions:$awsSdkVersion"
-    implementation "software.amazon.awssdk:url-connection-client:$awsSdkVersion" // Explicitly keeping this one
-
-    // Jackson for JSON processing
+    // Jackson for JSON processing (AWS SDK v2도 내부적으로 Jackson 사용)
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.+'
 
     // Jakarta JAXB - 최신 버전 명시적 추가
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
@@ -112,7 +107,6 @@ dependencies {
     }
 
     // HTTP Client - This is a general Apache HTTP Client, not the AWS SDK specific one.
-    // It's generally fine to keep this if other parts of your app need it.
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 
     // Database
@@ -164,22 +158,11 @@ afterEvaluate {
     }
 }
 
-// JVM 메모리 설정 제거 (gradle.properties에서 관리)
-// tasks.withType(JavaExec) {
-//     jvmArgs = ['-Xmx4g', '-Xms1g']
-// }
-
-// 의존성 충돌 방지 설정
 configurations {
     all {
-        // Elasticsearch 클라이언트와의 충돌 방지
         exclude group: 'org.elasticsearch.client'
         exclude group: 'co.elastic.clients'
-
-        // OpenSearch RestHighLevelClient 제외 (deprecated)
         exclude group: 'org.opensearch.client', module: 'opensearch-rest-high-level-client'
         exclude group: 'org.opensearch.client', module: 'opensearch-rest-client-sniffer'
-        // Ensure no apache-client is brought in transitively by other dependencies if not explicitly needed
-        // exclude group: 'software.amazon.awssdk', module: 'apache-client' // This is a more aggressive exclusion if the above doesn't work
     }
 }
