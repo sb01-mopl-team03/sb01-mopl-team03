@@ -51,25 +51,20 @@ public class DmServiceImpl implements DmService {
 
     Dm dm = new Dm(sendDmDto.getSenderId(), sendDmDto.getContent());
     dm.setDmRoom(dmRoom); // 연관관계 설정
+    dm.readDm(sendDmDto.getSenderId());
 
     // 알림 전송 추가
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
-      UUID senderId = sendDmDto.getSenderId();
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
-      dm.readDm(senderId);
     } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
-      UUID senderId = sendDmDto.getSenderId();
       UUID receiverId = dmRoom.getSenderId();
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
-      dm.readDm(senderId);
-      readAll(dmRoom.getId(), senderId);
     } else {
       throw new NoOneMatchInDmRoomException();
     }
 
     Dm savedDm = dmRepository.save(dm);
-
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
