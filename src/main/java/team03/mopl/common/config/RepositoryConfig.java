@@ -27,11 +27,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         classes = org.springframework.data.elasticsearch.repository.ElasticsearchRepository.class
     )
 )
-@EnableElasticsearchRepositories(
-    basePackages = {
-        "team03.mopl.domain.curation.elasticsearch" // Elasticsearch Repository들만
-    }
-)
+//@EnableElasticsearchRepositories(
+//    basePackages = {
+//        "team03.mopl.domain.curation.elasticsearch" // Elasticsearch Repository들만
+//    }
+//)
 public class RepositoryConfig {
   // Repository 스캔 범위를 명확하게 분리
 }
