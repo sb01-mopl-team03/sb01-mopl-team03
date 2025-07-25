@@ -1,13 +1,11 @@
 package team03.mopl.domain.curation.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import team03.mopl.domain.content.Content;
-import team03.mopl.domain.content.ContentType;
 
 @Data
 @Builder
