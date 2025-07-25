@@ -68,7 +68,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             # 로드 밸런서 DNS 주소로 변경
-            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/google"
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/login/oauth2/code/google"
             scope:
               - profile
               - email
@@ -77,7 +77,7 @@ spring:
             client-secret: ${KAKAO_CLIENT_SECRET}
             authorization-grant-type: authorization_code
             # 로드 밸런서 DNS 주소로 변경
-            redirect-uri: "http://${AWS_ALB_DNS_URL}/api/oauth2/callback/kakao"
+            redirect-uri: "http://${AWS_ALB_DNS_URL}/login/oauth2/code/kakao"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
