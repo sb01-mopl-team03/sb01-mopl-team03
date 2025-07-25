@@ -158,7 +158,13 @@ afterEvaluate {
                     '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
                     '**/team03/mopl/domain/**/dto/**', // DTO 클래스
                     '**/team03/mopl/domain/**/batch/**', // 배치
-                    '**/S3Service.class' // s3 서비스
+                    '**/S3Service.class',                // S3 서비스
+
+                    '**/team03/mopl/common/config/**',         // 설정 클래스
+                    '**/team03/mopl/common/exception/**',      // 커스텀 예외
+                    '**/team03/mopl/domain/curation/elasticsearch/**', // 엘라스틱
+                    '**/team03/mopl/domain/oauth2/**',         // OAuth 인증 유틸
+                    '**/team03/mopl/storage/**'                // 외부 스토리지 접근
             ])
         })
     }
