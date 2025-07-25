@@ -82,7 +82,7 @@ dependencies {
     implementation "org.opensearch.client:opensearch-java:2.11.0"
 
     // AWS SDK v2 dependencies (필수 모듈들)
-    implementation("software.amazon.awssdk:http-auth-aws")
+    implementation "software.amazon.awssdk:http-auth-aws"
     implementation "org.apache.httpcomponents.client5:httpclient5"
     implementation "software.amazon.awssdk:apache-client"
 

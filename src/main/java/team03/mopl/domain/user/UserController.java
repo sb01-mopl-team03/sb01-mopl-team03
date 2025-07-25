@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import team03.mopl.api.UserApi;
 import team03.mopl.domain.curation.dto.KeywordDto;
-//import team03.mopl.domain.curation.service.CurationService;
+import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.domain.playlist.dto.PlaylistDto;
 import team03.mopl.domain.playlist.service.PlaylistService;
 import team03.mopl.domain.review.dto.ReviewDto;
@@ -36,7 +36,7 @@ public class UserController implements UserApi {
   private final ReviewService reviewService;
   private final SubscriptionService subscriptionService;
   private final PlaylistService playlistService;
-//  private final CurationService curationService;
+  private final CurationService curationService;
 
   @Override
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -77,11 +77,11 @@ public class UserController implements UserApi {
     return ResponseEntity.ok(reviewService.getAllByUser(userId));
   }
 
-//  @Override
-//  @GetMapping("/{userId}/keywords")
-//  public ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId) {
-//    return ResponseEntity.ok(curationService.getKeywordsByUser(userId));
-//  }
+  @Override
+  @GetMapping("/{userId}/keywords")
+  public ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId) {
+    return ResponseEntity.ok(curationService.getKeywordsByUser(userId));
+  }
 
   @Override
   @GetMapping("/{userId}/playlists")

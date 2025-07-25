@@ -34,12 +34,6 @@ spring:
       ssl:
         enabled: true
 
-  elasticsearch:
-    uris: ${OPENSEARCH_ENDPOINT}
-    region: ${AWS_S3_REGION}
-    connection-timeout: 10s
-    socket-timeout: 60s
-
   batch:
     jdbc:
       initialize-schema: never
@@ -93,6 +87,10 @@ spring:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
+
+OPENSEARCH_ENDPOINT: ${OPENSEARCH_ENDPOINT}
+opensearch:
+  use-aws-auth: true
 
 jwt:
   secret: ${JWT_SECRET}

@@ -5,11 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.indices.GetIndexResponse;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "opensearch.health-check.enabled", havingValue = "true", matchIfMissing = false)
 public class OpenSearchHealthCheck implements CommandLineRunner {
 
   private final OpenSearchClient openSearchClient;

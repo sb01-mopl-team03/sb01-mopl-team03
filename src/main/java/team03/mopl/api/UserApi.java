@@ -51,9 +51,9 @@ public interface UserApi {
   @GetMapping("/{userId}/reviews")
   ResponseEntity<List<ReviewDto>> getAllReviewByUser(@PathVariable UUID userId);
 
-//  @Operation(summary = "사용자 키워드 목록 조회")
-//  @GetMapping("/{userId}/keywords")
-//  ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId);
+  @Operation(summary = "사용자 키워드 목록 조회")
+  @GetMapping("/{userId}/keywords")
+  ResponseEntity<List<KeywordDto>> getAllKeywordsByUser(@PathVariable UUID userId);
 
   @Operation(summary = "사용자 재생목록 목록 조회")
   @GetMapping("/{userId}/playlists")

@@ -13,7 +13,7 @@ services:
         condition: service_healthy
       kafka: # kafka가 먼저 실행되도록 의존성 추가
         condition: service_started
-      elasticsearch:
+      opensearch:
         condition: service_healthy
     env_file:
       - ./.env
@@ -29,8 +29,8 @@ services:
       - SPRING_REDIS_PORT=6379
       # kafka
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      # elasticsearch
-      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      # OpenSearch
+      - OPENSEARCH_ENDPOINT=http://opensearch:9200
 
   # Database: PostgreSQL
   db:
@@ -61,29 +61,38 @@ services:
     volumes:
       - redis_data:/data
 
-  # Search Engine: Elasticsearch with Nori (커스텀 이미지)
-  elasticsearch:
-    container_name: elasticsearch
-    build:
-      context: ./elasticsearch
-      dockerfile: Dockerfile
+  # Search Engine: OpenSearch
+  opensearch:
+    container_name: opensearch
+    image: opensearchproject/opensearch:2.11.0
     ports:
       - "9200:9200"
-      - "9300:9300"
+      - "9600:9600"
     environment:
-      - discovery.type=single-node
-      - cluster.name=mopl-cluster
-      - node.name=mopl-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
+      # 클러스터 설정
+      - cluster.name=mopl-opensearch-cluster
+      - node.name=mopl-opensearch-node1
+      - discovery.seed_hosts=mopl-opensearch-node1
+      - cluster.initial_cluster_manager_nodes=mopl-opensearch-node1
+      - bootstrap.memory_lock=true
+      # JVM 메모리 설정
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      # 보안 설정 (개발환경용)
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+      # 타임존 설정
       - TZ=Asia/Seoul
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
+      - opensearch-data:/usr/share/opensearch/data
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -126,4 +135,4 @@ volumes:
   postgres-data:
   redis_data:
   kafka_data:
-  elasticsearch-data:
+  opensearch-data:
