@@ -47,6 +47,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 import team03.mopl.domain.watchroom.entity.VideoControlAction;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.domain.watchroom.repository.WatchRoomMessageRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;
 import team03.mopl.domain.content.Content;
@@ -73,7 +74,7 @@ class WatchRoomServiceImplTest {
   private WatchRoomParticipantRepository watchRoomParticipantRepository;
 
   @Mock
-  private ObjectMapper objectMapper;
+  private WatchRoomMessageRepository watchRoomMessageRepository;
 
   @Mock
   private CursorCodecUtil codecUtil;

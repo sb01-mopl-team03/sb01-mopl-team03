@@ -32,7 +32,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 
 @DataJpaTest
-@Import({QueryDslConfig.class, JpaConfig.class, SpringApplicationContext.class}) // 임시방편으로 SpringApplicationContext도 import (0724)
+@Import({QueryDslConfig.class, JpaConfig.class, SpringApplicationContext.class})
 @TestPropertySource(properties = {
     "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
     "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제

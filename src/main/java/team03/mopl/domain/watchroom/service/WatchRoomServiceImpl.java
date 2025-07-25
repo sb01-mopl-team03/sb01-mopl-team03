@@ -29,6 +29,7 @@ import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
 import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.domain.watchroom.repository.WatchRoomMessageRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;
 import team03.mopl.domain.content.Content;
@@ -45,7 +46,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
   private final ContentRepository contentRepository;
   private final WatchRoomParticipantRepository watchRoomParticipantRepository;
   private final WatchRoomRepository watchRoomRepository;
-  //
+  private final WatchRoomMessageRepository watchRoomMessageRepository;
   private final CursorCodecUtil codecUtil;
 
   @Override
@@ -252,6 +253,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
         },
         // 남아있는 사람이 아무도 없으면 시청방 삭제
         () -> {
+          watchRoomMessageRepository.deleteAllByWatchRoom(watchRoom);
           watchRoomRepository.delete(watchRoom);
         }
     );
