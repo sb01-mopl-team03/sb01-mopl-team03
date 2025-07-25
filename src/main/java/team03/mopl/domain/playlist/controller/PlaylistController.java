@@ -58,27 +58,36 @@ public class PlaylistController implements PlaylistApi {
   @Override
   @GetMapping("/search")
   public ResponseEntity<List<PlaylistDto>> getPlaylistsByKeyword(
-      @RequestParam(required = true) String keyword) {
+      @RequestParam(required = true) String keyword,
+      CustomUserDetails userDetails) {
 
-    List<PlaylistDto> playlistDtos = playlistService.getAllByKeyword(keyword);
+    UUID currentUserId = userDetails.getId();
+    List<PlaylistDto> playlistDtos = playlistService.searchPlaylists(keyword, currentUserId);
     return ResponseEntity.ok(playlistDtos);
   }
 
-  @Override
-  @GetMapping
-  public ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-    UUID userId = userDetails.getId();
-    List<PlaylistDto> playlistDtos = playlistService.getAllByUser(userId);
-    return ResponseEntity.ok(playlistDtos);
-  }
-
+//  @Override
 //  @GetMapping
-//  public ResponseEntity<List<PlaylistDto>> getAll() {
-//    List<PlaylistDto> playlistDtos = playlistService.getAll();
+//  public ResponseEntity<List<PlaylistDto>> getPlaylistByUser(
+//      @AuthenticationPrincipal CustomUserDetails userDetails) {
+//
+//    UUID userId = userDetails.getId();
+//    List<PlaylistDto> playlistDtos = playlistService.getAllByUser(userId);
 //    return ResponseEntity.ok(playlistDtos);
 //  }
+
+  @GetMapping
+  public ResponseEntity<List<PlaylistDto>> getAllPublic() {
+    List<PlaylistDto> playlistDtos = playlistService.getAllPublic();
+    return ResponseEntity.ok(playlistDtos);
+  }
+
+  @GetMapping("/subscribed")
+  public ResponseEntity<List<PlaylistDto>> getAllSubscribed(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    UUID userId = userDetails.getId();
+    List<PlaylistDto> playlistDtos = playlistService.getAllSubscribed(userId);
+    return ResponseEntity.ok(playlistDtos);
+  }
 
   @Override
   @GetMapping("/{playlistId}")

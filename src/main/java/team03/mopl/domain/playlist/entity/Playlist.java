@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import team03.mopl.common.util.NormalizerUtil;
 import team03.mopl.domain.subscription.Subscription;
 import team03.mopl.domain.user.User;
 
@@ -43,6 +44,9 @@ public class Playlist {
 
   @Column(name = "name", length = 100)
   private String name;
+
+  @Column(name = "name_normalized", length = 100)
+  private String nameNormalized;
 
   @Column(name = "is_public", nullable = false)
   private boolean isPublic;
@@ -70,6 +74,7 @@ public class Playlist {
   public void update(String newName, Boolean newIsPublic) {
     if (newName != null && !newName.equals(this.name)) {
       this.name = newName;
+      this.nameNormalized = NormalizerUtil.normalize(newName);
     }
 
     if (newIsPublic != null && !Objects.equals(newIsPublic, this.isPublic)) {

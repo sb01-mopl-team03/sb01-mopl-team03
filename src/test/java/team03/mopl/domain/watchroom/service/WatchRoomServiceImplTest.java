@@ -140,7 +140,7 @@ class WatchRoomServiceImplTest {
       WatchRoomDto watchRoomDto = watchRoomService.create(request);
 
       //then
-      assertEquals(expected.contentTitle(), watchRoomDto.contentTitle());
+      assertEquals(expected.contentDto().title(), watchRoomDto.contentDto().title());
       assertEquals(expected.title(), watchRoomDto.title());
       assertEquals(expected.ownerId(), watchRoomDto.ownerId());
       assertEquals(expected.headCount(), watchRoomDto.headCount());
@@ -491,7 +491,7 @@ class WatchRoomServiceImplTest {
       //then
       assertEquals(expected.id(), watchRoomDto.id());
       assertEquals(expected.ownerId(), watchRoomDto.ownerId());
-      assertEquals(expected.contentTitle(), watchRoomDto.contentTitle());
+      assertEquals(expected.contentDto().title(), watchRoomDto.contentDto().title());
       assertEquals(expected.headCount(), watchRoomDto.headCount());
 
     }
@@ -531,6 +531,7 @@ class WatchRoomServiceImplTest {
       List<ParticipantDto> participantDtos = users.stream()
           .map(user -> {
             return ParticipantDto.builder()
+                .id(user.getId())
                 .username(user.getName())
                 .profile(null)
                 .isOwner(user.getId() == userId)
@@ -541,6 +542,8 @@ class WatchRoomServiceImplTest {
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
           .title("테스트용 시청방")
+          .playTime(1.0)
+          .isPlaying(true)
           .owner(user)
           .content(content)
           .build();
@@ -555,6 +558,8 @@ class WatchRoomServiceImplTest {
 
       WatchRoomInfoDto expected = WatchRoomInfoDto.builder()
           .id(chatRoomId)
+          .playTime(1.0)
+          .isPlaying(true)
           .content(ContentDto.from(content))
           .participantsInfoDto(participantsInfoDto)
           .build();
@@ -566,6 +571,8 @@ class WatchRoomServiceImplTest {
           .thenReturn(false);
       when(watchRoomParticipantRepository.findByWatchRoom(watchRoom))
           .thenReturn(watchRoomParticipant);
+      when(watchRoomParticipantRepository.save(any(WatchRoomParticipant.class))).thenReturn(
+          watchRoomParticipant.get(0));
 
       //when
       WatchRoomInfoDto watchRoomInfoDto = watchRoomService
@@ -573,6 +580,8 @@ class WatchRoomServiceImplTest {
 
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.content().title(), watchRoomInfoDto.content().title());
+      assertTrue(watchRoomInfoDto.isPlaying());
+      assertEquals(1.0, watchRoomInfoDto.playTime());
       assertEquals(expected.participantsInfoDto().participantCount(),
           watchRoomInfoDto.participantsInfoDto().participantCount());
 

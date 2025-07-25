@@ -11,7 +11,8 @@ public enum NotificationType {
   UNFOLLOWED("unfollowed"),
   DM_RECEIVED("dm_received"),
   NEW_DM_ROOM("created new DM room"),
-  CONNECTED("connected");
+  CONNECTED("connected"),
+  PLAYLIST_UPDATED("playlist_updated");
 
   private final String notificationName;
 

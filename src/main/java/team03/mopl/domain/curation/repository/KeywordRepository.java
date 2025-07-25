@@ -7,8 +7,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import team03.mopl.domain.curation.entity.Keyword;
 
 public interface KeywordRepository extends JpaRepository<Keyword, UUID> {
+  /**
+   * 사용자별 키워드 조회 (생성일 내림차순)
+   * - CurationService.getKeywordsByUser()에서 사용
+   */
+  List<Keyword> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
-  List<Keyword> findAllByUserId(UUID userId);
-
+  /**
+   * 키워드 소유권 확인 및 조회
+   * - CurationService.getRecommendationsByKeyword()에서 사용
+   * - CurationService.delete()에서 사용
+   */
   Optional<Keyword> findByIdAndUserId(UUID keywordId, UUID userId);
 }

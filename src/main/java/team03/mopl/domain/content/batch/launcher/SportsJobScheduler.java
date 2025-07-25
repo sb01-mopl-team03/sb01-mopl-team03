@@ -25,7 +25,7 @@ public class SportsJobScheduler {
     this.sportsJob = sportsJob;
   }
 
-  @Scheduled(cron = "0 0 4 * * *")
+  @Scheduled(cron = "0 30 14-18 * * *", zone = "Asia/Seoul")
   public void runSportsJob() {
     JobParameters jobParameters = new JobParametersBuilder()
         .addLong("timestamp", System.currentTimeMillis())
