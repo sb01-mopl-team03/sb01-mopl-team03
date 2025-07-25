@@ -9,11 +9,13 @@
 //import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.context.annotation.Bean;
 //import org.springframework.context.annotation.Configuration;
+//import org.springframework.context.annotation.Profile;
 //
 //@Configuration
+//@Profile("dev")
 //public class ElasticsearchConfig {
 //
-//  @Value("${spring.elasticsearch.uris:http://localhost:9200}")
+//  @Value("${spring.elasticsearch.uris}")
 //  private String elasticsearchUrl;
 //
 //  @Bean

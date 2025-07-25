@@ -77,12 +77,14 @@ dependencies {
     implementation 'software.amazon.awssdk:auth'
     implementation 'org.apache.httpcomponents:httpclient' // RestClient가 내부적으로 사용
 
-    // Elasticsearch Client (로컬용)
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+//    // Elasticsearch Client (로컬용)
+//    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+//    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-//    // OpenSearch Client (AWS용)
-//    implementation 'org.opensearch.client:opensearch-java:2.8.0'
+    // OpenSearch Client (AWS용)
+    implementation 'org.opensearch.client:spring-data-opensearch-starter:1.3.0'
+    implementation 'org.opensearch.client:spring-data-opensearch:1.3.0'
+    implementation 'org.opensearch.client:opensearch-java:2.10.0'
 //    implementation 'org.opensearch.client:opensearch-rest-client:2.8.0'
 
     // AWS SDK v2 dependencies
@@ -164,4 +166,12 @@ afterEvaluate {
 
 tasks.withType(JavaExec) {
     jvmArgs = ['-Xmx4g', '-Xms1g']
+}
+
+// 충돌 방지를 위해 Elasticsearch 자동설정 제외
+configurations {
+    all {
+        exclude group: 'org.elasticsearch.client'
+        exclude group: 'co.elastic.clients'
+    }
 }

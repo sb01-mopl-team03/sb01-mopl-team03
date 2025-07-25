@@ -1,6 +1,5 @@
 package team03.mopl.domain.curation.elasticsearch;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +9,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import team03.mopl.domain.content.Content;
 
 @Getter
@@ -17,6 +18,8 @@ import team03.mopl.domain.content.Content;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(indexName = "contents_search")
+@Mapping(mappingPath = "elasticsearch/content-mapping.json")
+@Setting(settingPath = "elasticsearch/content-setting.json")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentSearch {
 

@@ -1,45 +1,54 @@
-//package team03.mopl.common.config;
-//
-//import org.opensearch.client.opensearch.OpenSearchClient;
-//import org.opensearch.client.transport.aws.AwsSdk2Transport;
-//import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-//import software.amazon.awssdk.http.SdkHttpClient;
-//import software.amazon.awssdk.http.apache.ApacheHttpClient;
-//import software.amazon.awssdk.regions.Region;
-//
-//@Configuration
-//public class OpenSearchConfig {
-//
-//  @Value("${spring.elasticsearch.uris:https://search-domain.region.es.amazonaws.com}")
-//  private String openSearchUrl;
-//
-//  @Value("${spring.elasticsearch.region:ap-northeast-2}")
-//  private String awsRegion;
-//
-//  @Bean
-//  public OpenSearchClient openSearchClient() {
-//    // IAM ARN 마스터 사용자용 - AWS SDK 2.x 기반
-//    SdkHttpClient httpClient = ApacheHttpClient.builder().build();
-//
-//    AwsSdk2Transport transport = new AwsSdk2Transport(
-//        httpClient,
-//        extractHostFromUrl(openSearchUrl), // 호스트명만 추출
-//        "es", // 서비스명
-//        Region.of(awsRegion),
-//        AwsSdk2TransportOptions.builder()
-//            .setCredentials(DefaultCredentialsProvider.create())
-//            .build()
-//    );
-//
-//    return new OpenSearchClient(transport);
-//  }
-//
-//  private String extractHostFromUrl(String url) {
-//    // https://search-domain.region.es.amazonaws.com 에서 호스트명만 추출
-//    return url.replaceAll("^https?://", "").replaceAll("/$", "");
-//  }
-//}
+package team03.mopl.common.config;
+
+import org.apache.http.HttpHost;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.data.client.orhlc.AbstractOpenSearchConfiguration;
+import org.opensearch.data.client.orhlc.ClientConfiguration;
+import org.opensearch.data.client.orhlc.RestClients;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+
+@Configuration
+@Profile("dev")
+@EnableElasticsearchRepositories(basePackages = "team03.mopl.domain.curation.elasticsearch")
+public class OpenSearchConfig extends AbstractOpenSearchConfiguration {
+
+  @Value("${spring.elasticsearch.uris}")
+  private String openSearchUrl;
+
+  // Spring Data OpenSearch용 RestHighLevelClient
+  @Override
+  @Bean
+  public RestHighLevelClient opensearchClient() {
+    final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+        .connectedTo(openSearchUrl.replace("http://", "").replace("https://", ""))
+        .build();
+
+    return RestClients.create(clientConfiguration).rest();
+  }
+
+  // 새로운 OpenSearch Java Client용 빈 추가
+  @Bean
+  public OpenSearchClient openSearchClient() {
+    // RestClient 생성
+    RestClient restClient = RestClient.builder(
+        HttpHost.create(openSearchUrl)
+    ).build();
+
+    // Transport 생성 (Jackson JSON 매퍼 사용)
+    OpenSearchTransport transport = new RestClientTransport(
+        restClient, new JacksonJsonpMapper()
+    );
+
+    // OpenSearchClient 생성
+    return new OpenSearchClient(transport);
+  }
+}
