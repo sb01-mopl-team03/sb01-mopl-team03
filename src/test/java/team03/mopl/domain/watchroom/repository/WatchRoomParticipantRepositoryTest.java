@@ -513,7 +513,7 @@ class WatchRoomParticipantRepositoryTest {
       assertEquals("테스트시청방9", result.get(0).getWatchRoom().getTitle());
     }
 
-    /*@Test
+    @Test
     @DisplayName("컨텐츠 제목에 검색어가 있음, createdAt, ASC, Cursor not null, size 10, 결과는 5")
     void whenWatchRoomContentTitleContainsKeyword() {
 
@@ -537,7 +537,7 @@ class WatchRoomParticipantRepositoryTest {
       //then
       assertEquals(5, result.size());
       assertTrue(result.get(0).getContent().getTitle().contains("미"));
-    }*/
+    }
 
     @Test
     @DisplayName("시청방 제목, 컨텐츠 제목, 소유자 이름 모두에 키워드가 들어가지 않음")
