@@ -1,6 +1,7 @@
 package team03.mopl.domain.dm.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -121,6 +122,11 @@ public class DmRoomServiceImpl implements DmRoomService {
       User receiver = userRepository.findById(dmRoom.getReceiverId()).orElseThrow(UserNotFoundException::new);
 
       dmRoomDtos.add(DmRoomDto.from(content, unreadCount, sender.getName(), receiver.getName(), dmRoom));
+    }
+    //updateAt순으로 정렬
+    dmRoomDtos.sort(Comparator.comparing(DmRoomDto::getUpdatedAt).reversed());
+    for (DmRoomDto dmRoomDto : dmRoomDtos) {
+      System.out.println("dmRoomDto.getUpdatedAt() = " + dmRoomDto.getUpdatedAt());
     }
     return dmRoomDtos;
   }

@@ -58,7 +58,7 @@ class DmRoomControllerTest {
     UUID userB = UUID.randomUUID();
     String userAName = "UserA";
     String userBName = "UserB";
-    DmRoomDto dto = new DmRoomDto(roomId, userA, userB, userAName, userBName, LocalDateTime.now());
+    DmRoomDto dto = new DmRoomDto(roomId, userA, userB, userAName, userBName, LocalDateTime.now(), LocalDateTime.now());
     given(dmRoomService.getRoom(roomId)).willReturn(dto);
 
     mockMvc.perform(get("/api/dmRooms/{dmRoomId}", roomId))
@@ -88,7 +88,7 @@ class DmRoomControllerTest {
 
 
     given(dmRoomService.findOrCreateRoom(userA, userB))
-        .willReturn(new DmRoomDto(roomId, userA, userB, userAName, userBName, LocalDateTime.now()));
+        .willReturn(new DmRoomDto(roomId, userA, userB, userAName, userBName, LocalDateTime.now(), LocalDateTime.now()));
 
     mockMvc.perform(get("/api/dmRooms/userRoom")
             .with(user(principal))
@@ -105,8 +105,8 @@ class DmRoomControllerTest {
     UUID roomId2 = UUID.randomUUID();
 
     List<DmRoomDto> rooms = List.of(
-        new DmRoomDto(roomId1, userId, UUID.randomUUID(), "userA", "userB", LocalDateTime.now()),
-        new DmRoomDto(roomId2, userId, UUID.randomUUID(), "userA", "userC", LocalDateTime.now())
+        new DmRoomDto(roomId1, userId, UUID.randomUUID(), "userA", "userB", LocalDateTime.now(), LocalDateTime.now()),
+        new DmRoomDto(roomId2, userId, UUID.randomUUID(), "userA", "userC", LocalDateTime.now(), LocalDateTime.now())
     );
 
     User user;

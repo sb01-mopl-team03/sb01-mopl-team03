@@ -169,6 +169,7 @@ CREATE TABLE "dm_rooms"
     "sender_id"   UUID                    NULL,
     "receiver_id" UUID                    NULL,
     "created_at"  TIMESTAMP DEFAULT now() NOT NULL,
+    "updated_at"   TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("sender_id", "receiver_id"),
     FOREIGN KEY ("sender_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("receiver_id") REFERENCES "users" ("id")

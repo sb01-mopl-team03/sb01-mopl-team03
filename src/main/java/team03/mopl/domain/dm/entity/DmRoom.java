@@ -20,6 +20,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -44,6 +45,10 @@ public class DmRoom {
   @Column(name = "created_at", updatable = false, nullable = false)
   private LocalDateTime createdAt;
 
+  @LastModifiedDate
+  @Column(name = "updated_at")
+  private LocalDateTime updatedAt;
+
   @ElementCollection
   @CollectionTable(
       name = "dm_room_out_users",
@@ -61,6 +66,9 @@ public class DmRoom {
   public DmRoom(UUID senderId, UUID receiverId) {
     this.senderId = senderId;
     this.receiverId = receiverId;
+  }
+  public void touchUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
   }
   /*public boolean nobodyInRoom() {
     if( senderId == null && receiverId == null ) {
