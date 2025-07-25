@@ -81,8 +81,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-//    // OpenSearch Client (AWS용)
-//    implementation 'org.opensearch.client:opensearch-java:2.8.0'
+    // OpenSearch Client (AWS용)
+    implementation 'org.opensearch.client:spring-data-opensearch-starter:1.2.0'
+    implementation 'org.opensearch.client:spring-data-opensearch:1.2.0'
+    implementation 'org.opensearch.client:opensearch-java:2.6.0'
 //    implementation 'org.opensearch.client:opensearch-rest-client:2.8.0'
 
     // AWS SDK v2 dependencies
