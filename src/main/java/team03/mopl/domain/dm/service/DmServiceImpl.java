@@ -41,6 +41,7 @@ public class DmServiceImpl implements DmService {
   private final DmRepositoryCustom dmRepositoryCustom;
 
   @Override
+  @Transactional
   public DmDto sendDm(SendDmDto sendDmDto) {
     log.info("sendDm - DM 전송 시도: senderId={}, roomId={}, content={}", sendDmDto.getSenderId(), sendDmDto.getRoomId(), sendDmDto.getContent());
     DmRoom dmRoom = dmRoomRepository.findById(sendDmDto.getRoomId()).orElseThrow(() -> {
@@ -50,6 +51,7 @@ public class DmServiceImpl implements DmService {
 
     Dm dm = new Dm(sendDmDto.getSenderId(), sendDmDto.getContent());
     dm.setDmRoom(dmRoom); // 연관관계 설정
+    dm.readDm(sendDmDto.getSenderId());
 
     // 알림 전송 추가
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
