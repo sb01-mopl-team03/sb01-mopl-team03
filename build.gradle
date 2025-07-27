@@ -60,23 +60,6 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    // Security
-    implementation 'org.springframework.security:spring-security-messaging'
-
-    // AI - Stanford CoreNLP with JAXB exclusions
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4') {
-        exclude group: 'javax.xml.bind', module: 'jaxb-api'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
-    }
-    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4:models') {
-        exclude group: 'javax.xml.bind', module: 'jaxb-api'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
-    }
-    implementation 'com.github.shin285:KOMORAN:3.3.9'
-
     // OpenSearch Client (Java 17 호환 버전)
     implementation "org.opensearch.client:opensearch-rest-client:2.11.0"
     implementation "org.opensearch.client:opensearch-java:2.11.0"
