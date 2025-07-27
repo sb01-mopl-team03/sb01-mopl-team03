@@ -42,11 +42,7 @@ public class ContentSearchService {
 
     try {
       log.debug("OpenSearch 연결 테스트 중...");
-
-      // 연결 테스트를 위한 간단한 클러스터 정보 조회
       try {
-        // 클러스터 헬스 체크 (가장 기본적인 요청)
-        log.debug("클러스터 헬스 체크 시도...");
         var healthResponse = openSearchClient.cluster().health();
         log.info("OpenSearch 클러스터 연결 성공 - 상태: {}", healthResponse.status());
       } catch (Exception e) {
@@ -55,14 +51,31 @@ public class ContentSearchService {
         return;
       }
 
-      log.debug("인덱스 존재 여부 확인 중...");
-      createIndexIfNotExists();
+      // 인덱스 존재 여부 확인 및 생성
+      boolean exists = openSearchClient.indices().exists(ExistsRequest.of(e -> e.index(contentIndex))).value();
+
+      if (!exists) {
+        log.info("인덱스 '{}'가 존재하지 않아 새로 생성 및 모든 콘텐츠 인덱싱 시작.", contentIndex);
+        createIndexIfNotExists(); // 인덱스 생성
+        reindexAllContents(); // 생성 후 모든 콘텐츠 인덱싱
+      } else {
+        // 인덱스는 존재하지만 문서 수가 0인 경우도 초기화/재인덱싱 고려
+        // 또는 관리자가 명시적으로 재인덱싱을 요청할 때만 이 로직을 사용
+        long docCount = openSearchClient.search(s -> s.index(contentIndex).size(0), ContentSearch.class)
+            .hits().total().value();
+        if (docCount == 0) {
+          log.warn("인덱스 '{}'는 존재하지만 문서 수가 0입니다. 모든 콘텐츠를 재인덱싱합니다.", contentIndex);
+          reindexAllContents(); // 문서가 없으면 재인덱싱
+        } else {
+          log.info("인덱스 '{}'가 존재하고 문서가 있어 초기화 과정을 건너뜁니다. (총 문서 수: {})", contentIndex, docCount);
+        }
+      }
+
       log.info("ContentSearchService 인덱스 초기화 완료");
 
     } catch (Exception e) {
       log.error("ContentSearchService 인덱스 초기화 중 오류 발생", e);
       log.info("인덱스 초기화 실패했지만 애플리케이션은 계속 실행됩니다. 검색 기능이 제한될 수 있습니다.");
-      // 애플리케이션 시작을 막지 않도록 예외를 다시 던지지 않음
     }
   }
 
@@ -128,12 +141,14 @@ public class ContentSearchService {
           .document(document)
       );
 
-      openSearchClient.index(request);
+      // OpenSearch 작업 실행
+      openSearchClient.index(request); // 이 부분에서 IOException 발생 가능
       log.debug("콘텐츠 인덱싱 완료: ID={}, 제목={}", content.getId(), content.getTitle());
 
-    } catch (IOException e) {
+    } catch (IOException e) { // OpenSearch 관련 예외를 여기서 잡습니다.
       log.warn("콘텐츠 인덱싱 실패: ID={}, 제목={}", content.getId(), content.getTitle(), e);
-      throw new RuntimeException("콘텐츠 인덱싱 실패", e);
+      // 실패 시 추가적인 로직 (예: 재시도 큐에 추가, 사용자에게 알림)
+      throw new RuntimeException("콘텐츠 인덱싱 실패", e); // 필요에 따라 런타임 예외로 래핑하여 상위로 전파
     }
   }
 
@@ -165,7 +180,7 @@ public class ContentSearchService {
 
       var bulkResponse = openSearchClient.bulk(bulkRequestBuilder.build());
 
-      // 결과 처리
+      // bulkResponse.errors()를 통해 전체 작업 중 오류가 있었는지 확인
       if (bulkResponse.errors()) {
         long errorCount = bulkResponse.items().stream()
             .mapToLong(item -> item.error() != null ? 1 : 0)
@@ -174,10 +189,12 @@ public class ContentSearchService {
         log.warn("batchIndexContents - 배치 인덱싱 일부 실패: 성공 {}개, 실패 {}개",
             contents.size() - errorCount, errorCount);
 
+        // 각 항목별 실패 원인 확인 및 로깅
         bulkResponse.items().forEach(item -> {
           if (item.error() != null) {
             log.warn("배치 인덱싱 실패 항목 - ID: {}, 오류: {}",
                 item.id(), item.error().reason());
+            // 여기서 개별 실패 항목에 대한 후속 처리 (예: 재처리 목록에 추가)
           }
         });
       } else {
