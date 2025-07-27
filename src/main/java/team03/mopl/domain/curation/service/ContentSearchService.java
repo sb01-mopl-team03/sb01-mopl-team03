@@ -38,10 +38,80 @@ public class ContentSearchService {
 
   @PostConstruct
   public void initializeIndex() {
+    log.info("ContentSearchService 인덱스 초기화 시작");
+
     try {
+      log.debug("OpenSearch 연결 테스트 중...");
+
+      // 연결 테스트를 위한 간단한 클러스터 정보 조회
+      try {
+        // 클러스터 헬스 체크 (가장 기본적인 요청)
+        log.debug("클러스터 헬스 체크 시도...");
+        var healthResponse = openSearchClient.cluster().health();
+        log.info("OpenSearch 클러스터 연결 성공 - 상태: {}", healthResponse.status());
+      } catch (Exception e) {
+        log.error("OpenSearch 클러스터 연결 실패", e);
+        log.info("인덱스 초기화를 건너뜁니다. 애플리케이션은 검색 기능 없이 계속 실행됩니다.");
+        return;
+      }
+
+      log.debug("인덱스 존재 여부 확인 중...");
       createIndexIfNotExists();
-    } catch (IOException e) {
-      log.error("OpenSearch 인덱스 초기화 실패", e);
+      log.info("ContentSearchService 인덱스 초기화 완료");
+
+    } catch (Exception e) {
+      log.error("ContentSearchService 인덱스 초기화 중 오류 발생", e);
+      log.info("인덱스 초기화 실패했지만 애플리케이션은 계속 실행됩니다. 검색 기능이 제한될 수 있습니다.");
+      // 애플리케이션 시작을 막지 않도록 예외를 다시 던지지 않음
+    }
+  }
+
+  private void createIndexIfNotExists() throws IOException {
+    try {
+      log.debug("인덱스 '{}' 존재 여부 확인 시작", contentIndex);
+
+      // 인덱스 존재 여부 확인
+      boolean exists = openSearchClient.indices().exists(ExistsRequest.of(e -> e.index(contentIndex))).value();
+
+      if (exists) {
+        log.info("인덱스 '{}' 이미 존재함", contentIndex);
+        return;
+      }
+
+      log.info("인덱스 '{}' 생성 시작", contentIndex);
+
+      // 인덱스 생성
+      CreateIndexRequest createIndexRequest = CreateIndexRequest.of(c -> c
+          .index(contentIndex)
+          .mappings(m -> m
+              .properties("id", p -> p.keyword(k -> k))
+              .properties("title", p -> p.text(t -> t.analyzer("standard")))
+              .properties("description", p -> p.text(t -> t.analyzer("standard")))
+              .properties("content_type", p -> p.keyword(k -> k))
+              .properties("avg_rating", p -> p.double_(d -> d))
+          )
+      );
+
+      var response = openSearchClient.indices().create(createIndexRequest);
+
+      if (response.acknowledged()) {
+        log.info("인덱스 '{}' 생성 완료", contentIndex);
+      } else {
+        log.warn("인덱스 '{}' 생성 응답에서 acknowledged가 false입니다. 수동으로 확인이 필요할 수 있습니다.", contentIndex);
+      }
+
+    } catch (Exception e) {
+      log.error("인덱스 생성 중 오류 발생: {}", e.getMessage());
+
+      // 상세한 오류 정보 로깅
+      if (e.getCause() != null) {
+        log.error("근본 원인: {}", e.getCause().getMessage());
+      }
+
+      // 스택 트레이스는 DEBUG 레벨로
+      log.debug("인덱스 생성 오류 상세 스택 트레이스", e);
+
+      throw e;
     }
   }
 
@@ -279,28 +349,28 @@ public class ContentSearchService {
     }
   }
 
-  /**
-   * 인덱스 생성 - ContentSearch 필드에 맞춰 매핑 정의
-   */
-  private void createIndexIfNotExists() throws IOException {
-    ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(contentIndex));
-
-    if (!openSearchClient.indices().exists(existsRequest).value()) {
-      CreateIndexRequest createIndexRequest = CreateIndexRequest.of(c -> c
-          .index(contentIndex)
-          .mappings(m -> m
-              .properties("id", p -> p.keyword(k -> k))
-              .properties("title", p -> p.text(t -> t.analyzer("standard")))
-              .properties("description", p -> p.text(t -> t.analyzer("standard")))
-              .properties("content_type", p -> p.keyword(k -> k))  // String으로 저장됨
-              .properties("avg_rating", p -> p.double_(d -> d))
-          )
-      );
-
-      openSearchClient.indices().create(createIndexRequest);
-      log.info("OpenSearch 인덱스 '{}' 생성 완료", contentIndex);
-    }
-  }
+//  /**
+//   * 인덱스 생성 - ContentSearch 필드에 맞춰 매핑 정의
+//   */
+//  private void createIndexIfNotExists() throws IOException {
+//    ExistsRequest existsRequest = ExistsRequest.of(e -> e.index(contentIndex));
+//
+//    if (!openSearchClient.indices().exists(existsRequest).value()) {
+//      CreateIndexRequest createIndexRequest = CreateIndexRequest.of(c -> c
+//          .index(contentIndex)
+//          .mappings(m -> m
+//              .properties("id", p -> p.keyword(k -> k))
+//              .properties("title", p -> p.text(t -> t.analyzer("standard")))
+//              .properties("description", p -> p.text(t -> t.analyzer("standard")))
+//              .properties("content_type", p -> p.keyword(k -> k))  // String으로 저장됨
+//              .properties("avg_rating", p -> p.double_(d -> d))
+//          )
+//      );
+//
+//      openSearchClient.indices().create(createIndexRequest);
+//      log.info("OpenSearch 인덱스 '{}' 생성 완료", contentIndex);
+//    }
+//  }
 
   /**
    * 인덱스 초기화 - 삭제 후 재생성하고 모든 콘텐츠 재인덱싱
