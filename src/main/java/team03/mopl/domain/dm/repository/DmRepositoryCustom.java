@@ -28,7 +28,7 @@ public class DmRepositoryCustom {
       LocalDateTime mainCursorDate = LocalDateTime.parse(mainCursorValue); // cursor 기준
       UUID subCursorId = UUID.fromString(subCursorValue); // 서브 기준
 
-      BooleanExpression cursorCondition = dm.createdAt.lt(mainCursorDate).or(dm.createdAt.eq(mainCursorDate).and(dm.id.lt(subCursorId)));
+      BooleanExpression cursorCondition = dm.createdAt.loe(mainCursorDate).or(dm.createdAt.eq(mainCursorDate).and(dm.id.lt(subCursorId)));
 
       baseCondition = baseCondition.and(cursorCondition);
     }

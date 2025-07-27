@@ -11,4 +11,5 @@ public interface DmRepository extends JpaRepository<Dm, UUID> {
   @Query("SELECT d FROM Dm d WHERE d.dmRoom.id = :roomId ORDER BY d.createdAt ASC")
   List<Dm> findByDmRoomIdOrderByCreatedAtAsc(@Param("roomId") UUID roomId);
 
+  long countByDmRoomId(UUID roomId);
 }
