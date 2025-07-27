@@ -35,6 +35,7 @@ import team03.mopl.common.exception.dm.DmDecodingError;
 import team03.mopl.common.exception.dm.DmNotFoundException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.common.exception.dm.NoOneMatchInDmRoomException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.dto.DmPagingDto;
 import team03.mopl.domain.dm.dto.SendDmDto;
@@ -56,6 +57,9 @@ class DmServiceImplTest {
   private NotificationService notificationService;
   @Mock
   private DmRepositoryCustom dmRepositoryCustom;
+
+  @Mock
+  private CursorCodecUtil cursorCodecUtil;
 
   @InjectMocks
   private DmServiceImpl dmService;
@@ -190,7 +194,7 @@ class DmServiceImplTest {
     // 커서 조회 결과는 dm1, dm2
     given(dmRepositoryCustom.findByCursor(eq(roomId), anyInt(), any(), any()))
         .willReturn(List.of(dm1, dm2));
-    given(dmRepository.count()).willReturn(2L);
+    given(dmRepository.countByDmRoomId(roomId)).willReturn(2L);
 
     // when
     var pagingDto = new DmPagingDto(null, 20); // cursor 없음, size=20
@@ -219,14 +223,14 @@ class DmServiceImplTest {
     // 커서 조회 결과는 dm1, dm2
     given(dmRepositoryCustom.findByCursor(eq(roomId), anyInt(), any(), any()))
         .willReturn(list.subList(0, 21));
-    given(dmRepository.count()).willReturn(20L);
+    given(dmRepository.countByDmRoomId(roomId)).willReturn(40L);
 
     // when
     var pagingDto = new DmPagingDto(null, 20); // cursor 없음, size=20
     var result = dmService.getDmList(roomId, pagingDto, userB);
 
     // then
-    assertThat(result.data()).hasSize(21);
+    assertThat(result.data()).hasSize(20);
     assertThat(result.hasNext()).isTrue();
   }
 
