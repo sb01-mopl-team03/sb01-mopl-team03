@@ -6,7 +6,7 @@ import org.springframework.http.ResponseCookie;
 
 public class CookieUtil {
 
-  public static Cookie createResponseCookie(HttpServletResponse response,String refreshToken, long maxAgeInMs) {
+  public static void createResponseCookie(HttpServletResponse response,String refreshToken, long maxAgeInMs) {
     /*Cookie cookie = new Cookie("refresh", refreshToken);
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
