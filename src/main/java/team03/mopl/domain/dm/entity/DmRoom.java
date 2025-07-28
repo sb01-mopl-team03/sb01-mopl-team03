@@ -46,7 +46,7 @@ public class DmRoom {
   private LocalDateTime createdAt;
 
   @LastModifiedDate
-  @Column(name = "last_Message_At")
+  @Column(name = "last_message_at")
   private LocalDateTime lastMessageAt;
 
   @ElementCollection

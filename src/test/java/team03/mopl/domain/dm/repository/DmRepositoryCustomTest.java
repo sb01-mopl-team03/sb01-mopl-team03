@@ -80,7 +80,7 @@ public class DmRepositoryCustomTest {
         last.getId().toString()
     );
 
-    assertThat(secondPage).contains(last);
+    assertThat(secondPage).doesNotContain(last);
   }
 
   @Test
