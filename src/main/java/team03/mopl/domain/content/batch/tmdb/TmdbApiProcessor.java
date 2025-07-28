@@ -28,9 +28,10 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
 
   @Override
   public Content process(TmdbItemDto item) throws Exception {
+    log.info("TmdbApiProcessor - TMDB 아이템 → 컨텐츠 변환 시작 : item.getId={}", item.getId());
 
     if (contentRepository.existsByDataId(item.getId())) {
-      log.info("이미 존재하는 Content 입니다. item.getId()={}", item.getId());
+      log.debug("이미 존재하는 컨텐츠입니다.: item.getId()={}", item.getId());
       return null;
     }
 
@@ -53,6 +54,7 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
       LocalDate localDate = LocalDate.parse(item.getReleaseDate());
       releaseDate = localDate.atStartOfDay();
     }
+    log.debug("기본 정보 추출 완료: type={}, title={}", contentType, title);
 
     // 2. URI 생성
     URI uri = UriComponentsBuilder
@@ -60,6 +62,7 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
         .path("/{videoType}/{id}/videos")
         .queryParam("language", "ko-KR")
         .build(videoType, item.getId());
+    log.debug("비디오 정보 API 요청 시작: url={}", uri);
 
     // 3. Header 설정
     HttpHeaders headers = new org.springframework.http.HttpHeaders();
@@ -87,15 +90,25 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
     // 현재로선 전부 Youtube 인 것들만 확인되었습니다.
     String videoUrl = "";
     if (tmdbVideoItemDto != null && tmdbVideoItemDto.getSite().equals("YouTube")) {
-      // log.info("tmdbVideoItemDto.getType()={}", tmdbVideoItemDto.getSite());
       videoUrl = "https://youtu.be/" + tmdbVideoItemDto.getKey();
-       // log.info("videoUrl={}", videoUrl);
+      log.debug("비디오 URL 추출 성공: videoUrl={}", videoUrl);
+    }
+
+    if (videoUrl.isEmpty()) {
+      log.debug("YouTube URL 부재로 스킵: itemId={}", item.getId());
+      return null;
     }
 
     // 9. title 문자열 정규화
     String titleNormalized = NormalizerUtil.normalize(title);
 
-    // 10. Content 객체 생성및 반환
+    // 10. thumbnail URL 생성: 전체 경로, 원본 이미지
+    String thumbnailUrl = "";
+    if (item.getPosterPath() != null) {
+      thumbnailUrl = "https://image.tmdb.org/t/p/original" + item.getPosterPath();
+    }
+
+    // 11. Content 객체 생성및 반환
     Content content = Content.builder()
         .title(title)
         .titleNormalized(titleNormalized)
@@ -103,8 +116,11 @@ public class TmdbApiProcessor implements ItemProcessor<TmdbItemDto, Content> {
         .description(item.getOverview())
         .contentType(contentType)
         .releaseDate(releaseDate)
-        .url(videoUrl)
+        .youtubeUrl(videoUrl)
+        .thumbnailUrl(thumbnailUrl)
         .build();
+
+    log.info("TmdbApiProcessor - 아이템 처리 성공, Writer로 전달: dataId={}", item.getId());
 
     return content;
   }

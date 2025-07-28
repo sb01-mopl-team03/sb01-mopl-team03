@@ -13,6 +13,7 @@ import team03.mopl.domain.notification.entity.NotificationType;
 class EmitterRepositoryImplTest {
 
   private EmitterRepository emitterRepository = new EmitterRepositoryImpl();
+  private EmitterCacheRepository cacheRepository = new EmitterCacheRepositoryImpl();
   private Long DEFAULT_TIMEOUT = 60L * 1000L * 60L;
   private UUID userId;
 
@@ -28,7 +29,7 @@ class EmitterRepositoryImplTest {
   private String makeNotificationCacheId(String emitterId, UUID notificationId, UUID userId) {
     return notificationId + "_" + emitterId + "_" + userId;
   }
-  
+
   @Test
   @DisplayName("새로운 Emitter를 추가한다.")
   void save() {
@@ -45,7 +46,7 @@ class EmitterRepositoryImplTest {
     Notification notification = new Notification(userId, NotificationType.FOLLOWED, "알림 전송");
     //추가 고민 필요
     String notificationCacheId = makeNotificationCacheId(emitterId, UUID.randomUUID(), userId);
-    Assertions.assertDoesNotThrow(() -> emitterRepository.saveNotificationCache(notificationCacheId, notification));
+    Assertions.assertDoesNotThrow(() -> cacheRepository.saveNotificationCache(notificationCacheId, notification));
   }
 
   @Test
@@ -77,20 +78,20 @@ class EmitterRepositoryImplTest {
     UUID notificationId = UUID.randomUUID();
     String notificationCacheId1 = makeNotificationCacheId(makeEmitterId(notificationId), UUID.randomUUID(), userId);
     Notification notification1 = new Notification(userId, NotificationType.FOLLOWED, "팔로우 했습니다.");
-    emitterRepository.saveNotificationCache(notificationCacheId1, notification1);
+    cacheRepository.saveNotificationCache(notificationCacheId1, notification1);
 
     Thread.sleep(100);
     String notificationCacheId2 = makeNotificationCacheId(makeEmitterId(notificationId), UUID.randomUUID(), userId);
     Notification notification2 = new Notification(userId, NotificationType.DM_RECEIVED, "DM이 도착했습니다..");
-    emitterRepository.saveNotificationCache(notificationCacheId2, notification2);
+    cacheRepository.saveNotificationCache(notificationCacheId2, notification2);
 
     Thread.sleep(100);
     String notificationCacheId3 = makeNotificationCacheId(makeEmitterId(notificationId), UUID.randomUUID(), userId);
     Notification notification3 = new Notification(userId, NotificationType.UNFOLLOWED, "언팔로우 했습니다.");
-    emitterRepository.saveNotificationCache(notificationCacheId3, notification3);
+    cacheRepository.saveNotificationCache(notificationCacheId3, notification3);
 
     //when
-    Map<String, Notification> ActualResult = emitterRepository.findAllNotificationCachesByUserIdPrefix(userId);
+    Map<String, Notification> ActualResult = cacheRepository.findAllNotificationCachesByUserIdPrefix(userId);
 
     //then
     Assertions.assertEquals(3, ActualResult.size());
@@ -136,17 +137,17 @@ class EmitterRepositoryImplTest {
     UUID notificationId = UUID.randomUUID();
     String notificationCacheId1 = makeNotificationCacheId(makeEmitterId(notificationId), UUID.randomUUID(), userId);
     Notification notification1 = new Notification(userId, NotificationType.FOLLOWED, "팔로우 했습니다.");
-    emitterRepository.saveNotificationCache(notificationCacheId1, notification1);
+    cacheRepository.saveNotificationCache(notificationCacheId1, notification1);
 
     Thread.sleep(100);
     String notificationCacheId2 = makeNotificationCacheId(makeEmitterId(notificationId), UUID.randomUUID(), userId);
     Notification notification2 = new Notification(userId, NotificationType.DM_RECEIVED, "DM이 도착했습니다..");
-    emitterRepository.saveNotificationCache(notificationCacheId2, notification2);
+    cacheRepository.saveNotificationCache(notificationCacheId2, notification2);
 
     //when
-    emitterRepository.deleteAllNotificationCachesByUserIdPrefix(String.valueOf(userId));
+    cacheRepository.deleteAllNotificationCachesByUserIdPrefix(String.valueOf(userId));
 
     //then
-    Assertions.assertEquals(0, emitterRepository.findAllNotificationCachesByNotificationIdPrefix(notificationId).size());
+    Assertions.assertEquals(0, cacheRepository.findAllNotificationCachesByNotificationIdPrefix(notificationId).size());
   }
 }

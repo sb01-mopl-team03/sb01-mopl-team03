@@ -37,6 +37,9 @@ public class WatchRoom {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
+  @Column(name = "title", nullable = false)
+  private String title;
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "owner_id", nullable = false)
   private User owner;
@@ -68,8 +71,8 @@ public class WatchRoom {
   }
 
   //일시정지
-  public void pause() {
-    this.playTime = calculateRealPlayTime();
+  public void pause(double playTime) {
+    this.playTime = playTime;
     this.isPlaying = false;
     this.videoStateUpdatedAt = LocalDateTime.now();
   }
@@ -80,18 +83,6 @@ public class WatchRoom {
     this.videoStateUpdatedAt = LocalDateTime.now();
   }
 
-  //경과 시간 계산
-  public double calculateRealPlayTime() {
-    if (!this.isPlaying || this.videoStateUpdatedAt == null) {
-      return this.playTime;
-    }
-
-    LocalDateTime now = LocalDateTime.now();
-    Duration elapsed = Duration.between(this.videoStateUpdatedAt, now);
-    double elapsedSeconds = elapsed.toMillis() / 1000.0;
-
-    return this.playTime + elapsedSeconds;
-  }
 
   //방장 변경
   public void changeOwner(User newOwner) {

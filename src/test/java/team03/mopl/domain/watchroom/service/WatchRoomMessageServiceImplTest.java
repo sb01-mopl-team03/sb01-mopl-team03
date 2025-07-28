@@ -21,8 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team03.mopl.common.exception.user.UserNotFoundException;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageCreateRequest;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageCreateRequest;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
 import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomMessage;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
@@ -120,7 +120,7 @@ class WatchRoomMessageServiceImplTest {
           .sender(sender)
           .build();
 
-      when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+      when(userRepository.findByEmail(sender.getEmail())).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
           .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(true);
@@ -128,7 +128,7 @@ class WatchRoomMessageServiceImplTest {
           watchRoomMessage);
 
       //when
-      WatchRoomMessageDto result = chatMessageService.create(request, sender.getName());
+      WatchRoomMessageDto result = chatMessageService.create(request, sender.getEmail());
 
       //then
       assertNotNull(result);
@@ -151,11 +151,12 @@ class WatchRoomMessageServiceImplTest {
           LocalDateTime.now()
       );
 
-      when(userRepository.findById(randomUserId)).thenReturn(Optional.empty());
+      when(userRepository.findByEmail(sender.getEmail())).thenReturn(Optional.empty());
 
       //when & then
       assertThrows(UserNotFoundException.class,
-          () -> chatMessageService.create(request, sender.getName()));
+          () -> chatMessageService.create(request, sender.getEmail()
+));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }
@@ -174,12 +175,12 @@ class WatchRoomMessageServiceImplTest {
           now
       );
 
-      when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+      when(userRepository.findByEmail(sender.getEmail())).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(randomChatRoomId)).thenReturn(Optional.empty());
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class,
-          () -> chatMessageService.create(request, sender.getName()));
+          () -> chatMessageService.create(request, sender.getEmail()));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }
@@ -196,14 +197,15 @@ class WatchRoomMessageServiceImplTest {
           now
       );
 
-      when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
+      when(userRepository.findByEmail(sender.getEmail())).thenReturn(Optional.of(sender));
       when(watchRoomRepository.findById(chatRoomId)).thenReturn(Optional.of(watchRoom));
       when(watchRoomParticipantRepository
           .existsWatchRoomParticipantByWatchRoomAndUser(watchRoom, sender)).thenReturn(false);
 
       //when & then
       assertThrows(WatchRoomRoomNotFoundException.class,
-          () -> chatMessageService.create(request, sender.getName()));
+          () -> chatMessageService.create(request, sender.getEmail()
+));
 
       verify(watchRoomMessageRepository, never()).save(any(WatchRoomMessage.class));
     }

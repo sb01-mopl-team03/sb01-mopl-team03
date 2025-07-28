@@ -9,9 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.common.exception.auth.InvalidPasswordException;
 import team03.mopl.common.exception.user.DuplicatedEmailException;
-import team03.mopl.common.exception.user.DuplicatedNameException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.storage.ProfileImageStorage;
@@ -33,11 +34,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserResponse create(UserCreateRequest request) {
+    log.info("create - 유저 생성 시작: email={}, name={}", request.email(), request.name());
     if(userRepository.existsByEmail(request.email())){
+      log.warn("중복 이메일: email={}", request.email());
       throw new DuplicatedEmailException();
-    }
-    if (userRepository.existsByName(request.name())){
-      throw new DuplicatedNameException();
     }
 
     String uploadedImageUrl = null;
@@ -56,19 +56,35 @@ public class UserServiceImpl implements UserService {
         .isTempPassword(false)
         .profileImage(uploadedImageUrl)
         .build();
+
+    log.info("create - 유저 생성 완료: userId={}, email={}", user.getId(), user.getEmail());
     return UserResponse.from(userRepository.save(user));
   }
 
   @Override
   public UserResponse find(UUID userId) {
-    return UserResponse.from(userRepository.findById(userId)
-        .orElseThrow(UserNotFoundException::new));
+    log.info("find - 유저 조회 시작: userId={}", userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(UserNotFoundException::new);
+
+    log.info("find - 유저 조회 완료: userId={}, email={}", user.getId(), user.getEmail());
+    return UserResponse.from(user);
   }
 
   @Override
+  @Transactional
   public UserResponse update(UUID userId, UserUpdateRequest request, MultipartFile profile) {
+    log.info("update - 유저 수정 시작: userId={}", userId);
+
     User user= userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
+
+    log.debug("입력된 현재 비밀번호: {}", request.currentPassword());
+    log.debug("DB 저장된 비밀번호: {}", user.getPassword());
+    if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+      throw new InvalidPasswordException();
+    }
 
     String encodedPassword = null;
     if(request.newPassword() != null){
@@ -87,16 +103,18 @@ public class UserServiceImpl implements UserService {
 
     user.update(request.newName(), encodedPassword, newImageUrl);
 
+    log.info("update - 유저 수정 완료: userId={}, name={}", user.getId(), user.getName());
     return UserResponse.from(user);
   }
 
   @Override
   public void delete(UUID userId) {
+    log.info("delete - 유저 삭제 시작: userId={}", userId);
     // User 삭제 시 Follow 관계도 같이 삭제
     followService.deletedUserUnfollow(userId);
 
     userRepository.deleteById(userId);
-
+    log.info("delete - 유저 삭제 완료: userId={}", userId);
   }
 
   @Override
@@ -106,16 +124,21 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User loginOrRegisterOAuth(String email,String name){
-    return userRepository.findByEmail(email)
-        .orElseGet(()->{
-          String randomPassword  = UUID.randomUUID().toString();
+    log.info("loginOrRegisterOAuth - 소셜 로그인: email={}", email);
+
+    User user = userRepository.findByEmail(email)
+        .orElseGet(() -> {
+          String randomPassword = UUID.randomUUID().toString();
           return userRepository.save(User.builder()
               .email(email)
               .name(name)
-              .password(passwordEncoder.encode(randomPassword ))
+              .password(passwordEncoder.encode(randomPassword))
               .role(USER)
               .isLocked(false)
               .build());
         });
+
+    log.info("loginOrRegisterOAuth - 소셜 로그인 완료: userId={}, email={}", user.getId(), user.getEmail());
+    return user;
   }
 }

@@ -15,10 +15,7 @@ public interface WatchRoomParticipantRepository extends JpaRepository<WatchRoomP
 
   boolean existsWatchRoomParticipantByWatchRoomAndUser(WatchRoom watchRoom, User user);
 
-  //todo - 개선: N+1 문제 발생 가능
-  /** deprecated **/
-  long countByWatchRoomId(UUID chatRoomId);
+  Optional<WatchRoomParticipant> findFirstByWatchRoom(WatchRoom watchRoom);
 
   List<WatchRoomParticipant> findByWatchRoom(WatchRoom watchRoom);
-
 }

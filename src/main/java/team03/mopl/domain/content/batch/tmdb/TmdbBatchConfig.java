@@ -1,7 +1,9 @@
 package team03.mopl.domain.content.batch.tmdb;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
@@ -14,6 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.CurationJobListener;
 
 @Configuration
 @RequiredArgsConstructor
@@ -29,6 +32,8 @@ public class TmdbBatchConfig {
   private String baseurl;
   @Value("${tmdb.api_token}")
   private String apiToken;
+
+
 
   @Bean
   public Step initialTmdbStep(){

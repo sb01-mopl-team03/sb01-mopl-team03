@@ -21,6 +21,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.domain.curation.service.CurationService;
+import team03.mopl.domain.playlist.service.PlaylistService;
+import team03.mopl.domain.review.service.ReviewService;
+import team03.mopl.domain.subscription.service.SubscriptionService;
 
 
 @WebMvcTest(UserController.class)
@@ -32,11 +36,20 @@ class UserControllerTest {
   @MockitoBean
   private UserService userService;
 
-  @MockitoBean
-  private ProfileImageService profileImageService;
-
   @Autowired
   private ObjectMapper objectMapper;
+
+  @MockitoBean
+  private ReviewService reviewService;
+
+  @MockitoBean
+  private SubscriptionService subscriptionService;
+
+  @MockitoBean
+  private PlaylistService playlistService;
+
+  @MockitoBean
+  private CurationService curationService;
 
   @WithMockUser
   @Test
@@ -128,7 +141,7 @@ class UserControllerTest {
         "profile", "profile2.png", "image/png", "image-data".getBytes());
     MockMultipartFile jsonPart = new MockMultipartFile(
         "request", "", "application/json",
-        objectMapper.writeValueAsBytes(new UserUpdateRequest("강감찬", "newPass123")));
+        objectMapper.writeValueAsBytes(new UserUpdateRequest("강감찬", "password","newPass123")));
 
     UserResponse response = new UserResponse("hong@naver.com", "강감찬", "user", false, "profile2.png");
 
@@ -175,18 +188,5 @@ class UserControllerTest {
         .andExpect(jsonPath("$[0].email").value("hong@naver.com"))
         .andExpect(jsonPath("$[0].role").value("user"))
         .andExpect(jsonPath("$[0].isLocked").value(false));
-  }
-
-  @WithMockUser
-  @Test
-  void getProfileImages() throws Exception {
-    List<String> profiles = List.of("profile1.png", "profile2.png");
-
-    when(profileImageService.getProfileImages()).thenReturn(profiles);
-
-    mockMvc.perform(get("/api/users/profiles")
-            .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0]").value("profile1.png"));
   }
 }

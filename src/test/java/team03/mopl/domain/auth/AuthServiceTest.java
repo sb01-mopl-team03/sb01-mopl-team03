@@ -1,7 +1,7 @@
 package team03.mopl.domain.auth;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -20,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import team03.mopl.common.exception.ErrorCode;
+import team03.mopl.common.exception.auth.AuthException;
 import team03.mopl.domain.user.Role;
 import team03.mopl.domain.user.User;
 import team03.mopl.domain.user.UserRepository;
@@ -90,9 +92,9 @@ class AuthServiceTest {
     User lockedUser = user.toBuilder().isLocked(true).build();
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(lockedUser));
 
-    IllegalStateException e = assertThrows(IllegalStateException.class, () ->
+    AuthException e = assertThrows(AuthException.class, () ->
         authService.login("test@email.com", "pw"));
-    assertThat(e.getMessage()).contains("잠긴 계정");
+    assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOCKED_USER);
   }
 
 
@@ -106,9 +108,9 @@ class AuthServiceTest {
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(tempUser));
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
-    IllegalStateException e = assertThrows(IllegalStateException.class, () ->
+    AuthException e = assertThrows(AuthException.class, () ->
         authService.login("test@email.com", "pw"));
-    assertThat(e.getMessage()).contains("Temporary password expired");
+    assertThat(e.getErrorCode()).isEqualTo(ErrorCode.TEMP_PASSWORD_EXPIRED);
   }
 
   @Test

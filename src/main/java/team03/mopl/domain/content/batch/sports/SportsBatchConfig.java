@@ -13,15 +13,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.RestTemplate;
 import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.repository.ContentRepository;
+import team03.mopl.domain.curation.CurationJobListener;
 
 @Configuration
 @RequiredArgsConstructor
 public class SportsBatchConfig {
 
+  private final ContentRepository contentRepository;
   private final RestTemplate restTemplate;
   private final PlatformTransactionManager transactionManager;
   private final ItemWriter<Content> itemWriter;
   private final JobRepository jobRepository;
+  private final CurationJobListener curationJobListener;
 
   @Value("${sports.baseurl}")
   private String baseUrl;
@@ -58,6 +62,6 @@ public class SportsBatchConfig {
 
   @Bean
   public ItemProcessor<SportsItemDto, Content> sportsProcessor(){
-    return new SportsApiProcessor();
+    return new SportsApiProcessor(contentRepository);
   }
 }

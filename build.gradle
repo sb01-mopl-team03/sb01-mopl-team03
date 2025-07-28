@@ -16,6 +16,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 jacoco {
@@ -24,68 +25,94 @@ jacoco {
 
 ext {
     queryDslVersion = "5.1.0"
+    awsSdkVersion = "2.23.0" // 안정적인 버전 사용 (혹시 이 버전에서 문제 생기면 2.17.291 등 시도)
 }
 
-
 dependencies {
+    // AWS SDK BOM 추가로 버전 충돌 방지
+    implementation platform("software.amazon.awssdk:bom:$awsSdkVersion")
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
-    //queryDsl
+    // Lombok
+    implementation 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // QueryDSL
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
     annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
-    //OAuth2
+    // OAuth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-    //jwt
+    // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    runtimeOnly 'org.postgresql:postgresql'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // 레포지토리 단위 테스트 코드용 H2
-    runtimeOnly 'com.h2database:h2'
-
-
-    // AI
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4'
-    implementation 'edu.stanford.nlp:stanford-corenlp:4.5.4:models'
-    implementation 'com.github.vinhkhuc:jfasttext:0.5'
-
-    // Spring Batch
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
-    testImplementation 'org.springframework.batch:spring-batch-test'
-
-    // Actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    // Prometheus
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    //websocket
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // Security
     implementation 'org.springframework.security:spring-security-messaging'
-    testImplementation 'org.springframework:spring-websocket'
-    testImplementation 'org.springframework:spring-messaging'
 
-    //OpenAPI 문서
+    // OpenSearch Client (Java 17 호환 버전)
+    implementation "org.opensearch.client:opensearch-rest-client:2.11.0"
+    implementation "org.opensearch.client:opensearch-java:2.11.0"
+
+    // AWS SDK v2 dependencies (필수 모듈들)
+    implementation "software.amazon.awssdk:http-auth-aws"
+    implementation "org.apache.httpcomponents.client5:httpclient5"
+    implementation "software.amazon.awssdk:apache-client"
+
+    // Jackson for JSON processing (AWS SDK v2도 내부적으로 Jackson 사용)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.+'
+
+    // Jakarta JAXB - 최신 버전 명시적 추가
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'
+
+    // Monitoring
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // Documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
-    //S3
-    implementation 'software.amazon.awssdk:s3:2.31.7'
+    // AWS S3 - Exclude apache-client to avoid conflict
+    implementation('software.amazon.awssdk:s3') {
+        exclude group: 'software.amazon.awssdk', module: 'apache-client'
+    }
 
+    // HTTP Client - This is a general Apache HTTP Client, not the AWS SDK specific one.
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    // Test Dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'org.springframework:spring-websocket'
+    testImplementation 'org.springframework:spring-messaging'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
@@ -93,19 +120,38 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.named('jacocoTestReport'){
+tasks.named('jacocoTestReport') {
     dependsOn test
-    reports{
+    reports {
         xml.required = true
-        html.required =true
+        html.required = true
     }
 }
 
-tasks.withType(JavaExec) {
-    jvmArgs = ['-Xmx4g', '-Xms1g']
+afterEvaluate {
+    tasks.jacocoTestReport {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/MoplApplication.class',    // 메인 애플리케이션 클래스
+                    '**/Q*',                        // Q 클래스
+                    '**/*$*.class',      // Lombok이 생성한 내부 클래스
+                    '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
+                    '**/team03/mopl/domain/**/dto/**', // DTO 클래스
+                    '**/team03/mopl/domain/**/batch/**', // 배치
+                    '**/S3Service.class',                // S3 서비스
+
+                    '**/team03/mopl/common/config/**',         // 설정 클래스
+                    '**/team03/mopl/common/exception/**',      // 커스텀 예외
+                    '**/team03/mopl/domain/oauth2/**',         // OAuth 인증 유틸
+                    '**/team03/mopl/storage/**'                // 외부 스토리지 접근
+            ])
+        })
+    }
 }
 
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }  // 이 라인 추가
+configurations {
+    all {
+        exclude group: 'org.opensearch.client', module: 'opensearch-rest-high-level-client'
+        exclude group: 'org.opensearch.client', module: 'opensearch-rest-client-sniffer'
+    }
 }

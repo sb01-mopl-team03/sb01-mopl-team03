@@ -14,4 +14,6 @@ public interface ContentRepositoryCustom {
       String cursor,
       UUID cursorId,
       int size);
+
+  long countContentsWithFilter(String title, String contentType);
 }

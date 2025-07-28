@@ -2,15 +2,17 @@ package team03.mopl.domain.watchroom.dto;
 
 import java.util.UUID;
 import lombok.Builder;
-import lombok.Setter;
+import team03.mopl.domain.content.dto.ContentDto;
+import team03.mopl.domain.watchroom.dto.participant.ParticipantsInfoDto;
 
 @Builder
 public record WatchRoomInfoDto (
     UUID id,
-    @Setter
+    String title,
     UUID newUserId,
-    String contentTitle,
-    ParticipantsInfoDto participantsInfoDto
-){
+    Double playTime,
+    boolean isPlaying,
+    ParticipantsInfoDto participantsInfoDto,
+    ContentDto content){
 
 }

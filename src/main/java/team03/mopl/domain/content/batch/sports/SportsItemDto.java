@@ -39,4 +39,7 @@ public class SportsItemDto {
   @JsonProperty("strVideo")
   private String strVideo;
 
+  @JsonProperty("strThumb")
+  private String strThumb;
+
 }

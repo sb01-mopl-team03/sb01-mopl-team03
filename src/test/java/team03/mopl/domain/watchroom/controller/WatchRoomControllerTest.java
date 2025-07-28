@@ -1,6 +1,6 @@
 package team03.mopl.domain.watchroom.controller;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,8 +25,13 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import team03.mopl.common.dto.CursorPageResponseDto;
+import team03.mopl.domain.content.Content;
+import team03.mopl.domain.content.ContentType;
+import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
+import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
 
@@ -37,7 +42,7 @@ import team03.mopl.domain.watchroom.service.WatchRoomService;
         OAuth2ClientAutoConfiguration.class,
         OAuth2ClientWebSecurityAutoConfiguration.class,
         OAuth2ResourceServerAutoConfiguration.class})
-@DisplayName("채팅방 기능 컨트롤러 단위 테스트")
+@DisplayName("시청방 기능 컨트롤러 단위 테스트")
 class WatchRoomControllerTest {
 
   @Autowired
@@ -50,7 +55,7 @@ class WatchRoomControllerTest {
   private WatchRoomService watchRoomService;
 
   @Nested
-  @DisplayName("채팅방 생성 요청")
+  @DisplayName("시청방 생성 요청")
   class createWatchRoom {
 
     @Test
@@ -61,11 +66,21 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
       UUID contentId = UUID.randomUUID();
+      Content content = Content.builder()
+          .id(contentId)
+          .title("테스트콘텐츠")
+          .description("테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+      ContentDto contentDto = ContentDto.from(content);
 
-      WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId);
+      String title = "실시간 시청방 테스트용 이름";
+
+      WatchRoomCreateRequest request = new WatchRoomCreateRequest(ownerId, contentId, title);
       String requestBody = objectMapper.writeValueAsString(request);
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트용 콘텐츠 제목", ownerId, "유저1",
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, title, contentDto, ownerId, "유저1",
           LocalDateTime.now(), 1L);
 
       when(watchRoomService.create(request)).thenReturn(responseDto);
@@ -78,7 +93,7 @@ class WatchRoomControllerTest {
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
           .andExpect(jsonPath("$.id").value(roomId.toString()))
           .andExpect(jsonPath("$.ownerId").value(ownerId.toString()))
-          .andExpect(jsonPath("$.contentTitle").value("테스트용 콘텐츠 제목"));
+          .andExpect(jsonPath("$.contentDto.title").value("테스트콘텐츠"));
     }
 
     @Test
@@ -88,7 +103,7 @@ class WatchRoomControllerTest {
   }
 
   @Nested
-  @DisplayName("채팅방 전체 조회 요청")
+  @DisplayName("시청방 페이지네이션 조회 요청")
   class getWatchRooms {
 
     @Test
@@ -97,28 +112,60 @@ class WatchRoomControllerTest {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
 
-      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "인터스텔라", ownerId, "유저1",
-          LocalDateTime.now(), 1L);
-      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "장고", ownerId, "유저1",
-          LocalDateTime.now(), 2L);
-      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "오징어게임5", ownerId, "유저1",
-          LocalDateTime.now(), 3L);
+      Content content1 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("인터스텔라")
+          .description("인터스텔라 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
 
-      List<WatchRoomDto> responseDtos = List.of(responseDto1, responseDto2, responseDto3);
+      Content content2 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("장고")
+          .description("장고 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
 
-      when(watchRoomService.getAll()).thenReturn(responseDtos);
+      Content content3 = Content.builder()
+          .id(UUID.randomUUID())
+          .title("오징어게임5")
+          .description("오징어게임 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
+
+      WatchRoomDto responseDto1 = new WatchRoomDto(roomId, "아빠가유령임", ContentDto.from(content1),
+          ownerId, "유저1", LocalDateTime.now(), 1L);
+      WatchRoomDto responseDto2 = new WatchRoomDto(roomId, "명작", ContentDto.from(content2), ownerId,
+          "유저1", LocalDateTime.now(), 2L);
+      WatchRoomDto responseDto3 = new WatchRoomDto(roomId, "456번참가자", ContentDto.from(content3),
+          ownerId, "유저1", LocalDateTime.now(), 3L);
+
+      List<WatchRoomDto> watchRoomDtos = List.of(responseDto1, responseDto2, responseDto3);
+      CursorPageResponseDto<WatchRoomDto> responseDtos =
+          CursorPageResponseDto.<WatchRoomDto>builder()
+              .data(watchRoomDtos)
+              .size(20)
+              .nextCursor(null)
+              .hasNext(false)
+              .totalElements(watchRoomDtos.size())
+              .build();
+
+      when(watchRoomService.getAll(any(WatchRoomSearchDto.class))).thenReturn(responseDtos);
 
       //when & then
       mockMvc.perform(get("/api/rooms")
               .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isOk())
           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-          .andExpect(jsonPath("$", hasSize(3)));
+          .andExpect(jsonPath("$.totalElements").value(3));
     }
   }
 
   @Nested
-  @DisplayName("채팅방 단일 조회")
+  @DisplayName("시청방 단일 조회")
   class getWatchRoom {
 
     @Test
@@ -126,9 +173,16 @@ class WatchRoomControllerTest {
     void success() throws Exception {
       UUID roomId = UUID.randomUUID();
       UUID ownerId = UUID.randomUUID();
+      Content content = Content.builder()
+          .id(UUID.randomUUID())
+          .title("인터스텔라")
+          .description("인터스텔라 테스트용 콘텐츠 입니다.")
+          .contentType(ContentType.TV)
+          .releaseDate(LocalDateTime.now())
+          .build();
 
-      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트 콘텐츠 제목", ownerId, "유저1",
-          LocalDateTime.now(), 1L);
+      WatchRoomDto responseDto = new WatchRoomDto(roomId, "테스트시청방이름", ContentDto.from(content),
+          ownerId, "유저1", LocalDateTime.now(), 1L);
 
       when(watchRoomService.getById(roomId)).thenReturn(responseDto);
 
@@ -140,11 +194,11 @@ class WatchRoomControllerTest {
           .andExpect(jsonPath("$.id").exists())  // 모든 요소가 id를 가지는지
           .andExpect(jsonPath("$.id").value(roomId.toString()))
           .andExpect(jsonPath("$.ownerId").value(ownerId.toString()))
-          .andExpect(jsonPath("$.contentTitle").value("테스트 콘텐츠 제목"));
+          .andExpect(jsonPath("$.contentDto.title").value("인터스텔라"));
     }
 
     @Test
-    @DisplayName("존재하지 않는 채팅방 ID")
+    @DisplayName("존재하지 않는 시청방 ID")
     void fails() throws Exception {
       UUID randomId = UUID.randomUUID();
 

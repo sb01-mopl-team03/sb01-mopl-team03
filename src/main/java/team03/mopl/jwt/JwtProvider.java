@@ -82,14 +82,6 @@ public class JwtProvider {
     }
   }
 
-  public Claims getClaims(String token) {
-    return Jwts.parser()
-        .setSigningKey(getSigningKey())
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
-  }
-
   public String extractEmail(String token) {
     return Jwts.parser()
         .verifyWith(getSigningKey())
@@ -110,5 +102,24 @@ public class JwtProvider {
 
   private SecretKey getSigningKey() {
     return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+  }
+
+  public long getRemainingTime(String oldAccessToken) {
+    try{
+      Claims claims = Jwts.parser()
+          .verifyWith(getSigningKey())
+          .build()
+          .parseSignedClaims(oldAccessToken)
+          .getPayload();
+
+      Date expiration = claims.getExpiration();
+      return expiration.getTime() - System.currentTimeMillis();
+    }catch (ExpiredJwtException e){
+      Date expiration = e.getClaims().getExpiration();
+      return expiration.getTime() - System.currentTimeMillis(); //음수도 가능
+    }catch (JwtException e){
+      log.warn("getRemainingTime - 유효하지 않은 토큰: {}",e.getMessage());
+      return -1;
+    }
   }
 }

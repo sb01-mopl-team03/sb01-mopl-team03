@@ -6,8 +6,10 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -39,13 +41,13 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
     boolean isDesc = "DESC".equalsIgnoreCase(direction);
     Order orderDirection = isDesc ? Order.DESC : Order.ASC;
     // 2. 정렬 기준에 따른 OrderSpecifier 설정 : 기준값 기본은 title
-    OrderSpecifier<?> mainSort;
+    OrderSpecifier<?> mainSort = new OrderSpecifier<>(orderDirection, content.titleNormalized);
     if ("RELEASE_AT".equalsIgnoreCase(sortBy)) {
       mainSort = new OrderSpecifier<>(orderDirection, content.releaseDate);
-    } else {
-      mainSort = new OrderSpecifier<>(orderDirection, content.titleNormalized);
+    } else if ("AVG_RATING".equalsIgnoreCase(sortBy)) {
+      mainSort = new OrderSpecifier<>(orderDirection, content.avgRating);
     }
-    OrderSpecifier<?> idSort = new OrderSpecifier<>(Order.ASC, content.id);
+    OrderSpecifier<?> idSort = new OrderSpecifier<>(orderDirection, content.id);
 
     // 3. 필터링 조건 조립
     BooleanExpression titleExpression =
@@ -94,23 +96,46 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
       if (isDesc) {
         // 내림차순: 커서 일자보다 이전 일자이되 동일한 일자일시 id가 더 큰 값들
         return content.releaseDate.lt(localDateTimeCursor)
-            .or(content.releaseDate.eq(localDateTimeCursor).and(content.id.gt(cursorId)));
+            .or(content.releaseDate.eq(localDateTimeCursor).and(content.id.lt(cursorId)));
       } else {
         // 오름차순: 커서 일자보다 이후 일자이되 동일한 일자일시 id가 더 큰 값들
         return content.releaseDate.gt(localDateTimeCursor)
             .or(content.releaseDate.eq(localDateTimeCursor).and(content.id.gt(cursorId)));
       }
-    } else {
-      if(isDesc){
+    } else if (sortBy.equalsIgnoreCase("TITLE")) {
+      if (isDesc) {
         // 내림차순: 커서 제목보다 사전적으로 이전 제목이되 동일한 제목일시 id가 더 큰 값들 
         return content.titleNormalized.lt(cursor)
-            .or(content.titleNormalized.eq(cursor).and(content.id.gt(cursorId)));
+            .or(content.titleNormalized.eq(cursor).and(content.id.lt(cursorId)));
       } else {
         // 오름차순: 커서 제목보다 사전적으로 이후 제목이되 동일한 제목일시 id가 더 큰 값들
         return content.titleNormalized.gt(cursor)
             .or(content.titleNormalized.eq(cursor).and(content.id.gt(cursorId)));
       }
+    } else { //AVG_RATING
+      BigDecimal bigDecimalCursor = new BigDecimal(cursor);
+      if (isDesc) {
+        return content.avgRating.lt(bigDecimalCursor)
+            .or(content.avgRating.eq(bigDecimalCursor).and(content.id.lt(cursorId)));
+      } else {
+        return content.avgRating.gt(bigDecimalCursor)
+            .or(content.avgRating.eq(bigDecimalCursor).and(content.id.gt(cursorId)));
+      }
     }
+  }
 
+  public long countContentsWithFilter(String title, String contentType){
+    BooleanExpression titleExpression =
+        title != null && !title.isEmpty() ? content.title.containsIgnoreCase(title) : null;
+
+    BooleanExpression contentTypeExpression =
+        contentType != null && !contentType.isEmpty() ?
+            content.contentType.stringValue().equalsIgnoreCase(contentType) : null;
+
+    return Optional.ofNullable(queryFactory
+        .select(content.count())
+        .from(content)
+        .where(titleExpression, contentTypeExpression)
+        .fetchOne()).orElse(0L);
   }
 }

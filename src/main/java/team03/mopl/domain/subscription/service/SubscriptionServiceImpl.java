@@ -4,14 +4,17 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team03.mopl.common.exception.playlist.PlaylistNotFoundException;
 import team03.mopl.common.exception.subscription.AlreadySubscribedException;
+import team03.mopl.common.exception.subscription.PrivatePlaylistSubscriptionException;
 import team03.mopl.common.exception.subscription.SelfSubscriptionNotAllowedException;
 import team03.mopl.common.exception.subscription.SubscriptionDeleteDeniedException;
 import team03.mopl.common.exception.subscription.SubscriptionNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.domain.notification.events.PlaylistSubscribedEvent;
 import team03.mopl.domain.playlist.entity.Playlist;
 import team03.mopl.domain.playlist.repository.PlaylistRepository;
 import team03.mopl.domain.subscription.Subscription;
@@ -28,9 +31,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private final SubscriptionRepository subscriptionRepository;
   private final UserRepository userRepository;
   private final PlaylistRepository playlistRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
-  @Transactional(readOnly = true)
+  @Transactional
   public SubscriptionDto subscribe(UUID userId, UUID playlistId) {
     User user = userRepository.findById(userId)
         .orElseThrow(UserNotFoundException::new);
@@ -40,6 +44,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     if (playlist.getUser().getId().equals(userId)) {
       throw new SelfSubscriptionNotAllowedException();
+    }
+
+    if (!playlist.isPublic()) {
+      throw new PrivatePlaylistSubscriptionException();
     }
 
     // 이미 구독 중인지 확인
@@ -53,11 +61,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .build();
     Subscription savedSubscription = subscriptionRepository.save(subscription);
 
+    // 플레이리스트가 구독되면 플레이리스트 소유자에게 알림
+    eventPublisher.publishEvent(new PlaylistSubscribedEvent(
+        playlist.getId(),
+        playlist.getUser().getId(),
+        playlist.getName(),
+        user.getId()
+    ));
+
+    log.info("subscribe - 구독 완료: 구독자 ID = {}, 플레이리스트 ID = {}", userId, playlistId);
     return SubscriptionDto.from(savedSubscription);
   }
 
   @Override
-  @Transactional(readOnly = true)
+  @Transactional
   public void unsubscribe(UUID subscriptionId, UUID userId) {
 
     Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(
@@ -68,6 +85,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       throw new SubscriptionDeleteDeniedException();
     }
 
+    log.info("subscribe - 구독 취소: 구독 ID = {}", subscriptionId);
     subscriptionRepository.deleteById(subscriptionId);
   }
 

@@ -3,8 +3,8 @@ package team03.mopl.domain.watchroom.service;
 
 import java.util.List;
 import java.util.UUID;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageCreateRequest;
-import team03.mopl.domain.watchroom.dto.WatchRoomMessageDto;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageCreateRequest;
+import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
 
 public interface WatchRoomMessageService {
 

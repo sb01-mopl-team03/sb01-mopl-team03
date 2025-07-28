@@ -35,19 +35,14 @@ public class Dm {
   @Column(name = "content", length = 255, nullable = false)
   private String content;
 
-  /* @Column(name = "is_read", nullable = false)
-  private List<UUID> isRead = false;*/
   @ElementCollection
   @CollectionTable(name = "dm_read_users", joinColumns = @JoinColumn(name = "dm_id"))
-  @Column(name = "user_id", unique = true)
+  @Column(name = "user_id")
   private Set<UUID> readUserIds = new HashSet<>();
 
   @Column(name = "created_at", updatable = false, nullable = false)
   private LocalDateTime createdAt = LocalDateTime.now();
 
-  /*if (!dmRoom.getMessages().contains(this)) {
-      dmRoom.getMessages().add(this);
-    }*/
   @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "dm_room_id", nullable = false)

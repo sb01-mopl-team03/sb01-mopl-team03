@@ -4,9 +4,9 @@
     {
       "name": "mopl-container",
       "image": "public.ecr.aws/k5f2z7e1/mopl-app",
-      "cpu": 256,
-      "memory": 512,
-      "memoryReservation": 256,
+      "cpu": 3072,
+      "memory": 2048,
+      "memoryReservation": 1024,
       "portMappings": [
         {
           "name": "mopl-container-80-tcp",
@@ -17,7 +17,12 @@
         }
       ],
       "essential": true,
-      "environment": [],
+      "environment": [
+        {
+          "name": "OPENSEARCH_ENDPOINT",
+          "value": "https://vpc-mopl-search-domain-axi4bgbebjqschluvclyxi5ymu.ap-northeast-2.es.amazonaws.com"
+        }
+      ],
       "environmentFiles": [
         {
           "value": "arn:aws:s3:::mopl-03-bucket/mopl.env",
@@ -26,11 +31,22 @@
       ],
       "mountPoints": [],
       "volumesFrom": [],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/actuator/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 120
+      },
       "ulimits": [],
       "systemControls": []
     }
   ],
   "family": "mopl-app-task",
+  "taskRoleArn": "arn:aws:iam::112555930244:role/MoplAppTaskRole",
   "executionRoleArn": "arn:aws:iam::112555930244:role/ecsTaskExecutionRole",
   "networkMode": "bridge",
   "revision": 2,
@@ -54,8 +70,8 @@
   "requiresCompatibilities": [
     "EC2"
   ],
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "3072",
+  "memory": "2048",
   "runtimePlatform": {
     "cpuArchitecture": "X86_64",
     "operatingSystemFamily": "LINUX"
