@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import team03.mopl.api.CurationApi;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.curation.dto.KeywordDto;
 import team03.mopl.domain.curation.dto.KeywordRequest;
+import team03.mopl.domain.curation.service.ContentSearchService;
 import team03.mopl.domain.curation.service.CurationService;
 import team03.mopl.jwt.CustomUserDetails;
 
@@ -26,6 +28,7 @@ import team03.mopl.jwt.CustomUserDetails;
 public class CurationController implements CurationApi {
 
   private final CurationService curationService;
+  private final ContentSearchService contentSearchService;
 
   @Override
   @PostMapping
@@ -56,4 +59,11 @@ public class CurationController implements CurationApi {
     curationService.delete(keywordId, userId);
     return ResponseEntity.noContent().build();
   }
+
+  @PostMapping("/initialize")
+  public ResponseEntity<Void> initialize() {
+    contentSearchService.initializeIndexWithAllContents();
+    return ResponseEntity.noContent().build();
+  }
+
 }

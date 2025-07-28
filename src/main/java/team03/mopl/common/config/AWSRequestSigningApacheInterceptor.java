@@ -1,120 +1,129 @@
 package team03.mopl.common.config;
 
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.Signer;
-import com.amazonaws.http.HttpMethodName;
-import org.apache.http.*;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HttpContext;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-
-import static org.apache.http.protocol.HttpCoreContext.HTTP_TARGET_HOST;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.protocol.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.signer.Aws4Signer;
+import software.amazon.awssdk.auth.signer.params.Aws4SignerParams;
+import software.amazon.awssdk.http.SdkHttpFullRequest;
+import software.amazon.awssdk.regions.Region;
 
 public class AWSRequestSigningApacheInterceptor implements HttpRequestInterceptor {
+  private static final Logger logger = LoggerFactory.getLogger(AWSRequestSigningApacheInterceptor.class);
 
-  private final String service;
-  private final Signer signer;
-  private final AWSCredentialsProvider awsCredentialsProvider;
+  private final String serviceName;
+  private final Aws4Signer signer;
+  private final AwsCredentialsProvider credentialsProvider;
+  private final Region region;
 
-  public AWSRequestSigningApacheInterceptor(final String service,
-      final Signer signer,
-      final AWSCredentialsProvider awsCredentialsProvider) {
-    this.service = service;
+  public AWSRequestSigningApacheInterceptor(String serviceName,
+      Aws4Signer signer,
+      AwsCredentialsProvider credentialsProvider,
+      String region) {
+    this.serviceName = serviceName;
     this.signer = signer;
-    this.awsCredentialsProvider = awsCredentialsProvider;
+    this.credentialsProvider = credentialsProvider;
+    this.region = Region.of(region);
+
+    logger.info("AWS Interceptor 초기화 - serviceName: {}, region: {}", serviceName, region);
   }
 
   @Override
-  public void process(final HttpRequest request, final HttpContext context) throws IOException {
-    URIBuilder uriBuilder;
+  public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
     try {
-      uriBuilder = new URIBuilder(request.getRequestLine().getUri());
-    } catch (URISyntaxException e) {
-      throw new IOException("Invalid URI", e);
-    }
+      logger.debug("AWS 서명 프로세스 시작 - Request URI: {}", request.getRequestLine().getUri());
 
-    // Apache HttpRequest를 AWS DefaultRequest로 변환
-    DefaultRequest<?> signableRequest = new DefaultRequest<>(service);
-    HttpHost host = (HttpHost) context.getAttribute(HTTP_TARGET_HOST);
-    if (host != null) {
-      signableRequest.setEndpoint(URI.create(host.toURI()));
-    }
-
-    final HttpMethodName httpMethod = HttpMethodName.fromValue(request.getRequestLine().getMethod());
-    signableRequest.setHttpMethod(httpMethod);
-
-    try {
-      signableRequest.setResourcePath(uriBuilder.build().getRawPath());
-    } catch (URISyntaxException e) {
-      throw new IOException("Invalid URI", e);
-    }
-
-    if (request instanceof HttpEntityEnclosingRequest httpEntityEnclosingRequest) {
-      if (httpEntityEnclosingRequest.getEntity() == null) {
-        signableRequest.setContent(new ByteArrayInputStream(new byte[0]));
-      } else {
-        signableRequest.setContent(httpEntityEnclosingRequest.getEntity().getContent());
+      // 1. 자격 증명 확인
+      logger.debug("AWS 자격 증명 확인 중...");
+      AwsCredentials credentials;
+      try {
+        credentials = credentialsProvider.resolveCredentials();
+        logger.debug("AWS 자격 증명 획득 성공 - Access Key ID: {}...",
+            credentials.accessKeyId().substring(0, Math.min(10, credentials.accessKeyId().length())));
+      } catch (Exception e) {
+        logger.error("AWS 자격 증명 획득 실패", e);
+        throw new HttpException("AWS 자격 증명을 가져올 수 없습니다", e);
       }
-    }
 
-    signableRequest.setParameters(nvpToMapParams(uriBuilder.getQueryParams()));
-    signableRequest.setHeaders(headerArrayToMap(request.getAllHeaders()));
-
-    // 서명 적용
-    signer.sign(signableRequest, awsCredentialsProvider.getCredentials());
-
-    // 다시 원본 요청에 복사
-    request.setHeaders(mapToHeaderArray(signableRequest.getHeaders()));
-    if (request instanceof HttpEntityEnclosingRequest httpEntityEnclosingRequest) {
-      if (httpEntityEnclosingRequest.getEntity() != null) {
-        BasicHttpEntity basicHttpEntity = new BasicHttpEntity();
-        basicHttpEntity.setContent(signableRequest.getContent());
-        httpEntityEnclosingRequest.setEntity(basicHttpEntity);
+      // 2. SDK 요청 변환
+      logger.debug("Apache HttpRequest를 SDK 요청으로 변환 중...");
+      SdkHttpFullRequest sdkRequest;
+      try {
+        sdkRequest = ApacheRequestConverter.toSdkRequest(request);
+        logger.debug("SDK 요청 변환 성공 - Method: {}, URI: {}",
+            sdkRequest.method(), sdkRequest.getUri());
+      } catch (Exception e) {
+        logger.error("SDK 요청 변환 실패", e);
+        throw new HttpException("요청 변환에 실패했습니다", e);
       }
-    }
-  }
 
-  private static Map<String, List<String>> nvpToMapParams(final List<NameValuePair> params) {
-    Map<String, List<String>> parameterMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    for (NameValuePair nvp : params) {
-      List<String> argsList = parameterMap.computeIfAbsent(nvp.getName(), k -> new ArrayList<>());
-      argsList.add(nvp.getValue());
-    }
-    return parameterMap;
-  }
-
-  private static Map<String, String> headerArrayToMap(final Header[] headers) {
-    Map<String, String> headersMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    for (Header header : headers) {
-      if (!skipHeader(header)) {
-        headersMap.put(header.getName(), header.getValue());
+      // 3. 서명 파라미터 생성
+      logger.debug("AWS4 서명 파라미터 생성 중...");
+      Aws4SignerParams signerParams;
+      try {
+        signerParams = Aws4SignerParams.builder()
+            .signingRegion(region)
+            .signingName(serviceName)
+            .awsCredentials(credentials)
+            .build();
+        logger.debug("서명 파라미터 생성 성공 - Service: {}, Region: {}", serviceName, region);
+      } catch (Exception e) {
+        logger.error("서명 파라미터 생성 실패", e);
+        throw new HttpException("서명 파라미터 생성에 실패했습니다", e);
       }
-    }
-    return headersMap;
-  }
 
-  private static boolean skipHeader(final Header header) {
-    return ("content-length".equalsIgnoreCase(header.getName()) && "0".equals(header.getValue()))
-        || "host".equalsIgnoreCase(header.getName());
-  }
+      // 4. 요청 서명
+      logger.debug("요청 서명 중...");
+      SdkHttpFullRequest signed;
+      try {
+        signed = signer.sign(sdkRequest, signerParams);
+        logger.debug("요청 서명 성공 - Authorization 헤더 존재: {}",
+            signed.headers().containsKey("Authorization"));
+      } catch (Exception e) {
+        logger.error("요청 서명 실패", e);
+        throw new HttpException("요청 서명에 실패했습니다", e);
+      }
 
-  private static Header[] mapToHeaderArray(final Map<String, String> mapHeaders) {
-    Header[] headers = new Header[mapHeaders.size()];
-    int i = 0;
-    for (Map.Entry<String, String> headerEntry : mapHeaders.entrySet()) {
-      headers[i++] = new BasicHeader(headerEntry.getKey(), headerEntry.getValue());
+      // 5. 서명된 헤더를 원래 요청에 적용
+      logger.debug("서명된 헤더를 원본 요청에 적용 중...");
+      int headerCount = 0;
+      try {
+        for (Map.Entry<String, List<String>> header : signed.headers().entrySet()) {
+          if (!header.getValue().isEmpty()) {
+            request.setHeader(header.getKey(), header.getValue().get(0));
+            headerCount++;
+
+            // Authorization 헤더는 로그에서 일부만 표시
+            if ("Authorization".equals(header.getKey())) {
+              logger.debug("헤더 적용: {} = {}...", header.getKey(),
+                  header.getValue().get(0).substring(0, Math.min(50, header.getValue().get(0).length())));
+            } else {
+              logger.debug("헤더 적용: {} = {}", header.getKey(), header.getValue().get(0));
+            }
+          }
+        }
+        logger.debug("헤더 적용 완료 - 총 {} 개 헤더 적용됨", headerCount);
+      } catch (Exception e) {
+        logger.error("헤더 적용 실패", e);
+        throw new HttpException("헤더 적용에 실패했습니다", e);
+      }
+
+      logger.debug("AWS 서명 프로세스 완료");
+
+    } catch (HttpException e) {
+      logger.error("AWS 요청 서명 중 HttpException 발생", e);
+      throw e;
+    } catch (Exception e) {
+      logger.error("AWS 요청 서명 중 예상치 못한 오류 발생", e);
+      throw new HttpException("AWS 요청 서명 중 오류가 발생했습니다", e);
     }
-    return headers;
   }
 }

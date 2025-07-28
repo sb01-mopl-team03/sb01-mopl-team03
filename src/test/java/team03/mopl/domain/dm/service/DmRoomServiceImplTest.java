@@ -1,8 +1,8 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -442,6 +442,7 @@ class DmRoomServiceImplTest {
           .thenReturn(Optional.of(receiver));
     }
     // unreadCount는 0으로 고정
+
     doReturn(0).when(dmRoomService).getUnreadCount(any(), eq(userId));
 
     // 실행
