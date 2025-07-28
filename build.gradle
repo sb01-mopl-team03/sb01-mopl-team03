@@ -132,13 +132,18 @@ afterEvaluate {
     tasks.jacocoTestReport {
         classDirectories = files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    '**/MoplApplication.class',
-                    '**/Q*',
-                    '**/*$*.class',
-                    '**/*$*$*.class',
-                    '**/team03/mopl/domain/**/dto/**',
-                    '**/team03/mopl/domain/**/batch/**',
-                    '**/S3Service.class'
+                    '**/MoplApplication.class',    // 메인 애플리케이션 클래스
+                    '**/Q*',                        // Q 클래스
+                    '**/*$*.class',      // Lombok이 생성한 내부 클래스
+                    '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
+                    '**/team03/mopl/domain/**/dto/**', // DTO 클래스
+                    '**/team03/mopl/domain/**/batch/**', // 배치
+                    '**/S3Service.class',                // S3 서비스
+
+                    '**/team03/mopl/common/config/**',         // 설정 클래스
+                    '**/team03/mopl/common/exception/**',      // 커스텀 예외
+                    '**/team03/mopl/domain/oauth2/**',         // OAuth 인증 유틸
+                    '**/team03/mopl/storage/**'                // 외부 스토리지 접근
             ])
         })
     }
@@ -146,8 +151,6 @@ afterEvaluate {
 
 configurations {
     all {
-        exclude group: 'org.elasticsearch.client'
-        exclude group: 'co.elastic.clients'
         exclude group: 'org.opensearch.client', module: 'opensearch-rest-high-level-client'
         exclude group: 'org.opensearch.client', module: 'opensearch-rest-client-sniffer'
     }
