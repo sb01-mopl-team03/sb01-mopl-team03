@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 import team03.mopl.domain.oauth2.CustomOAuth2UserService;
+import team03.mopl.domain.oauth2.OAuth2FailureHandler;
 import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
 import team03.mopl.jwt.CustomUserDetailsService;
 import team03.mopl.jwt.JwtAuthenticationFilter;
@@ -28,6 +29,7 @@ public class SecurityConfig {
   private final JwtProvider jwtProvider;
   private final JwtBlacklist jwtBlacklist;
   private final OAuth2SuccessHandler oAuth2SuccessHandler;
+  private final OAuth2FailureHandler oAuth2FailureHandler;
   private final CorsConfigurationSource corsConfigurationSource;
   private final CustomOAuth2UserService customOAuth2UserService;
 
@@ -87,7 +89,8 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfo -> userInfo
                 .userService(customOAuth2UserService))
-            .successHandler(oAuth2SuccessHandler))
+            .successHandler(oAuth2SuccessHandler)
+            .failureHandler(oAuth2FailureHandler))
         .addFilterBefore(
             new JwtAuthenticationFilter(jwtProvider, customUserDetailsService, jwtBlacklist),
             UsernamePasswordAuthenticationFilter.class);
