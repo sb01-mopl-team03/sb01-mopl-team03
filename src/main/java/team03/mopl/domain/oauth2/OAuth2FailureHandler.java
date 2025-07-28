@@ -15,7 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class OAuth2FailureHandler implements AuthenticationFailureHandler {
 
-  @Value("S{frontend.redirect-uri}")
+  @Value("${frontend.redirect-uri}")
   private String redirectUri;
 
   @Override
