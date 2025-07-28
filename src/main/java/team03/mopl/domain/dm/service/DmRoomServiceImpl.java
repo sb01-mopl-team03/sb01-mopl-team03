@@ -123,11 +123,8 @@ public class DmRoomServiceImpl implements DmRoomService {
 
       dmRoomDtos.add(DmRoomDto.from(content, unreadCount, sender.getName(), receiver.getName(), dmRoom));
     }
-    //updateAt순으로 정렬
-    dmRoomDtos.sort(Comparator.comparing(DmRoomDto::getUpdatedAt).reversed());
-    for (DmRoomDto dmRoomDto : dmRoomDtos) {
-      System.out.println("dmRoomDto.getUpdatedAt() = " + dmRoomDto.getUpdatedAt());
-    }
+    //LastMessageAt 순으로 정렬
+    dmRoomDtos.sort(Comparator.comparing(DmRoomDto::getLastMessageAt).reversed());
     return dmRoomDtos;
   }
 

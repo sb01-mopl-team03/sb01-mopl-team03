@@ -46,8 +46,8 @@ public class DmRoom {
   private LocalDateTime createdAt;
 
   @LastModifiedDate
-  @Column(name = "updated_at")
-  private LocalDateTime updatedAt;
+  @Column(name = "last_Message_At")
+  private LocalDateTime lastMessageAt;
 
   @ElementCollection
   @CollectionTable(
@@ -67,8 +67,8 @@ public class DmRoom {
     this.senderId = senderId;
     this.receiverId = receiverId;
   }
-  public void touchUpdatedAt(LocalDateTime updatedAt) {
-    this.updatedAt = updatedAt;
+  public void touchLastMessageAt(LocalDateTime lastMessageAt) {
+    this.lastMessageAt = lastMessageAt;
   }
   /*public boolean nobodyInRoom() {
     if( senderId == null && receiverId == null ) {

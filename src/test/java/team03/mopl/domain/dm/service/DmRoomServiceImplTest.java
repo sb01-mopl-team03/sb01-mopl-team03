@@ -1,7 +1,6 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +9,6 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -29,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -272,10 +269,10 @@ class DmRoomServiceImplTest {
     // 방
     DmRoom room1 = new DmRoom(roomId1, senderId, receiverId);
     room1.getMessages().add(message1);
-    ReflectionTestUtils.setField(room1, "updatedAt", LocalDateTime.now().minusMinutes(1));
+    ReflectionTestUtils.setField(room1, "lastMessageAt", LocalDateTime.now().minusMinutes(1));
     DmRoom room2 = new DmRoom(roomId2, senderId, receiverId);
     room2.getMessages().add(message2);
-    ReflectionTestUtils.setField(room2, "updatedAt", LocalDateTime.now());
+    ReflectionTestUtils.setField(room2, "lastMessageAt", LocalDateTime.now());
     // Repository Stubbing
     given(dmRoomRepository.findBySenderIdOrReceiverId(senderId, senderId))
         .willReturn(List.of(room1, room2));
@@ -417,7 +414,7 @@ class DmRoomServiceImplTest {
 
       // createdAt, updatedAt 세팅 (i가 클수록 최신)
       ReflectionTestUtils.setField(room, "createdAt", baseTime.plusMinutes(i));
-      ReflectionTestUtils.setField(room, "updatedAt", baseTime.plusMinutes(i));
+      ReflectionTestUtils.setField(room, "lastMessageAt", baseTime.plusMinutes(i));
 
       // 메시지가 없어도 되지만, lastMessage 로직을 위해 하나라도 넣어둘 수 있습니다
       Dm dummy = new Dm(userId, "msg" + i);
@@ -454,7 +451,7 @@ class DmRoomServiceImplTest {
     DmRoomDto first = result.get(0);
     assertThat(first.getNewMessageCount()).isEqualTo(0);
     assertThat(first.getLastMessage()).isEqualTo("hello world");
-    assertThat(first.getUpdatedAt()).isEqualTo(baseTime.plusMinutes(10));
+    assertThat(first.getLastMessageAt()).isEqualTo(baseTime.plusMinutes(10));
   }
 
 }

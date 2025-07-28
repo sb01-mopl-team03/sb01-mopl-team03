@@ -66,7 +66,7 @@ public class DmServiceImpl implements DmService {
     }
 
     Dm savedDm = dmRepository.save(dm);
-    dmRoom.touchUpdatedAt(LocalDateTime.now());
+    dmRoom.touchLastMessageAt(LocalDateTime.now());
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
