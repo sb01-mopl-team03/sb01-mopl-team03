@@ -78,7 +78,7 @@ class DmWebSocketControllerTest {
 
     User user = User.builder()
         .id(userId)
-        .email("user@test.com")
+        .email(email)
         .name("user")
         .password("pw")
         .build();
