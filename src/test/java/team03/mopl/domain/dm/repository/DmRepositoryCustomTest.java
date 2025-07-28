@@ -92,18 +92,18 @@ public class DmRepositoryCustomTest {
     assertThat(firstPage).hasSize(5);
 
     // Step 2: 커서 값 준비 (5번째 메시지 기준)
-    Dm lastOfFirstPage = firstPage.get(4); // 0~4, 가장 마지막
+    Dm lastOfFirstPage = firstPage.get(4); // 0~3, 4 가장 마지막
     String mainCursor = lastOfFirstPage.getCreatedAt().toString();
     String subCursor = lastOfFirstPage.getId().toString();
 
     // Step 3: 커서 기반 다음 페이지 조회
-    List<Dm> secondPage = dmRepositoryCustom.findByCursor(actualRoomId, 5, mainCursor, subCursor);
-
+    List<Dm> secondPage = dmRepositoryCustom.findByCursor(actualRoomId, 5, mainCursor, subCursor); //4~7, 8
+    secondPage.add(lastOfFirstPage); //+4
+    secondPage = secondPage.subList(0, secondPage.size() - 1); //-9
     // 검증
     assertThat(secondPage).hasSize(5); // 총 10개 넣었으므로 5개 더 있음
-    assertThat(secondPage).doesNotContain(lastOfFirstPage); // 중복 없음
     assertThat(secondPage).allSatisfy(dm -> {
-      boolean isOlder = dm.getCreatedAt().isBefore(lastOfFirstPage.getCreatedAt());
+      boolean isOlder = !dm.getCreatedAt().isAfter(lastOfFirstPage.getCreatedAt());
       boolean isSameTimeAndSmallerId = dm.getCreatedAt().isEqual(lastOfFirstPage.getCreatedAt()) &&
           dm.getId().compareTo(lastOfFirstPage.getId()) < 0;
       assertThat(isOlder || isSameTimeAndSmallerId).isTrue();

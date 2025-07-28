@@ -211,6 +211,7 @@ $RECYCLE.BIN/
 **/application.yaml
 **/application-dev.yaml
 **/application-test.yaml
+**/application-local.yaml
 
 # 환경변수
 .env

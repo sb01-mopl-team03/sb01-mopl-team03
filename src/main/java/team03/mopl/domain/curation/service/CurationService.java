@@ -1,5 +1,6 @@
 package team03.mopl.domain.curation.service;
 
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,8 +12,8 @@ import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.content.Content;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.content.repository.ContentRepository;
-import team03.mopl.domain.curation.elasticsearch.ContentSearchService;
 import team03.mopl.domain.curation.dto.KeywordDto;
+import team03.mopl.domain.curation.entity.ContentSearchResult;
 import team03.mopl.domain.curation.entity.Keyword;
 import team03.mopl.domain.curation.entity.KeywordContent;
 import team03.mopl.domain.curation.repository.KeywordContentRepository;
@@ -29,10 +30,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CurationService {
 
+  private final ContentSearchService contentSearchService;
   private final KeywordRepository keywordRepository;
   private final KeywordContentRepository keywordContentRepository;
   private final UserRepository userRepository;
-  private final ContentSearchService contentSearchService; // Elasticsearch 검색 서비스
   private final ContentRepository contentRepository;
 
   /**
@@ -64,7 +65,7 @@ public class CurationService {
       // 3. 각 키워드별로 새 콘텐츠들과의 매칭 수행
       int totalMatches = 0;
       for (Keyword keyword : allKeywords) {
-        int matches = matchNewContentsWithKeyword(keyword, newContents);
+        int matches = matchNewContentsWithKeywordUsingSearch(keyword, newContents);
         totalMatches += matches;
       }
 
@@ -94,17 +95,29 @@ public class CurationService {
   }
 
   /**
-   * 특정 키워드와 새 콘텐츠들 간의 매칭 수행
+   * OpenSearch를 활용한 새 콘텐츠와 키워드 매칭
    */
-  private int matchNewContentsWithKeyword(Keyword keyword, List<Content> newContents) {
+  private int matchNewContentsWithKeywordUsingSearch(Keyword keyword, List<Content> newContents) {
     String keywordText = keyword.getKeyword();
 
-    // 새 콘텐츠 중에서 이 키워드와 관련된 것들만 필터링
-    List<Content> matchedContents = newContents.stream()
-        .filter(content -> isContentRelevantToKeyword(keywordText, content))
+    // OpenSearch로 키워드와 관련된 콘텐츠 검색 (점수와 함께)
+    List<ContentSearchResult> searchResults = contentSearchService.findContentsByKeywordWithScore(keywordText);
+
+    if (searchResults.isEmpty()) {
+      return 0;
+    }
+
+    // 새 콘텐츠 ID들을 Set으로 변환 (성능 최적화)
+    Set<UUID> newContentIds = newContents.stream()
+        .map(Content::getId)
+        .collect(Collectors.toSet());
+
+    // 검색 결과 중 새 콘텐츠에 해당하는 것들만 필터링
+    List<ContentSearchResult> newContentResults = searchResults.stream()
+        .filter(result -> newContentIds.contains(result.getContent().getId()))
         .collect(Collectors.toList());
 
-    if (matchedContents.isEmpty()) {
+    if (newContentResults.isEmpty()) {
       return 0;
     }
 
@@ -112,36 +125,22 @@ public class CurationService {
     List<UUID> existingContentIds = keywordContentRepository
         .findContentIdsByKeyword(keyword);
 
-    // 새로운 매칭만 생성
-    List<KeywordContent> newKeywordContents = matchedContents.stream()
-        .filter(content -> !existingContentIds.contains(content.getId()))
-        .map(content -> {
-          Double score = calculateRelevanceScore(keywordText, content);
-          return new KeywordContent(keyword, content, score);
+    // 새로운 매칭만 생성 (OpenSearch 점수 활용)
+    List<KeywordContent> newKeywordContents = newContentResults.stream()
+        .filter(result -> !existingContentIds.contains(result.getContent().getId()))
+        .map(result -> {
+          Double finalScore = calculateFinalRelevanceScore(result);
+          return new KeywordContent(keyword, result.getContent(), finalScore);
         })
         .collect(Collectors.toList());
 
     if (!newKeywordContents.isEmpty()) {
       keywordContentRepository.saveAll(newKeywordContents);
-      log.info("키워드 '{}' - {}개의 새로운 콘텐츠 매칭 추가",
+      log.info("키워드 '{}' - {}개의 새로운 콘텐츠 매칭 추가 (OpenSearch 점수 활용)",
           keywordText, newKeywordContents.size());
     }
 
     return newKeywordContents.size();
-  }
-
-  /**
-   * 콘텐츠가 키워드와 관련이 있는지 판단
-   * (Elasticsearch 검색 결과를 사용하지 않고 직접 판단)
-   */
-  private boolean isContentRelevantToKeyword(String keyword, Content content) {
-    String keywordLower = keyword.toLowerCase();
-    String title = content.getTitle().toLowerCase();
-    String description = content.getDescription() != null ?
-        content.getDescription().toLowerCase() : "";
-
-    // 제목이나 설명에 키워드가 포함되어 있으면 관련있다고 판단
-    return title.contains(keywordLower) || description.contains(keywordLower);
   }
 
   @Transactional
@@ -158,9 +157,9 @@ public class CurationService {
     Keyword savedKeyword = keywordRepository.save(keyword);
     log.info("키워드 등록: 사용자={}, 키워드={}", user.getEmail(), keywordText);
 
-    // 2. Elasticsearch로 관련 콘텐츠 찾아서 자동 매핑
+    // 2. OpenSearch로 관련 콘텐츠 찾아서 자동 매핑 (점수와 함께)
     try {
-      findAndMapRelatedContents(savedKeyword);
+      findAndMapRelatedContentsWithScore(savedKeyword);
     } catch (Exception e) {
       log.warn("키워드 '{}' 관련 콘텐츠 매핑 실패: {}", keywordText, e.getMessage());
       // TODO: 비동기로 재시도
@@ -170,34 +169,57 @@ public class CurationService {
   }
 
   /**
-   * 키워드와 관련된 콘텐츠들을 Elasticsearch로 찾아서 KeywordContent 테이블에 저장
+   * OpenSearch 점수를 활용하여 키워드와 관련된 콘텐츠들을 매핑
    */
-  private void findAndMapRelatedContents(Keyword keyword) {
+  private void findAndMapRelatedContentsWithScore(Keyword keyword) {
     String keywordText = keyword.getKeyword();
 
-    // Elasticsearch로 관련 콘텐츠 검색
-    List<Content> relatedContents = contentSearchService.findContentsByKeyword(keywordText);
+    // OpenSearch로 관련 콘텐츠 검색 (점수와 함께)
+    List<ContentSearchResult> searchResults = contentSearchService.findContentsByKeywordWithScore(keywordText);
 
-    log.info("findAndMapRelatedContents - relatedCOntents 개수 = {}", relatedContents.size());
-    if (relatedContents.isEmpty()) {
+    log.info("findAndMapRelatedContentsWithScore - 검색 결과 {}개", searchResults.size());
+    if (searchResults.isEmpty()) {
       log.info("키워드 '{}'와 관련된 콘텐츠가 없습니다.", keywordText);
       return;
     }
 
-    // KeywordContent 관계 생성 (점수와 함께)
-    List<KeywordContent> keywordContents = relatedContents.stream()
-        .map(content -> {
-          // 관련성 점수 계산 (제목에 키워드 포함 시 높은 점수)
-          Double score = calculateRelevanceScore(keywordText, content);
-          return new KeywordContent(keyword, content, score);
+    // KeywordContent 관계 생성 (OpenSearch 점수 활용)
+    List<KeywordContent> keywordContents = searchResults.stream()
+        .map(result -> {
+          // OpenSearch 점수와 평점을 조합한 최종 점수 계산
+          Double finalScore = calculateFinalRelevanceScore(result);
+          return new KeywordContent(keyword, result.getContent(), finalScore);
         })
         .collect(Collectors.toList());
 
     // 데이터베이스에 저장
-    log.info("키워드 개수", keywordContents.size());
     keywordContentRepository.saveAll(keywordContents);
 
-    log.info("키워드 '{}' - {}개의 관련 콘텐츠 매핑 완료", keywordText, keywordContents.size());
+    log.info("키워드 '{}' - {}개의 관련 콘텐츠 매핑 완료 (OpenSearch 점수 활용)",
+        keywordText, keywordContents.size());
+  }
+
+  /**
+   * OpenSearch 점수와 콘텐츠 평점을 조합한 최종 관련성 점수 계산
+   * @param searchResult OpenSearch에서 반환된 검색 결과 (점수 포함)
+   * @return 0.0 ~ 1.0 사이의 정규화된 점수
+   */
+  private Double calculateFinalRelevanceScore(ContentSearchResult searchResult) {
+    double searchScore = searchResult.getScore();
+    Content content = searchResult.getContent();
+
+    // 1. 선형 정규화 (최대 점수를 20으로 가정)
+    double normalizedSearchScore = Math.min(searchScore / 20.0, 0.8);
+
+    // 2. 평점 보너스
+    double ratingBonus = 0.0;
+    if (content.getAvgRating() != null && content.getAvgRating().doubleValue() > 0) {
+      ratingBonus = (content.getAvgRating().doubleValue() / 5.0) * 0.2;
+    }
+
+    double finalScore = normalizedSearchScore + ratingBonus;
+
+    return Math.min(finalScore, 1.0);
   }
 
   /**
@@ -221,51 +243,18 @@ public class CurationService {
         })
         .collect(Collectors.toList());
 
-    log.info("키워드 '{}' 추천 콘텐츠 {}개 조회", keyword.getKeyword(), recommendations.size());
+    log.info("키워드 '{}' 추천 콘텐츠 {}개 조회 (OpenSearch 점수 기반)",
+        keyword.getKeyword(), recommendations.size());
 
     return recommendations;
   }
 
-  /**
-   * 키워드 삭제
-   */
   public void delete(UUID keywordId, UUID userId) {
     Keyword keyword = keywordRepository.findByIdAndUserId(keywordId, userId)
         .orElseThrow(KeywordDeleteDeniedException::new);
 
     keywordRepository.delete(keyword); // KeywordContent는 CASCADE로 자동 삭제
     log.info("키워드 삭제: {}", keyword.getKeyword());
-  }
-
-  /**
-   * 관련성 점수 계산
-   * - 제목에 키워드 포함: 높은 점수
-   * - 설명에만 포함: 중간 점수
-   * - 평점도 고려
-   */
-  private Double calculateRelevanceScore(String keyword, Content content) {
-    double score = 0.0;
-
-    String title = content.getTitle().toLowerCase();
-    String description = content.getDescription() != null ?
-        content.getDescription().toLowerCase() : "";
-    String keywordLower = keyword.toLowerCase();
-
-    // 제목에 키워드 포함 시 높은 점수
-    if (title.contains(keywordLower)) {
-      score += 0.6;
-    }
-
-    // 설명에 키워드 포함 시 중간 점수
-    if (description.contains(keywordLower)) {
-      score += 0.3;
-    }
-
-    // 평점 보너스 (5점 만점 기준으로 0.1 추가 점수)
-    double ratingBonus = content.getAvgRating().doubleValue() / 5.0 * 0.1;
-    score += ratingBonus;
-
-    return Math.min(score, 1.0); // 최대 1.0점
   }
 
   public List<KeywordDto> getKeywordsByUser(UUID userId) {
