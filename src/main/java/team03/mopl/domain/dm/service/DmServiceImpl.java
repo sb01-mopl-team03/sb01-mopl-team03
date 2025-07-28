@@ -2,6 +2,7 @@ package team03.mopl.domain.dm.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +73,7 @@ public class DmServiceImpl implements DmService {
     }
 
     Dm savedDm = dmRepository.save(dm);
+    dmRoom.touchLastMessageAt(LocalDateTime.now());
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
