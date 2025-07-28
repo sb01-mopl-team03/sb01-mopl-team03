@@ -18,7 +18,8 @@ public class CorsConfig {
         "https://localhost:*",
         "http://127.0.0.1:*",
         "https://127.0.0.1:*",
-        "https://sb01-mopl-team03-fe.vercel.app"
+        "https://sb01-mopl-team03-fe.vercel.app",
+        "http://sb01-mopl-team03-fe.vercel.app"
     ));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
