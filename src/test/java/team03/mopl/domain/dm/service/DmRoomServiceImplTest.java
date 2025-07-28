@@ -442,8 +442,8 @@ class DmRoomServiceImplTest {
           .thenReturn(Optional.of(receiver));
     }
     // unreadCount는 0으로 고정
-    
-  (0).when(dmRoomService).getUnreadCount(any(), eq(userId));
+
+    doReturn(0).when(dmRoomService).getUnreadCount(any(), eq(userId));
 
     // 실행
     List<DmRoomDto> result = dmRoomService.getAllRoomsForUser(userId);
