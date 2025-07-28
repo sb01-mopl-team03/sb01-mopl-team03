@@ -29,7 +29,8 @@ public class JobConfig {
 
 
   public JobConfig(
-      JobRepository jobRepository, CurationJobListener curationJobListener,
+      JobRepository jobRepository,
+      CurationJobListener curationJobListener,
       @Qualifier("initialSportsStep") Step initialSportsStep,
       @Qualifier("sportsStep") Step sportsStep,
       @Qualifier("initialTmdbStep") Step initialTmdbStep,
