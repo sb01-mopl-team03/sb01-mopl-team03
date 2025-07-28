@@ -42,7 +42,6 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .requestMatchers(HttpMethod.GET, "/oauth2/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/login/oauth2/**").permitAll()
-            .requestMatchers("/login/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/auth/change-password").permitAll()

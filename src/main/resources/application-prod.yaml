@@ -15,7 +15,7 @@ mopl:
       presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
 
 frontend:
-  redirect-uri: https://${AWS_ALB_DNS_URL}/oauth/callback
+  redirect-uri: https://${FRONT_URL}/oauth/callback
 
 
 spring:
