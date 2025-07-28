@@ -392,17 +392,12 @@ class DmRoomServiceImplTest {
     when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
     when(dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId)).thenReturn(Optional.of(room));
     when(dmRoomRepository.findById(room.getId())).thenReturn(Optional.of(room));
-    // Spy를 써서 reenterRoom 호출 여부/동작 확인
-    DmRoomServiceImpl realService = new DmRoomServiceImpl(
-        dmRoomRepository, dmService, userRepository, notificationService
-    );
-    DmRoomServiceImpl spyService = Mockito.spy(realService);
 
     // when
-    DmRoomDto dto = spyService.findOrCreateRoom(senderId, receiverId);
+    DmRoomDto dto = dmRoomService.findOrCreateRoom(senderId, receiverId);
 
     // then
-    verify(spyService).reenterRoom(eq(senderId), eq(room.getId()));
+    verify(dmRoomService).reenterRoom(eq(senderId), eq(room.getId()));
     assertFalse(room.isOut(senderId));                          // outUsers 에서 제거됐는지
     Assertions.assertEquals(room.getId(), dto.getId());        // 기존 방 재사용 확인
   }
