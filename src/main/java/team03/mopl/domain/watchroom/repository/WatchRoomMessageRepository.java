@@ -9,4 +9,6 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 public interface WatchRoomMessageRepository extends JpaRepository<WatchRoomMessage, UUID> {
 
   List<WatchRoomMessage> findAllByWatchRoom(WatchRoom watchRoom);
+
+  void deleteAllByWatchRoom(WatchRoom watchRoom);
 }

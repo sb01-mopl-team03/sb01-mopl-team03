@@ -78,7 +78,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
         .join(qWatchRoom.content, qContent).fetchJoin()
         .join(qWatchRoom.owner).fetchJoin()
         .where(whereClause)
-        .groupBy(qWatchRoom.id, qContent.id,qWatchRoom.owner.id)
+        .groupBy(qWatchRoom.id, qContent.id, qWatchRoom.owner.id)
         .having(havingClause)
         .orderBy(orderSpecifier)
         .limit(request.getSize() + 1)
@@ -117,7 +117,8 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
     switch (sortBy.toLowerCase()) {
       case "createdat": //생성일
         LocalDateTime cursorCreatedAt = LocalDateTime.parse(cursor.lastValue());
-        applyCreatedAtCursor(whereClause, cursorCreatedAt, UUID.fromString(cursor.lastId()), isDesc);
+        applyCreatedAtCursor(whereClause, cursorCreatedAt, UUID.fromString(cursor.lastId()),
+            isDesc);
         break;
       case "title":  //시청방 이름
         applyTitleCursor(whereClause, cursor.lastValue(), UUID.fromString(cursor.lastId()), isDesc);
@@ -146,13 +147,13 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
               .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
                   .and(qWatchRoom.id.lt(lastId)))
       );
-    } else {
-      havingClause.and(
-          qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
-              .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
-                  .and(qWatchRoom.id.gt(lastId)))
-      );
+      return;
     }
+    havingClause.and(
+        qWatchRoomParticipant.countDistinct().gt(cursorParticipantCount)
+            .or(qWatchRoomParticipant.countDistinct().eq(cursorParticipantCount)
+                .and(qWatchRoom.id.gt(lastId)))
+    );
   }
 
   // 제목 정렬 커서 적용
@@ -193,7 +194,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
   //정렬 조건 생성
   private OrderSpecifier<?>[] getOrderSpecifier(String sortBy, String direction) {
     boolean isDesc = direction == null || direction.equalsIgnoreCase("desc");
-    String lowerSortBy = sortBy == null? "participantcount" : sortBy.toLowerCase();
+    String lowerSortBy = sortBy == null ? "participantcount" : sortBy.toLowerCase();
 
     OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
@@ -204,7 +205,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
 
     OrderSpecifier<?> secondarySort = isDesc ? qWatchRoom.id.desc() : qWatchRoom.id.asc();
 
-    return new OrderSpecifier<?>[] { primarySort, secondarySort };
+    return new OrderSpecifier<?>[]{primarySort, secondarySort};
   }
 
 
