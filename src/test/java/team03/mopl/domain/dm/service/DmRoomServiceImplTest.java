@@ -1,7 +1,6 @@
 package team03.mopl.domain.dm.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,12 +9,14 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -55,6 +56,7 @@ class DmRoomServiceImplTest {
   private NotificationService notificationService;
   @Mock
   private PasswordEncoder passwordEncoder;
+  @Spy
   @InjectMocks
   private DmRoomServiceImpl dmRoomService;
   @InjectMocks
@@ -267,9 +269,10 @@ class DmRoomServiceImplTest {
     // 방
     DmRoom room1 = new DmRoom(roomId1, senderId, receiverId);
     room1.getMessages().add(message1);
+    ReflectionTestUtils.setField(room1, "lastMessageAt", LocalDateTime.now().minusMinutes(1));
     DmRoom room2 = new DmRoom(roomId2, senderId, receiverId);
     room2.getMessages().add(message2);
-
+    ReflectionTestUtils.setField(room2, "lastMessageAt", LocalDateTime.now());
     // Repository Stubbing
     given(dmRoomRepository.findBySenderIdOrReceiverId(senderId, senderId))
         .willReturn(List.of(room1, room2));
@@ -295,7 +298,7 @@ class DmRoomServiceImplTest {
   }
 
   @Test
-  @DisplayName("sender 먼저 나가고 receiver는 남아있어 방유지")
+  @DisplayName("sender 먼저 나가고 receiver는 남아있어 방 유지")
   void deleteSender () {
     // given
     UUID roomId = UUID.randomUUID();
@@ -386,16 +389,69 @@ class DmRoomServiceImplTest {
     when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
     when(dmRoomRepository.findByRoomBetweenUsers(senderId, receiverId)).thenReturn(Optional.of(room));
     when(dmRoomRepository.findById(room.getId())).thenReturn(Optional.of(room));
-    // Spy를 써서 reenterRoom 호출 여부/동작 확인
-    DmRoomServiceImpl spyService = Mockito.spy(dmRoomService);
 
     // when
-    DmRoomDto dto = spyService.findOrCreateRoom(senderId, receiverId);
+    DmRoomDto dto = dmRoomService.findOrCreateRoom(senderId, receiverId);
 
     // then
-    verify(spyService).reenterRoom(eq(senderId), eq(room.getId()));
+    verify(dmRoomService).reenterRoom(eq(senderId), eq(room.getId()));
     assertFalse(room.isOut(senderId));                          // outUsers 에서 제거됐는지
     Assertions.assertEquals(room.getId(), dto.getId());        // 기존 방 재사용 확인
+  }
+
+  @Test
+  @DisplayName("getAllRoomsForUser - updatedAt 순으로 내림차순 정렬되는지 테스트")
+  void getAllRoomsForUser_sortedByUpdatedAt() {
+    // 준비: userId
+    UUID userId = UUID.randomUUID();
+
+    // baseTime 기준으로 10개 방 생성
+    LocalDateTime baseTime = LocalDateTime.of(2025, 7, 25, 12, 0);
+    List<DmRoom> rooms = new ArrayList<>();
+    for (int i = 1; i <= 10; i++) {
+      // id, sender, receiver 아무 UUID라도 상관없음
+      DmRoom room = new DmRoom(UUID.randomUUID(), userId, UUID.randomUUID());
+
+      // createdAt, updatedAt 세팅 (i가 클수록 최신)
+      ReflectionTestUtils.setField(room, "createdAt", baseTime.plusMinutes(i));
+      ReflectionTestUtils.setField(room, "lastMessageAt", baseTime.plusMinutes(i));
+
+      // 메시지가 없어도 되지만, lastMessage 로직을 위해 하나라도 넣어둘 수 있습니다
+      Dm dummy = new Dm(userId, "msg" + i);
+      dummy.setDmRoom(room);
+      if(i==10){
+        room.getMessages().add(new Dm(userId, "hello world"));
+      }else{
+        room.getMessages().add(dummy);
+      }
+
+      rooms.add(room);
+    }
+
+    // mock: repository, userRepository, unreadCount
+    given(dmRoomRepository.findBySenderIdOrReceiverId(any(), any())).willReturn(rooms);
+
+    // userRepository는 senderId, receiverId 둘 다 찾도록
+    for (DmRoom room : rooms) {
+      User sender = User.builder().id(room.getSenderId()).email("sender@test.com").name("sender").password("pw").build();
+      User receiver = User.builder().id(room.getReceiverId()).email("receiver@test.com").name("receiver").password("pw").build();
+
+      when(userRepository.findById(room.getSenderId()))
+          .thenReturn(Optional.of(sender));
+      when(userRepository.findById(room.getReceiverId()))
+          .thenReturn(Optional.of(receiver));
+    }
+    // unreadCount는 0으로 고정
+    doReturn(0).when(dmRoomService).getUnreadCount(any(), eq(userId));
+
+    // 실행
+    List<DmRoomDto> result = dmRoomService.getAllRoomsForUser(userId);
+
+    // 검증: 가장 첫 번째 방의 updatedAt 이 baseTime + 10분 인지 확인
+    DmRoomDto first = result.get(0);
+    assertThat(first.getNewMessageCount()).isEqualTo(0);
+    assertThat(first.getLastMessage()).isEqualTo("hello world");
+    assertThat(first.getLastMessageAt()).isEqualTo(baseTime.plusMinutes(10));
   }
 
 }

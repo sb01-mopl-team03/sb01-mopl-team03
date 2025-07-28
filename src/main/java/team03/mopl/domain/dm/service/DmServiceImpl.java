@@ -2,6 +2,7 @@ package team03.mopl.domain.dm.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,8 @@ public class DmServiceImpl implements DmService {
   private final ObjectMapper objectMapper;
   private final DmRepositoryCustom dmRepositoryCustom;
   private final CursorCodecUtil cursorCodecUtil;
+  private final PresenceTracker presenceTracker;
+
   @Override
   @Transactional
   public DmDto sendDm(SendDmDto sendDmDto) {
@@ -58,14 +61,21 @@ public class DmServiceImpl implements DmService {
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
+        dm.readDm(receiverId);
+      }
     } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getSenderId();
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
+        dm.readDm(receiverId);
+      }
     } else {
       throw new NoOneMatchInDmRoomException();
     }
 
     Dm savedDm = dmRepository.save(dm);
+    dmRoom.touchLastMessageAt(LocalDateTime.now());
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
