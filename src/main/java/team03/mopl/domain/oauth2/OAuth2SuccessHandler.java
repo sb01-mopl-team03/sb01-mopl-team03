@@ -40,6 +40,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
       CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
       User user = userDetails.getUser();
 
+      jwtService.delete(user);
+
       String accessToken = jwtProvider.generateToken(user);
       String refreshToken = jwtProvider.generateRefreshToken(user);
       jwtService.save(user, accessToken, refreshToken, refreshTokenExpiration);
