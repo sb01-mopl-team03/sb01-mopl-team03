@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import team03.mopl.common.config.SecurityConfig;
 import team03.mopl.common.config.TestSecurityConfig;
 import team03.mopl.domain.oauth2.CustomOAuth2UserService;
+import team03.mopl.domain.oauth2.OAuth2FailureHandler;
 import team03.mopl.domain.oauth2.OAuth2SuccessHandler;
 import team03.mopl.jwt.CustomUserDetails;
 import team03.mopl.jwt.CustomUserDetailsService;
@@ -59,6 +60,9 @@ class AuthControllerTest {
 
   @MockitoBean
   private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+  @MockitoBean
+  private OAuth2FailureHandler oAuth2FailureHandler;
 
   @MockitoBean
   private CustomUserDetails customUserDetails;
