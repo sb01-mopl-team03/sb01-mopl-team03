@@ -56,6 +56,8 @@ class DmServiceImplTest {
   private NotificationService notificationService;
   @Mock
   private DmRepositoryCustom dmRepositoryCustom;
+  @Mock
+  private PresenceTracker presenceTracker;
 
   @InjectMocks
   private DmServiceImpl dmService;
@@ -87,7 +89,7 @@ class DmServiceImplTest {
     given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom_SenderEqualDmRoomSenderUserA));
     given(dmRepository.save(any(Dm.class)))
         .willAnswer(invocation -> invocation.getArgument(0));
-
+    given(presenceTracker.isInRoom(any(), any())).willReturn(false);
     // when
     var result = dmService.sendDm(new SendDmDto(userA, roomId, content));
 
@@ -113,7 +115,7 @@ class DmServiceImplTest {
     given(dmRoomRepository.findById(roomId)).willReturn(Optional.of(dmRoom_SenderEqualDmRoomReceiverUserB));
     given(dmRepository.save(any(Dm.class)))
         .willAnswer(invocation -> invocation.getArgument(0));
-
+    given(presenceTracker.isInRoom(any(), any())).willReturn(false);
     // when
     var result = dmService.sendDm(new SendDmDto(userB, roomId, content));
 
