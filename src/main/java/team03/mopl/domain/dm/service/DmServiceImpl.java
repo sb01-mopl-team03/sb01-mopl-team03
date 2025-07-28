@@ -106,7 +106,7 @@ public class DmServiceImpl implements DmService {
     String nextCursor = null;
     if (hasNext) {
       //더 보낼게 있는 것들
-      DmDto lastDmDto = dmDtoList.get(dmDtoList.size() - 1);
+      DmDto lastDmDto = dmDtoList.get(dmDtoList.size() - 2);
       nextCursor = cursorCodecUtil.encodeNextCursor(lastDmDto);
       dmDtoList = dmDtoList.subList(0, size);//20개가 넘치니 자름
     }

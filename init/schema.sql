@@ -165,11 +165,11 @@ CREATE TABLE "watch_room_participants"
 -- DM 룸 테이블
 CREATE TABLE "dm_rooms"
 (
-    "id"          UUID PRIMARY KEY        NOT NULL,
-    "sender_id"   UUID                    NULL,
-    "receiver_id" UUID                    NULL,
-    "created_at"  TIMESTAMP DEFAULT now() NOT NULL,
-    "updated_at" TIMESTAMP DEFAULT now() NOT NULL,
+    "id"                UUID PRIMARY KEY        NOT NULL,
+    "sender_id"         UUID                    NULL,
+    "receiver_id"       UUID                    NULL,
+    "created_at"        TIMESTAMP DEFAULT now() NOT NULL,
+    "last_message_at"   TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("sender_id", "receiver_id"),
     FOREIGN KEY ("sender_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("receiver_id") REFERENCES "users" ("id")
