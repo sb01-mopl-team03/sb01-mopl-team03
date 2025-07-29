@@ -152,6 +152,7 @@ public class PlaylistServiceImpl implements PlaylistService {
   }
 
   @Override
+  @Transactional
   public void delete(UUID playlistId, UUID userId) {
     Playlist playlist = playlistRepository.findById(playlistId).orElseThrow(PlaylistNotFoundException::new);
     if (!playlist.getUser().getId().equals(userId)) {
@@ -159,6 +160,7 @@ public class PlaylistServiceImpl implements PlaylistService {
       throw new PlaylistDeniedException();
     }
     playlistRepository.deleteById(playlistId);
+    log.info("delete - 플레이리스트가 삭제되었습니다. 플레이리스트 ID = {}", playlistId);
   }
 
   @Override
