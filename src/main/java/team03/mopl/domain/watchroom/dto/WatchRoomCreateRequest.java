@@ -13,6 +13,7 @@ public record WatchRoomCreateRequest(
     @Schema(description = "실시간 같이 보기(Owner) ID", example = "a1b2c3d4-1234-5678-9012-abcdefabcdef")
     UUID ownerId,
 
+    @Schema(description = "시청방 제목", example = "케데헌 같이 볼 사람!")
     String title
 ){
 }
