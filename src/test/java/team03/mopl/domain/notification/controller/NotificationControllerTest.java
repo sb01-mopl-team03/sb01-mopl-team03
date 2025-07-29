@@ -302,6 +302,24 @@ class NotificationControllerTest {
     // 호출 검증
     verify(notificationService).readNotification(eq(user.getId()), eq(notificationId));
   }
+  @Test
+  @DisplayName("모든 알림 읽음 처리 - 성공")
+  @WithMockUser
+  void readAllNotification_Success() throws Exception {
+    // given
+    User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
+    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
+        customUserDetails.getAuthorities());
+
+    // when & then
+    mockMvc.perform(post("/api/notifications/")
+            .with(authentication(authToken)).with(csrf()))
+        .andExpect(status().isOk());
+
+    // service가 잘 호출됐는지 검증
+    verify(notificationService).markAllAsRead(eq(user.getId()));
+  }
 
 
   @Test

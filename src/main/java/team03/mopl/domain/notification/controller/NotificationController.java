@@ -120,6 +120,13 @@ public class NotificationController {
     return ResponseEntity.ok().build();
   }
 
+  @PostMapping("/")
+  public ResponseEntity<Void> readAllNotification(@AuthenticationPrincipal CustomUserDetails user) {
+    UUID userId = user.getId();
+    notificationService.markAllAsRead(userId);
+    return ResponseEntity.ok().build();
+  }
+
   @DeleteMapping("/{notificationId}")
   public ResponseEntity<Void> deleteNotification(@PathVariable("notificationId") UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
     notificationService.deleteNotification(notificationId);
