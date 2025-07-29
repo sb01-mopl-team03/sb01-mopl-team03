@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -16,8 +17,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import team03.mopl.common.exception.watchroom.UnsupportedVideoControlActionException;
+import team03.mopl.common.exception.watchroom.VideoControlPermissionDeniedException;
+import team03.mopl.domain.watchroom.dto.video.VideoControlRequest;
+import team03.mopl.domain.watchroom.dto.video.VideoSyncDto;
 import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageCreateRequest;
 import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
+import team03.mopl.domain.watchroom.entity.VideoControlAction;
 import team03.mopl.domain.watchroom.service.WatchRoomMessageService;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
 
@@ -68,7 +74,7 @@ class WatchRoomWebSocketControllerTest {
     }
 
     @Test
-    @DisplayName("요청 파라미터로 주어진 채팅방 id와 메세지 생성 요청 바디의 채팅방Id가 일치하지 않음")
+    @DisplayName("요청 파라미터로 주어진 채팅방 id와 메세지 생성 요청 바디의 채팅방 Id가 일치하지 않음")
     void fail() {
       //given
       UUID mockRoomId = UUID.randomUUID();
@@ -114,6 +120,84 @@ class WatchRoomWebSocketControllerTest {
       verify(watchRoomService).joinWatchRoomAndGetInfo(mockRoomId, principal.getName());
       verify(watchRoomService).getParticipants(mockRoomId);
 
+    }
+  }
+
+  @Nested
+  @DisplayName("시청방 비디오 제어")
+  class VideoControl {
+
+    @Test
+    @DisplayName("성공")
+    void success() throws Exception {
+      //given
+      UUID roomId = UUID.randomUUID();
+
+      Principal principal = mock(Principal.class);
+
+      VideoControlRequest request = new VideoControlRequest(VideoControlAction.PAUSE, 10.0);
+
+      VideoSyncDto videoSyncDto = VideoSyncDto.builder()
+          .videoControlAction(VideoControlAction.PAUSE)
+          .currentTime(10.0)
+          .isPlaying(false)
+          .build();
+
+      when(principal.getName()).thenReturn("test@test.com");
+      when(watchRoomService.updateVideoStatus(roomId, request, principal.getName())).thenReturn(
+          videoSyncDto);
+
+      //when
+      watchRoomWebSocketController.videoControl(roomId, request, principal);
+
+      //then
+      verify(watchRoomService).updateVideoStatus(roomId, request, principal.getName());
+    }
+
+    @Test
+    @DisplayName("방장이 아닌 참여자는 제어할 수 없음")
+    void failsWhenNotOwner() throws Exception {
+      //given
+      UUID roomId = UUID.randomUUID();
+
+      Principal principal = mock(Principal.class);
+
+      VideoControlRequest request = new VideoControlRequest(VideoControlAction.PAUSE, 10.0);
+
+      VideoSyncDto videoSyncDto = VideoSyncDto.builder()
+          .videoControlAction(VideoControlAction.PAUSE)
+          .currentTime(10.0)
+          .isPlaying(false)
+          .build();
+
+      when(principal.getName()).thenReturn("test@test.com");
+      when(watchRoomService.updateVideoStatus(roomId, request, principal.getName()))
+          .thenThrow(VideoControlPermissionDeniedException.class);
+
+      //when & then
+      assertThrows(VideoControlPermissionDeniedException.class,
+          () -> watchRoomWebSocketController.videoControl(roomId, request, principal));
+    }
+
+    @Test
+    @DisplayName("지원하지 않는 제어 액션")
+    void failsWhenUnsupportedVideoControlAction() throws Exception {
+      //given
+      UUID roomId = UUID.randomUUID();
+      Principal principal = mock(Principal.class);
+
+      // Reflection으로 잘못된 enum 값 생성
+      VideoControlAction invalidAction = mock(VideoControlAction.class);
+
+      VideoControlRequest request = new VideoControlRequest(invalidAction, 10.0);
+
+      when(principal.getName()).thenReturn("test@test.com");
+      when(watchRoomService.updateVideoStatus(roomId, request, principal.getName()))
+          .thenThrow(UnsupportedVideoControlActionException.class);
+
+      //when & then
+      assertThrows(UnsupportedVideoControlActionException.class,
+          () -> watchRoomWebSocketController.videoControl(roomId, request, principal));
     }
   }
 }
