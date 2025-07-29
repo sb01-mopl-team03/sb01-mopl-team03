@@ -114,7 +114,7 @@ public class NotificationController {
   }
 
   @PostMapping("/{notificationId}")
-  public ResponseEntity<Void> readNotification(@PathVariable UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
+  public ResponseEntity<Void> readNotification(@PathVariable("notificationId") UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
     UUID userId = user.getId();
     notificationService.readNotification(userId, notificationId);
     return ResponseEntity.ok().build();
