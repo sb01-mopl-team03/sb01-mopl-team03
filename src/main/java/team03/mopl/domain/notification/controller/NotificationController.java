@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,28 +66,9 @@ public class NotificationController {
       log.debug("SSE Emitter 구독 중...");
       emitter = emitterService.subscribe(userId, lastEventId);
 
-      /*// 3. 에러 핸들러 설정 (Broken pipe 에러 처리)
-      emitter.onCompletion(() -> {
-        log.info("SSE 연결이 정상적으로 완료되었습니다: userId={}", userId);
-      });
-
-      emitter.onTimeout(() -> {
-        log.info("SSE 연결이 타임아웃되었습니다: userId={}", userId);
-        emitterService.deleteById(userId); // emitter 정리
-      });
-
-      emitter.onError((ex) -> {
-        if (ex instanceof IOException && ex.getMessage().contains("Broken pipe")) {
-          log.debug("클라이언트가 연결을 끊었습니다: userId={}", userId);
-        } else {
-          log.error("SSE 연결 오류: userId={}, error={}", userId, ex.getMessage());
-        }
-        emitterService.deleteById(userId); // emitter 정리
-      });*/
-
       log.debug("SSE Emitter 구독 완료");
 
-      // 4. 구독 직후, CONNECTED 알림 전송
+      // 3. 구독 직후, CONNECTED 알림 전송
       log.debug("초기 알림 전송 중...");
       emitterService.sendInitNotification(emitter);
       log.info("SSE 구독 완료: userId={}", userId);
@@ -129,6 +111,13 @@ public class NotificationController {
     notificationService.markAllAsRead(userId);
     log.info("알림 읽음 처리 완료: userId={}, 알림 수={}", userId, list.size());
     return ResponseEntity.ok(list);
+  }
+
+  @PostMapping("/{notificationId}")
+  public ResponseEntity<Void> readNotification(@PathVariable UUID notificationId, @AuthenticationPrincipal CustomUserDetails user) {
+    UUID userId = user.getId();
+    notificationService.readNotification(userId, notificationId);
+    return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{notificationId}")

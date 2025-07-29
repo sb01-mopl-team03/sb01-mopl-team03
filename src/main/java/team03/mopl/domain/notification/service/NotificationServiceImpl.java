@@ -96,6 +96,18 @@ public class NotificationServiceImpl implements NotificationService{
 
   @Override
   @Transactional
+  public void readNotification(UUID receiverId, UUID notificationId) {
+    log.info("markAllAsRead - 알림 읽음 처리 시작: receiverId={}, notificationId={}", receiverId, notificationId);
+    Notification notification = notificationRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
+    if (notification.isRead()) return;
+    notification.setIsRead();
+    //읽었다고 판단한 알림들은 재전송용 캐시에서 삭제
+    emitterService.deleteNotificationCaches(List.of(notification));
+    log.info("markAllAsRead - 알림 읽음 처리 완료: receiverId={}, 읽은 알림 수={}", receiverId, 1);
+  }
+
+  @Override
+  @Transactional
   public void deleteNotification(UUID notificationId) {
     log.info("deleteNotification - 알림 삭제 시도: notificationId={}", notificationId);
     notificationRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
