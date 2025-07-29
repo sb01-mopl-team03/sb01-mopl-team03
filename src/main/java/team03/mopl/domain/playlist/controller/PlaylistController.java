@@ -73,6 +73,7 @@ public class PlaylistController implements PlaylistApi {
     return ResponseEntity.ok(playlistDtos);
   }
 
+  @Override
   @GetMapping("/subscribed")
   public ResponseEntity<List<PlaylistDto>> getAllSubscribed(@AuthenticationPrincipal CustomUserDetails userDetails) {
     UUID userId = userDetails.getId();

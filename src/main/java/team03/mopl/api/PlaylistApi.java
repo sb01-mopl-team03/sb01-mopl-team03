@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +41,10 @@ public interface PlaylistApi {
   @Operation(summary = "공개 재생목록 전체 조회")
   @GetMapping
   ResponseEntity<List<PlaylistDto>> getAllPublic();
+
+  @Operation(summary = "구독 중인 플레이리스트 전체 조회")
+  @GetMapping("/subscribed")
+  ResponseEntity<List<PlaylistDto>> getAllSubscribed(@AuthenticationPrincipal CustomUserDetails userDetails);
 
   @Operation(summary = "재생목록 단일 조회")
   @GetMapping("/{playlistId}")
