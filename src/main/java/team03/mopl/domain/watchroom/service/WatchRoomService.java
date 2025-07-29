@@ -1,6 +1,7 @@
 package team03.mopl.domain.watchroom.service;
 
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;

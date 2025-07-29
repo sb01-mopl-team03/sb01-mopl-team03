@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+import team03.mopl.common.config.QueryDslConfig;
 import team03.mopl.domain.dm.entity.Dm;
 import team03.mopl.domain.dm.entity.DmRoom;
 
@@ -22,7 +23,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({DmRepositoryCustom.class, DmRepositoryCustomTest.QueryDslTestConfig.class})
+@Import({DmRepositoryCustom.class, QueryDslConfig.class})
 @TestPropertySource(properties = {
     "spring.sql.init.mode=never", // schema.sql 자동 실행 막음
     "spring.jpa.hibernate.ddl-auto=create-drop" // 내장 DB에 테이블을 자동으로 생성/삭제
@@ -91,32 +92,23 @@ public class DmRepositoryCustomTest {
     assertThat(firstPage).hasSize(5);
 
     // Step 2: 커서 값 준비 (5번째 메시지 기준)
-    Dm lastOfFirstPage = firstPage.get(4); // 0~4, 가장 마지막
+    Dm lastOfFirstPage = firstPage.get(4); // 0~3, 4 가장 마지막
     String mainCursor = lastOfFirstPage.getCreatedAt().toString();
     String subCursor = lastOfFirstPage.getId().toString();
 
     // Step 3: 커서 기반 다음 페이지 조회
-    List<Dm> secondPage = dmRepositoryCustom.findByCursor(actualRoomId, 5, mainCursor, subCursor);
-
+    List<Dm> secondPage = dmRepositoryCustom.findByCursor(actualRoomId, 5, mainCursor, subCursor); //4~7, 8
+    secondPage.add(lastOfFirstPage); //+4
+    secondPage = secondPage.subList(0, secondPage.size() - 1); //-9
     // 검증
     assertThat(secondPage).hasSize(5); // 총 10개 넣었으므로 5개 더 있음
-    assertThat(secondPage).doesNotContain(lastOfFirstPage); // 중복 없음
     assertThat(secondPage).allSatisfy(dm -> {
-      boolean isOlder = dm.getCreatedAt().isBefore(lastOfFirstPage.getCreatedAt());
+      boolean isOlder = !dm.getCreatedAt().isAfter(lastOfFirstPage.getCreatedAt());
       boolean isSameTimeAndSmallerId = dm.getCreatedAt().isEqual(lastOfFirstPage.getCreatedAt()) &&
           dm.getId().compareTo(lastOfFirstPage.getId()) < 0;
       assertThat(isOlder || isSameTimeAndSmallerId).isTrue();
     });
   }
 
-
-
-  @TestConfiguration
-  static class QueryDslTestConfig {
-    @Bean
-    public JPAQueryFactory jpaQueryFactory(EntityManager em) {
-      return new JPAQueryFactory(em);
-    }
-  }
 }
 

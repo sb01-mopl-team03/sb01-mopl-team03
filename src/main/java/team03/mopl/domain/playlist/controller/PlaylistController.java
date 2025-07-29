@@ -66,6 +66,7 @@ public class PlaylistController implements PlaylistApi {
     return ResponseEntity.ok(playlistDtos);
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<List<PlaylistDto>> getAllPublic() {
     List<PlaylistDto> playlistDtos = playlistService.getAllPublic();

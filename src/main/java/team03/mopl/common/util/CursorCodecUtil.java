@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import team03.mopl.common.dto.Cursor;
 import team03.mopl.domain.content.dto.ContentDto;
+import team03.mopl.domain.dm.dto.DmDto;
+import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 
 @Slf4j
@@ -25,6 +27,7 @@ public class CursorCodecUtil {
   public Cursor decodeCursor(String encodedCursor) {
     log.info("decodeCursor - cursor 값 Base64 디코딩 시작");
     if (encodedCursor == null) {
+      log.warn("null 입력으로 기본 커서 객체를 반환");
       return new Cursor(null, null);
     }
     try {
@@ -37,7 +40,6 @@ public class CursorCodecUtil {
     } catch (Exception e) {
       log.warn("Base64 문자열을 디코딩하여 객체로 변환 중 오류 발생", e);
       return new Cursor(null, null);
-//      throw new RuntimeException(e);
     }
   }
 
@@ -88,6 +90,33 @@ public class CursorCodecUtil {
     return encodeNextCursor(cursor);
   }
 
+  /**
+   * 커서 페이지네이션의 마지막 데이터를 인코딩하여 반환합니다.
+   * 다른 서비스에서 호출됩니다.
+   *
+   * @param lastItem NotificationDto 타입의 아이템
+   */
+  public String encodeNextCursor(NotificationDto lastItem) {
+    Cursor cursor = new Cursor(
+        lastItem.getCreatedAt().toString(),
+        lastItem.getId().toString()
+    );
+    return encodeNextCursor(cursor);
+  }
+
+  /**
+   * 커서 페이지네이션의 마지막 데이터를 인코딩하여 반환합니다.
+   * 다른 서비스에서 호출됩니다.
+   *
+   * @param lastItem DmDto 타입의 아이템
+   */
+  public String encodeNextCursor(DmDto lastItem) {
+    Cursor cursor = new Cursor(
+        lastItem.getCreatedAt().toString(),
+        lastItem.getId().toString()
+    );
+    return encodeNextCursor(cursor);
+  }
 
   /**
    * 내부에서 핵심 인코딩 로직을 담당합니다.

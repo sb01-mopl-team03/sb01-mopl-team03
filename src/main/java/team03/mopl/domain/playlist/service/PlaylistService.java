@@ -12,7 +12,9 @@ public interface PlaylistService {
 
   PlaylistDto getById(UUID playlistId);
 
-  List<PlaylistDto> getAll();
+  List<PlaylistDto> getAllPublic();
+
+  List<PlaylistDto> getAllSubscribed(UUID userId);
 
   List<PlaylistDto> getAllByUser(UUID userId);
 

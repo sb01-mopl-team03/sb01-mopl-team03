@@ -47,6 +47,7 @@ import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
 import team03.mopl.domain.watchroom.entity.VideoControlAction;
 import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.domain.watchroom.repository.WatchRoomMessageRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;
 import team03.mopl.domain.content.Content;
@@ -73,7 +74,7 @@ class WatchRoomServiceImplTest {
   private WatchRoomParticipantRepository watchRoomParticipantRepository;
 
   @Mock
-  private ObjectMapper objectMapper;
+  private WatchRoomMessageRepository watchRoomMessageRepository;
 
   @Mock
   private CursorCodecUtil codecUtil;
@@ -531,6 +532,7 @@ class WatchRoomServiceImplTest {
       List<ParticipantDto> participantDtos = users.stream()
           .map(user -> {
             return ParticipantDto.builder()
+                .id(user.getId())
                 .username(user.getName())
                 .profile(null)
                 .isOwner(user.getId() == userId)
@@ -541,6 +543,8 @@ class WatchRoomServiceImplTest {
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
           .title("테스트용 시청방")
+          .playTime(1.0)
+          .isPlaying(true)
           .owner(user)
           .content(content)
           .build();
@@ -555,6 +559,8 @@ class WatchRoomServiceImplTest {
 
       WatchRoomInfoDto expected = WatchRoomInfoDto.builder()
           .id(chatRoomId)
+          .playTime(1.0)
+          .isPlaying(true)
           .content(ContentDto.from(content))
           .participantsInfoDto(participantsInfoDto)
           .build();
@@ -566,6 +572,8 @@ class WatchRoomServiceImplTest {
           .thenReturn(false);
       when(watchRoomParticipantRepository.findByWatchRoom(watchRoom))
           .thenReturn(watchRoomParticipant);
+      when(watchRoomParticipantRepository.save(any(WatchRoomParticipant.class))).thenReturn(
+          watchRoomParticipant.get(0));
 
       //when
       WatchRoomInfoDto watchRoomInfoDto = watchRoomService
@@ -573,6 +581,8 @@ class WatchRoomServiceImplTest {
 
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.content().title(), watchRoomInfoDto.content().title());
+      assertTrue(watchRoomInfoDto.isPlaying());
+      assertEquals(1.0, watchRoomInfoDto.playTime());
       assertEquals(expected.participantsInfoDto().participantCount(),
           watchRoomInfoDto.participantsInfoDto().participantCount());
 

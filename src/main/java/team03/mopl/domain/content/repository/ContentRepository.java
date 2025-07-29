@@ -15,37 +15,18 @@ public interface ContentRepository extends JpaRepository<Content, UUID>, Content
 
   boolean existsByDataId(String dataId);
 
-  // 배치 처리를 위한 페이징 조회
-  @Query(value = """
-        SELECT * FROM contents c 
-        ORDER BY c.id 
-        LIMIT :limit OFFSET :offset
-        """, nativeQuery = true)
-  List<Content> findAllWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+  boolean existsByTitle(String title);
 
-  // 최근 TMDB 콘텐츠 조회 (예: 최근 1시간 내)
-  @Query("SELECT c FROM Content c WHERE c.createdAt >= :since AND c.contentType IN ('MOVIE', 'TV')")
-  List<Content> findRecentTmdbContents(@Param("since") LocalDateTime since);
+  @Query("SELECT c FROM Content c WHERE " +
+      "LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+      "LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+  List<Content> findByKeyword(@Param("keyword") String keyword);
 
-  default List<Content> findRecentTmdbContents() {
-    return findRecentTmdbContents(LocalDateTime.now().minusHours(1));
-  }
+  // 특정 시간 이후에 생성된 TMDB 콘텐츠 조회
+  @Query("SELECT c FROM Content c WHERE c.createdAt > :dateTime AND (c.contentType = 'MOVIE' or c.contentType = 'TV') ORDER BY c.createdAt DESC")
+  List<Content> findRecentTmdbContentsAfter(@Param("dateTime") LocalDateTime dateTime);
 
-  // 최근 Sports 콘텐츠 조회
-  @Query("SELECT c FROM Content c WHERE c.createdAt >= :since AND c.contentType = 'SPORTS'")
-  List<Content> findRecentSportsContents(@Param("since") LocalDateTime since);
-
-  default List<Content> findRecentSportsContents() {
-    return findRecentSportsContents(LocalDateTime.now().minusHours(1));
-  }
-
-  @Query("SELECT c FROM Content c WHERE c.createdAt >= :since")
-  List<Content> findRecentContents(@Param("since") LocalDateTime since);
-
-  default List<Content> findRecentContents(int daysBack) {
-    return findRecentContents(LocalDateTime.now().minusDays(daysBack));
-  }
-
-  @Query("SELECT c FROM Content c ORDER BY c.id LIMIT :limit OFFSET :offset")
-  List<Content> findAllWithOffset(@Param("offset") int offset, @Param("limit") int limit);
+  // 특정 시간 이후에 생성된 Sports 콘텐츠 조회
+  @Query("SELECT c FROM Content c WHERE c.createdAt > :dateTime AND c.contentType = 'SPORTS' ORDER BY c.createdAt DESC")
+  List<Content> findRecentSportsContentsAfter(@Param("dateTime") LocalDateTime dateTime);
 }

@@ -165,10 +165,11 @@ CREATE TABLE "watch_room_participants"
 -- DM 룸 테이블
 CREATE TABLE "dm_rooms"
 (
-    "id"          UUID PRIMARY KEY        NOT NULL,
-    "sender_id"   UUID                    NULL,
-    "receiver_id" UUID                    NULL,
-    "created_at"  TIMESTAMP DEFAULT now() NOT NULL,
+    "id"                UUID PRIMARY KEY        NOT NULL,
+    "sender_id"         UUID                    NULL,
+    "receiver_id"       UUID                    NULL,
+    "created_at"        TIMESTAMP DEFAULT now() NOT NULL,
+    "last_message_at"   TIMESTAMP DEFAULT now() NOT NULL,
     UNIQUE ("sender_id", "receiver_id"),
     FOREIGN KEY ("sender_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("receiver_id") REFERENCES "users" ("id")
@@ -221,6 +222,14 @@ CREATE TABLE "dm_read_users"
     "user_id" UUID NOT NULL,
     PRIMARY KEY ("dm_id", "user_id"),
     FOREIGN KEY ("dm_id") REFERENCES "dms" ("id")
+);
+
+CREATE TABLE dm_room_out_users (
+    dm_room_id UUID NOT NULL,
+    user_id    UUID NOT NULL,
+    PRIMARY KEY (dm_room_id, user_id),
+    FOREIGN KEY (dm_room_id) REFERENCES dm_rooms (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES users (id)        ON DELETE CASCADE
 );
 
 -- 소셜 계정 테이블

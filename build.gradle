@@ -25,9 +25,13 @@ jacoco {
 
 ext {
     queryDslVersion = "5.1.0"
+    awsSdkVersion = "2.23.0" // 안정적인 버전 사용 (혹시 이 버전에서 문제 생기면 2.17.291 등 시도)
 }
 
 dependencies {
+    // AWS SDK BOM 추가로 버전 충돌 방지
+    implementation platform("software.amazon.awssdk:bom:$awsSdkVersion")
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -59,19 +63,19 @@ dependencies {
     // Security
     implementation 'org.springframework.security:spring-security-messaging'
 
-    // AI - Stanford CoreNLP with JAXB exclusions
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4') {
-        exclude group: 'javax.xml.bind', module: 'jaxb-api'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
-    }
-    implementation('edu.stanford.nlp:stanford-corenlp:4.5.4:models') {
-        exclude group: 'javax.xml.bind', module: 'jaxb-api'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-impl'
-        exclude group: 'com.sun.xml.bind', module: 'jaxb-core'
-    }
-    implementation 'com.github.shin285:KOMORAN:3.3.9'
+    // OpenSearch Client (Java 17 호환 버전)
+    implementation "org.opensearch.client:opensearch-rest-client:2.11.0"
+    implementation "org.opensearch.client:opensearch-java:2.11.0"
+
+    // AWS SDK v2 dependencies (필수 모듈들)
+    implementation "software.amazon.awssdk:http-auth-aws"
+    implementation "org.apache.httpcomponents.client5:httpclient5"
+    implementation "software.amazon.awssdk:apache-client"
+
+    // Jackson for JSON processing (AWS SDK v2도 내부적으로 Jackson 사용)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.+'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.+'
 
     // Jakarta JAXB - 최신 버전 명시적 추가
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
@@ -83,12 +87,17 @@ dependencies {
     // Documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
-    // AWS S3
-    implementation 'software.amazon.awssdk:s3:2.31.7'
+    // AWS S3 - Exclude apache-client to avoid conflict
+    implementation('software.amazon.awssdk:s3') {
+        exclude group: 'software.amazon.awssdk', module: 'apache-client'
+    }
+
+    // HTTP Client - This is a general Apache HTTP Client, not the AWS SDK specific one.
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
-    runtimeOnly 'com.h2database:h2' // 테스트용
+    runtimeOnly 'com.h2database:h2'
 
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -129,12 +138,21 @@ afterEvaluate {
                     '**/*$*$*.class',    // 중첩된 Lombok 생성 클래스
                     '**/team03/mopl/domain/**/dto/**', // DTO 클래스
                     '**/team03/mopl/domain/**/batch/**', // 배치
-                    '**/S3Service.class' // s3 서비스
+                    '**/S3Service.class',                // S3 서비스
+
+                    '**/team03/mopl/common/config/**',         // 설정 클래스
+                    '**/team03/mopl/common/exception/**',      // 커스텀 예외
+                    '**/team03/mopl/domain/curation/CurationJobListener.class', // 큐레이션 job listener
+                    '**/team03/mopl/domain/oauth2/**', // oauth 클래스
+                    '**/team03/mopl/storage/**'                // 외부 스토리지 접근
             ])
         })
     }
 }
 
-tasks.withType(JavaExec) {
-    jvmArgs = ['-Xmx4g', '-Xms1g']
+configurations {
+    all {
+        exclude group: 'org.opensearch.client', module: 'opensearch-rest-high-level-client'
+        exclude group: 'org.opensearch.client', module: 'opensearch-rest-client-sniffer'
+    }
 }

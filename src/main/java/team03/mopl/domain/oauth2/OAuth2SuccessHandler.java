@@ -40,12 +40,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
       CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
       User user = userDetails.getUser();
 
+      jwtService.delete(user);
+
       String accessToken = jwtProvider.generateToken(user);
       String refreshToken = jwtProvider.generateRefreshToken(user);
       jwtService.save(user, accessToken, refreshToken, refreshTokenExpiration);
 
-      Cookie cookie = CookieUtil.createResponseCookie(refreshToken, refreshTokenExpiration);
-      response.addCookie(cookie);
+      CookieUtil.createResponseCookie(response, refreshToken, refreshTokenExpiration);
 
       String redirectUrl = UriComponentsBuilder.fromUriString(redirectUri)
           .queryParam("access_token", accessToken)

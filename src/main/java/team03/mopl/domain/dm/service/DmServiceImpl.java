@@ -2,6 +2,7 @@ package team03.mopl.domain.dm.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import team03.mopl.common.exception.dm.DmDecodingError;
 import team03.mopl.common.exception.dm.DmNotFoundException;
 import team03.mopl.common.exception.dm.DmRoomNotFoundException;
 import team03.mopl.common.exception.dm.NoOneMatchInDmRoomException;
+import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.dm.dto.DmDto;
 import team03.mopl.domain.dm.dto.DmPagingDto;
 import team03.mopl.domain.dm.dto.SendDmDto;
@@ -39,8 +41,11 @@ public class DmServiceImpl implements DmService {
   private final NotificationService notificationService;
   private final ObjectMapper objectMapper;
   private final DmRepositoryCustom dmRepositoryCustom;
+  private final CursorCodecUtil cursorCodecUtil;
+  private final PresenceTracker presenceTracker;
 
   @Override
+  @Transactional
   public DmDto sendDm(SendDmDto sendDmDto) {
     log.info("sendDm - DM 전송 시도: senderId={}, roomId={}, content={}", sendDmDto.getSenderId(), sendDmDto.getRoomId(), sendDmDto.getContent());
     DmRoom dmRoom = dmRoomRepository.findById(sendDmDto.getRoomId()).orElseThrow(() -> {
@@ -50,19 +55,27 @@ public class DmServiceImpl implements DmService {
 
     Dm dm = new Dm(sendDmDto.getSenderId(), sendDmDto.getContent());
     dm.setDmRoom(dmRoom); // 연관관계 설정
+    dm.readDm(sendDmDto.getSenderId());
 
     // 알림 전송 추가
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
+        dm.readDm(receiverId);
+      }
     } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getSenderId();
       notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
+        dm.readDm(receiverId);
+      }
     } else {
       throw new NoOneMatchInDmRoomException();
     }
 
     Dm savedDm = dmRepository.save(dm);
+    dmRoom.touchLastMessageAt(LocalDateTime.now());
     log.info("sendDm - DM 전송 완료: dmId={}", savedDm.getId());
     return DmDto.from(savedDm);
   }
@@ -84,7 +97,7 @@ public class DmServiceImpl implements DmService {
     int size = dmPagingDto.getSize();
 
     List<Dm> list = dmRepositoryCustom.findByCursor(roomId, size + 1, mainCursorValue, subCursorValue);
-    long totalElements = dmRepository.count();
+    long totalElements = dmRepository.countByDmRoomId(roomId);
     boolean hasNext = list.size() > size; // 해당 DM이 마지막인지 확인
 
     //21개
@@ -93,8 +106,9 @@ public class DmServiceImpl implements DmService {
     String nextCursor = null;
     if (hasNext) {
       //더 보낼게 있는 것들
-      nextCursor = dmDtoList.get(dmDtoList.size() - 1).getCreatedAt().toString(); //마지막 Dmdto
-      dmDtoList.subList(0, size); //20개가 넘치니 자름
+      DmDto lastDmDto = dmDtoList.get(dmDtoList.size() - 2);
+      nextCursor = cursorCodecUtil.encodeNextCursor(lastDmDto);
+      dmDtoList = dmDtoList.subList(0, size);//20개가 넘치니 자름
     }
 
     return CursorPageResponseDto.<DmDto>builder().data(dmDtoList).nextCursor(nextCursor).size(dmDtoList.size()).totalElements(totalElements)

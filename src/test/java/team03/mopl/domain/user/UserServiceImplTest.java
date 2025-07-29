@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
+import team03.mopl.common.exception.auth.InvalidPasswordException;
 import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.domain.follow.service.FollowService;
 import team03.mopl.storage.ProfileImageStorage;
@@ -102,28 +103,52 @@ class UserServiceImplTest {
   }
 
   @Test
-  @DisplayName("유저 비밀번호 수정")
-  void updateUser() {
+  @DisplayName("유저 비밀번호 수정 - 현재 비밀번호 일치 시 성공")
+  void updateUser_withCorrectCurrentPassword() {
     // given
     UUID id = UUID.randomUUID();
     User user = User.builder()
         .id(id)
-        .email("aaa@a.com")
+        .email("test@test.com")
         .name("수정맨")
-        .password("old")
+        .password("encoded-oldpass") // DB에 저장된 인코딩된 비번
         .role(Role.USER)
         .build();
 
-    UserUpdateRequest request = new UserUpdateRequest("ㅎㅎ","newpass");
+    UserUpdateRequest request = new UserUpdateRequest("수정맨", "oldpass", "newpass");
+
     given(userRepository.findById(id)).willReturn(Optional.of(user));
+    given(passwordEncoder.matches("oldpass", "encoded-oldpass")).willReturn(true);
     given(passwordEncoder.encode("newpass")).willReturn("encoded-newpass");
 
     // when
-    UserResponse response = userService.update(id, request,null);
+    UserResponse response = userService.update(id, request, null);
 
     // then
     assertThat(user.getPassword()).isEqualTo("encoded-newpass");
+    assertThat(response.name()).isEqualTo("수정맨");
   }
+
+  @Test
+  @DisplayName("유저 비밀번호 수정 실패 - 현재 비밀번호 불일치")
+  void updateUser_withWrongCurrentPassword() {
+    UUID id = UUID.randomUUID();
+    User user = User.builder()
+        .id(id)
+        .email("test@test.com")
+        .name("수정맨")
+        .password("encoded-oldpass")
+        .role(Role.USER)
+        .build();
+
+    UserUpdateRequest request = new UserUpdateRequest("수정맨", "wrongpass", "newpass");
+
+    given(userRepository.findById(id)).willReturn(Optional.of(user));
+    given(passwordEncoder.matches("wrongpass", "encoded-oldpass")).willReturn(false);
+
+    assertThrows(InvalidPasswordException.class, () -> userService.update(id, request, null));
+  }
+
 
   @Test
   @DisplayName("유저 이름만 수정")
@@ -139,15 +164,15 @@ class UserServiceImplTest {
         .profileImage("/static/profile/woody.png")
         .build();
 
-    UserUpdateRequest request = new UserUpdateRequest("변경된이름", null);
+    UserUpdateRequest request = new UserUpdateRequest("변경된이름", "old",null);
     given(userRepository.findById(id)).willReturn(Optional.of(user));
+    given(passwordEncoder.matches("old", "old")).willReturn(true);
 
     // when
     UserResponse response = userService.update(id, request, null);
 
     // then
     assertThat(user.getName()).isEqualTo("변경된이름");
-    assertThat(user.getPassword()).isEqualTo("old"); // 비밀번호는 변경 안 됨
     assertThat(response.name()).isEqualTo("변경된이름");
   }
 
@@ -170,8 +195,9 @@ class UserServiceImplTest {
     given(newProfile.isEmpty()).willReturn(false);
     given(userRepository.findById(id)).willReturn(Optional.of(user));
     given(profileImageStorage.upload(newProfile)).willReturn("/local/profile/new.png");
+    given(passwordEncoder.matches("pw", "pw")).willReturn(true);
 
-    UserUpdateRequest request = new UserUpdateRequest(null, null);
+    UserUpdateRequest request = new UserUpdateRequest(null, "pw",null);
 
     // when
     UserResponse response = userService.update(id, request, newProfile);
@@ -211,5 +237,48 @@ class UserServiceImplTest {
 
     // then
     then(userRepository).should().deleteById(id);
+  }
+
+  @Test
+  @DisplayName("OAuth 로그인 - 기존 유저가 있으면 로그인 처리")
+  void loginOrRegisterOAuth_existingUser() {
+    String email = "oauth@test.com";
+    String name = "OAuthUser";
+    User existingUser = User.builder()
+        .id(UUID.randomUUID())
+        .email(email)
+        .name(name)
+        .password("encoded")
+        .role(Role.USER)
+        .build();
+
+    given(userRepository.findByEmail(email)).willReturn(Optional.of(existingUser));
+
+    User result = userService.loginOrRegisterOAuth(email, name);
+
+    assertThat(result).isEqualTo(existingUser);
+    then(userRepository).should(never()).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("OAuth 로그인 - 유저가 없으면 자동 가입 처리")
+  void loginOrRegisterOAuth_registerNewUser() {
+    String email = "new@oauth.com";
+    String name = "NewOAuth";
+    given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+    given(passwordEncoder.encode(anyString())).willReturn("encoded-password");
+
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+    User result = userService.loginOrRegisterOAuth(email, name);
+
+    then(userRepository).should().save(userCaptor.capture());
+    User savedUser = userCaptor.getValue();
+
+    assertThat(savedUser.getEmail()).isEqualTo(email);
+    assertThat(savedUser.getName()).isEqualTo(name);
+    assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
+    assertThat(result).isEqualTo(savedUser);
   }
 }

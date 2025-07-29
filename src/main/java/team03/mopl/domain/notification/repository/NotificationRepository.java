@@ -10,4 +10,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
   List<Notification> findByReceiverIdAndIsRead(UUID receiverId, boolean read);
 
   void deleteByReceiverIdAndIsRead(UUID receiverId, boolean read);
+
+  long countByReceiverId(UUID receiverId);
 }

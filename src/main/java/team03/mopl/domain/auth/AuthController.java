@@ -36,9 +36,7 @@ public class AuthController implements AuthApi {
   public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
     LoginResult result = authService.login(request.email(), request.password());
 
-    Cookie cookie = CookieUtil.createResponseCookie(result.refreshToken(), refreshTokenExpiration);
-    response.addCookie(cookie);
-
+    CookieUtil.createResponseCookie(response, result.refreshToken(), refreshTokenExpiration);
 
     return ResponseEntity.ok().body(new LoginResponse(result.accessToken(),result.isTempPassword()));
     //isTempPassword true 면 change-password 로
@@ -67,9 +65,8 @@ public class AuthController implements AuthApi {
     try {
       TokenPair tokenPair = authService.refresh(refreshToken);
 
-      Cookie cookie = CookieUtil.createResponseCookie(tokenPair.getRefreshToken(),
+     CookieUtil.createResponseCookie(response, tokenPair.getRefreshToken(),
           refreshTokenExpiration);
-      response.addCookie(cookie);
 
       return ResponseEntity.ok().body(tokenPair.getAccessToken());
     } catch (IllegalStateException e) {
