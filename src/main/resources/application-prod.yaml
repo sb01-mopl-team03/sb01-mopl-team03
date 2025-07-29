@@ -19,6 +19,8 @@ frontend:
 
 
 spring:
+  jackson:
+    time-zone: Asia/Seoul
   application:
     name: mopl
   datasource:
