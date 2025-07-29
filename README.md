@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/sb01-mopl-team03/sb01-mopl-team03/branch/main/graph/badge.svg)](https://codecov.io/gh/sb01-mopl-team03/sb01-mopl-team03)
+
 # 📹 모두의 플리
 > 대규모 트래픽이 예상되는 글로벌 컨텐츠 평점 및 큐레이션 플랫폼
 </br> 
