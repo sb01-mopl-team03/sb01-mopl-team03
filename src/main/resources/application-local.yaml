@@ -1,0 +1,28 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+opensearch:
+  endpoint: http://localhost:9200
+  use-aws-auth: false
+
+#  sql:
+#    init:
+#      # schema.sql, data.sql 사용
+#      mode: always
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    team03.mopl.domain.oauth2: DEBUG
+    org.springframework.web.client: DEBUG
