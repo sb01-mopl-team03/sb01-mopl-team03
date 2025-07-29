@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import team03.mopl.api.NotificationApi;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.domain.notification.dto.NotificationDto;
 import team03.mopl.domain.notification.dto.NotificationPagingDto;
@@ -30,7 +31,7 @@ import team03.mopl.jwt.CustomUserDetails;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationController {
+public class NotificationController implements NotificationApi {
 
   private final NotificationService notificationService;
   private final EmitterService emitterService;

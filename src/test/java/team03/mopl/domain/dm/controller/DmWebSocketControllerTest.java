@@ -28,13 +28,14 @@ class DmWebSocketControllerTest {
 
   private DmService dmService;
   private SimpMessagingTemplate simpMessagingTemplate;
-  private DmWebSocketController controller;
   private PresenceTracker presenceTracker;
+  private DmWebSocketController controller;
 
   @BeforeEach
   void setUp() {
     dmService = mock(DmService.class);
     simpMessagingTemplate = mock(SimpMessagingTemplate.class);
+    presenceTracker = mock(PresenceTracker.class);
     controller = new DmWebSocketController(simpMessagingTemplate, dmService, presenceTracker);
   }
 
@@ -94,4 +95,31 @@ class DmWebSocketControllerTest {
 
     assertTrue(presenceTracker.isInRoom(userId, roomId));
   }
+
+  @Test
+  @DisplayName("컨트롤러에서 enterRoom 호출 시 presenceTracker의 enterRoom이 호출되는지")
+  void testEnterRoom() {
+    String userName = "testuser";
+    UUID roomId = UUID.randomUUID();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn(userName);
+
+    controller.enterRoom(roomId.toString(), principal);
+
+    verify(presenceTracker).enterRoom(eq(userName), eq(roomId));
+  }
+
+  @Test
+  @DisplayName("컨트롤러에서 exitRoom 호출 시 presenceTracker의 exitRoom이 호출되는지")
+  void testExitRoom() {
+    String userName = "testuser";
+    UUID roomId = UUID.randomUUID();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn(userName);
+
+    controller.exitRoom(roomId.toString(), principal);
+
+    verify(presenceTracker).exitRoom(eq(userName), eq(roomId));
+  }
+
 }
