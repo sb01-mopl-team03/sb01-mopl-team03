@@ -32,7 +32,7 @@ import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
 import team03.mopl.domain.watchroom.dto.WatchRoomDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
-import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.common.exception.exception.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.service.WatchRoomService;
 
 
