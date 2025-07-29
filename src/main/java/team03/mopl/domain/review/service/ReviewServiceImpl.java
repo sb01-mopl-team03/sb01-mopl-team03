@@ -42,14 +42,14 @@ public class ReviewServiceImpl implements ReviewService {
 
     Content content = contentRepository.findById(request.contentId())
         .orElseThrow(() -> {
-          log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", request.contentId());
+          log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID = {}", request.contentId());
           return new ContentNotFoundException();
         });
 
-    reviewRepository.findByUserId(user.getId()).ifPresent(review -> {
-      log.warn("이미 리뷰를 작성한 사용자입니다. 사용자 ID: {}", user.getId());
+    if (reviewRepository.existsByUserIdAndContentId(user.getId(), content.getId())) {
+      log.warn("이미 해당 콘텐츠에 리뷰를 작성했습니다. 콘텐츠 ID = {}, 사용자 ID = {}", user.getId(), content.getId());
       throw new DuplicateReviewException();
-    });
+    }
 
     Review review = Review.builder()
         .user(user)
@@ -74,7 +74,7 @@ public class ReviewServiceImpl implements ReviewService {
         .orElseThrow(ReviewNotFoundException::new);
 
     if (!review.getUser().getId().equals(userId)) {
-      log.warn("리뷰 작성자만 수정할 수 있습니다. 요청 유저 ID: {}, 리뷰 작성자 ID: {}",
+      log.warn("리뷰 작성자만 수정할 수 있습니다. 요청 유저 ID = {}, 리뷰 작성자 ID = {}",
           userId, review.getUser().getId());
       throw new ReviewUpdateDeniedException();
     }
@@ -99,7 +99,7 @@ public class ReviewServiceImpl implements ReviewService {
   @Override
   public List<ReviewDto> getAllByUser(UUID userId) {
     if (!userRepository.existsById(userId)) {
-      log.warn("존재하지 않는 유저입니다. 유저 ID: {}", userId);
+      log.warn("존재하지 않는 유저입니다. 유저 ID = {}", userId);
       throw new UserNotFoundException();
     }
 
@@ -111,7 +111,7 @@ public class ReviewServiceImpl implements ReviewService {
   @Transactional(readOnly = true)
   public List<ReviewDto> getAllByContent(UUID contentId) {
     if (!contentRepository.existsById(contentId)) {
-      log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID: {}", contentId);
+      log.warn("존재하지 않는 콘텐츠입니다. 콘텐츠 ID = {}", contentId);
       throw new ContentNotFoundException();
     }
 
@@ -126,7 +126,7 @@ public class ReviewServiceImpl implements ReviewService {
         .orElseThrow(ReviewNotFoundException::new);
 
     if (!review.getUser().getId().equals(userId)) {
-      log.warn("리뷰 작성자만 삭제할 수 있습니다. 요청 유저 ID: {}, 리뷰 작성자 ID: {}",
+      log.warn("리뷰 작성자만 삭제할 수 있습니다. 요청 유저 ID = {}, 리뷰 작성자 ID = {}",
           userId, review.getUser().getId());
       throw new ReviewDeleteDeniedException();
     }
