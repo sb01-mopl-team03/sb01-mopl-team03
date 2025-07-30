@@ -17,6 +17,7 @@ import team03.mopl.common.exception.user.UserNotFoundException;
 import team03.mopl.common.exception.watchroom.UnsupportedVideoControlActionException;
 import team03.mopl.common.exception.watchroom.VideoControlPermissionDeniedException;
 import team03.mopl.common.util.CursorCodecUtil;
+import team03.mopl.common.util.NormalizerUtil;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomCreateRequest;
@@ -65,6 +66,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     WatchRoom watchRoom = WatchRoom.builder()
         .title(request.title())
+        .titleNormalized(NormalizerUtil.normalize(request.title()))
         .owner(owner)
         .content(content)
         .build();
