@@ -24,8 +24,9 @@ public enum ErrorCode {
   REVIEW_UPDATE_DENIED(HttpStatus.FORBIDDEN, "REVIEW_003", "본인의 리뷰만 수정할 수 있습니다."),
   DUPLICATED_REVIEW(HttpStatus.CONFLICT, "REVIEW_004", "해당 콘텐츠에 이미 리뷰를 작성했습니다."),
 
-  CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM_001", "존재하지 않는 채팅방입니다."),
-  ALREADY_JOINED_CHATROOM(HttpStatus.CREATED, "CHATROOM_002", "이미 참여중인 채팅방입니다."),
+  WATCH_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "WATCHROOM_001", "존재하지 않는 시청방입니다."),
+  WATCH_ROOM_PERMISSION_DENIED(HttpStatus.FORBIDDEN, "WATCHROOM_002", "방장만 동영상을 제어할 수 있습니다."),
+  WATCH_ROOM_INVALID_CONTROL_ACTION(HttpStatus.BAD_REQUEST, "WATCHROOM_003", "지원하지 않는 동영상 제어 액션입니다."),
 
   //DM
   DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM_001", "존재하지 않는 다이렉트 메시지입니다."),
