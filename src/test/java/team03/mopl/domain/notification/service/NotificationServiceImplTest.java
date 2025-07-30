@@ -8,6 +8,9 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -87,7 +90,7 @@ class NotificationServiceImplTest {
     given(notificationRepository.save(any(Notification.class))).willReturn(saved);
 
     // when
-    NotificationDto notificationDto = new NotificationDto(receiverId, type, content);
+    NotificationDto notificationDto = new NotificationDto(receiverId, type, content, false);
     notificationService.sendNotification(notificationDto);
 
     // then
@@ -203,6 +206,58 @@ class NotificationServiceImplTest {
     assertThat(n1.isRead()).isTrue();
     assertThat(n2.isRead()).isTrue();
     then(notificationRepository).should().saveAll(anyList());
+  }
+
+  @Test
+  @DisplayName("읽지 않은 알림 - 읽음 처리 및 캐시 삭제 호출")
+  void readNotification_unread() {
+    // given
+    UUID receiverId = UUID.randomUUID();
+    UUID notificationId = UUID.randomUUID();
+    Notification notification = mock(Notification.class);
+
+    when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+    when(notification.isRead()).thenReturn(false);
+
+    // when
+    notificationService.readNotification(receiverId, notificationId);
+
+    // then
+    verify(notification).setIsRead();
+    verify(emitterService).deleteNotificationCaches(List.of(notification));
+  }
+
+  @Test
+  @DisplayName("이미 읽은 알림 - setIsRead, 캐시 삭제 미호출")
+  void readNotification_alreadyRead() {
+    // given
+    UUID receiverId = UUID.randomUUID();
+    UUID notificationId = UUID.randomUUID();
+    Notification notification = mock(Notification.class);
+
+    when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+    when(notification.isRead()).thenReturn(true);
+
+    // when
+    notificationService.readNotification(receiverId, notificationId);
+
+    // then
+    verify(notification, never()).setIsRead();
+    verify(emitterService, never()).deleteNotificationCaches(any());
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 알림 - NotificationNotFoundException 발생")
+  void readNotification_notFound() {
+    // given
+    UUID receiverId = UUID.randomUUID();
+    UUID notificationId = UUID.randomUUID();
+
+    when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> notificationService.readNotification(receiverId, notificationId))
+        .isInstanceOf(NotificationNotFoundException.class);
   }
 
   @Test

@@ -44,7 +44,7 @@ public class NotificationEventListener {
     }
 
     String content = "플레이리스트가 업데이트되었습니다: " + event.playlistTitle();
-    subs.forEach(s -> notificationService.sendNotification(new NotificationDto(s.getUser().getId(), NotificationType.PLAYLIST_SUBSCRIBED, content)));
+    subs.forEach(s -> notificationService.sendNotification(new NotificationDto(s.getUser().getId(), NotificationType.PLAYLIST_SUBSCRIBED, content, false)));
 
     log.info("PlaylistUpdatedEvent 처리 완료: playlistId={}, 알림 수={}", playlistId, subs.size());
   }
@@ -55,7 +55,7 @@ public class NotificationEventListener {
   public void onPlaylistSubscribed(PlaylistSubscribedEvent event) {
     // 알림 내용은 필요에 따라 가공
     String content = "당신의 " + event.title() + " 플레이리스트에 새로운 구독자가 등록되었습니다.";
-    notificationService.sendNotification(new NotificationDto(event.ownerId(), NotificationType.PLAYLIST_SUBSCRIBED, content));
+    notificationService.sendNotification(new NotificationDto(event.ownerId(), NotificationType.PLAYLIST_SUBSCRIBED, content, false));
     log.info("PlaylistSubscribedEvent 처리 완료: playlistId={}, ownerId={}, subscriberId={}", event.playlistId(), event.ownerId(), event.subscriberId());
   }
 
@@ -84,7 +84,7 @@ public class NotificationEventListener {
     String content = "팔로우 중인 사용자(" + event.creatorName() + ")가 새로운 플레이리스트를 만들었습니다: " + playlistName;
     for (FollowResponse f : followings) {
       UUID followingId = f.id();
-      notificationService.sendNotification(new NotificationDto(followingId, NotificationType.FOLLOWING_POSTED_PLAYLIST, content));
+      notificationService.sendNotification(new NotificationDto(followingId, NotificationType.FOLLOWING_POSTED_PLAYLIST, content, false));
     }
 
     log.info("onFollowingPostedPlaylist 처리 완료: creatorId={}, playlistId={}, followerCount={}", event.creatorId(), event.playlistId(),

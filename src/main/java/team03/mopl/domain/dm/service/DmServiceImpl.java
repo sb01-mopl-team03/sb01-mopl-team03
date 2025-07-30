@@ -60,13 +60,13 @@ public class DmServiceImpl implements DmService {
     // 알림 전송 추가
     if (dmRoom.getSenderId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getReceiverId(); // dmRoom의 senderId 로 등록된 사람 == dm 받는 사람
-      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent(), false));
       if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
         dm.readDm(receiverId);
       }
     } else if (dmRoom.getReceiverId().equals(sendDmDto.getSenderId())) {
       UUID receiverId = dmRoom.getSenderId();
-      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent()));
+      notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.DM_RECEIVED, sendDmDto.getContent(), false));
       if (presenceTracker.isInRoom(receiverId, dmRoom.getId())) {
         dm.readDm(receiverId);
       }

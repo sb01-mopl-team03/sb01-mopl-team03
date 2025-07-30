@@ -58,7 +58,7 @@ public class FollowServiceImpl implements FollowService {
     // 알림 전송 추가
     notificationService.sendNotification(
         new NotificationDto(following.getId(), NotificationType.FOLLOWED,
-            follower.getName()+ "이(가) "+following.getName()+"를 팔로우 했습니다."));
+            follower.getName()+ "이(가) "+following.getName()+"를 팔로우 했습니다.", false));
     log.info("follow - 팔로우 성공: followerId={}, followingId={}", followerId, followingId);
   }
 
@@ -82,7 +82,7 @@ public class FollowServiceImpl implements FollowService {
       // 알림 전송 추가
       notificationService.sendNotification(
           new NotificationDto(unFollowing.getId(), NotificationType.UNFOLLOWED,
-              unFollower.getName()+" 이(가) "+unFollowing.getName() + "을(를) 언팔로우 했습니다."));
+              unFollower.getName()+" 이(가) "+unFollowing.getName() + "을(를) 언팔로우 했습니다.", false));
       log.info("unfollow - 언팔로우 성공: unfollowerId={}, unfollowingId={}", unfollowerId, unfollowingId);
 
     } else {

@@ -62,7 +62,7 @@ public class DmRoomServiceImpl implements DmRoomService {
     log.info("createRoom - DM 방 생성 완료: roomId={}", roomDto.getId());
 
     // 알림 전송 추가
-    notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.NEW_DM_ROOM, "새로운 DM 방이 생성되었습니다."));
+    notificationService.sendNotification(new NotificationDto(receiverId, NotificationType.NEW_DM_ROOM, "새로운 DM 방이 생성되었습니다.", false));
 
     return roomDto;
   }

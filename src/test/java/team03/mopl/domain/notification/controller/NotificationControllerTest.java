@@ -16,6 +16,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -209,7 +210,7 @@ class NotificationControllerTest {
         customUserDetails.getAuthorities());
 
     NotificationDto dto = new NotificationDto(notificationId, user.getId(), "새로운 알림입니다.", NotificationType.DM_RECEIVED,
-        LocalDateTime.of(2025, 7, 1, 12, 0));
+        LocalDateTime.of(2025, 7, 1, 12, 0), false);
 
     List<NotificationDto> notifications = List.of(dto);
 
@@ -236,7 +237,7 @@ class NotificationControllerTest {
     UUID notificationId = UUID.randomUUID();
     for (int i = 0; i < 30; i++) {
       NotificationDto notificationDto = new NotificationDto(notificationId, receiverId, "콘텐츠 " + i, NotificationType.DM_RECEIVED,
-          now.minusSeconds(30 - i));
+          now.minusSeconds(30 - i), false);
       if (i < 20) {
         firstPageData.add(notificationDto);
       } else {
@@ -281,6 +282,45 @@ class NotificationControllerTest {
     String json = objectMapper.writeValueAsString(cursor);
     return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
+
+  @Test
+  @DisplayName("알림 읽음 처리 - 성공")
+  @WithMockUser
+  void readNotification_Success() throws Exception {
+    // given
+    UUID notificationId = UUID.randomUUID();
+
+    User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
+    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
+        customUserDetails.getAuthorities());
+
+    // when & then
+    mockMvc.perform(post("/api/notifications/{notificationId}", notificationId).with(authentication(authToken)).with(csrf())
+        ).andExpect(status().isOk());
+
+    // 호출 검증
+    verify(notificationService).readNotification(eq(user.getId()), eq(notificationId));
+  }
+  @Test
+  @DisplayName("모든 알림 읽음 처리 - 성공")
+  @WithMockUser
+  void readAllNotification_Success() throws Exception {
+    // given
+    User user = User.builder().id(UUID.randomUUID()).email("testuser@example.com").password("password").role(Role.USER).build();
+    CustomUserDetails customUserDetails = new CustomUserDetails(user);
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(customUserDetails, customUserDetails.getPassword(),
+        customUserDetails.getAuthorities());
+
+    // when & then
+    mockMvc.perform(post("/api/notifications/")
+            .with(authentication(authToken)).with(csrf()))
+        .andExpect(status().isOk());
+
+    // service가 잘 호출됐는지 검증
+    verify(notificationService).markAllAsRead(eq(user.getId()));
+  }
+
 
   @Test
   @DisplayName("DELETE /api/notifications/{id} : 특정 알림 삭제 -> 204, 서비스 호출 확인")
