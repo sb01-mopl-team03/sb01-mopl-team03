@@ -324,6 +324,7 @@ class WatchRoomParticipantRepositoryTest {
       // 새로운 시청방 생성 (참여자 없음) - ID 직접 설정 안함
       WatchRoom newWatchRoom = WatchRoom.builder()
           .title("참여자없는방")
+          .titleNormalized("참여자없는방")
           .owner(owner)
           .content(content)
           .createdAt(LocalDateTime.now())

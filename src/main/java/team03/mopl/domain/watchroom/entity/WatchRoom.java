@@ -40,6 +40,9 @@ public class WatchRoom {
   @Column(name = "title", nullable = false)
   private String title;
 
+  @Column(name = "title_normalized", nullable = false)
+  private String titleNormalized;
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "owner_id", nullable = false)
   private User owner;
