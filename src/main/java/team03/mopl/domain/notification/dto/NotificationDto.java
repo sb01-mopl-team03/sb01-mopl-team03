@@ -28,12 +28,16 @@ public class NotificationDto {
   @Schema(description = "생성 시각", example = "2025-07-16T10:15:30")
   private final LocalDateTime createdAt;
 
-  public NotificationDto(UUID receiverId, NotificationType notificationType, String content) {
+  @Schema(description = "읽음 확인", example = "false")
+  private final Boolean isRead;
+
+  public NotificationDto(UUID receiverId, NotificationType notificationType, String content, Boolean isRead) {
     this.id = null;
     this.receiverId = receiverId;
     this.content = content;
     this.notificationType = notificationType;
     this.createdAt = null;
+    this.isRead = isRead;
   }
 
   public static NotificationDto from(Notification notification) {
@@ -42,7 +46,8 @@ public class NotificationDto {
         notification.getReceiverId(),
         notification.getContent(),
         notification.getType(),
-        notification.getCreatedAt()
+        notification.getCreatedAt(),
+        notification.isRead()
     );
   }
 }

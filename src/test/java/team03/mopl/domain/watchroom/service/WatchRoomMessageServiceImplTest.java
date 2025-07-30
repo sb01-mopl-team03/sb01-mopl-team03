@@ -25,7 +25,7 @@ import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageCreateR
 import team03.mopl.domain.watchroom.dto.watchroommessage.WatchRoomMessageDto;
 import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomMessage;
-import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.common.exception.watchroom.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.repository.WatchRoomMessageRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;

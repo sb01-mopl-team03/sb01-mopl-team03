@@ -143,6 +143,8 @@ afterEvaluate {
                     '**/team03/mopl/common/config/**',         // 설정 클래스
                     '**/team03/mopl/common/exception/**',      // 커스텀 예외
                     '**/team03/mopl/domain/curation/CurationJobListener.class', // 큐레이션 job listener
+                    '**/team03/mopl/jwt/RedisJwtBlacklist.class', // 사용하지 않는 RedisJwtBlackList.class
+                    '**/team03/mopl/ApplicationInitializer.class', // 앱 초기화 클래스
                     '**/team03/mopl/domain/oauth2/**', // oauth 클래스
                     '**/team03/mopl/storage/**'                // 외부 스토리지 접근
             ])

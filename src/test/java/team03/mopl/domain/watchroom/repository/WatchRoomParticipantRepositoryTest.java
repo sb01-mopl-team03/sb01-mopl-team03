@@ -495,7 +495,7 @@ class WatchRoomParticipantRepositoryTest {
 
       WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
           .searchKeyword("er") // owner 또는 user에 포함
-          .sortBy("participantCount")
+          .sortBy("unknown")
           .direction("desc")
           .cursor(cursor)
           .size(10)
@@ -517,7 +517,7 @@ class WatchRoomParticipantRepositoryTest {
 
       WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
           .searchKeyword("use") // user에 포함
-          .sortBy("title")
+          .sortBy(null)
           .direction("DESC")
           .cursor(cursor)
           .size(9)
@@ -580,12 +580,39 @@ class WatchRoomParticipantRepositoryTest {
     }
 
     @Test
+    @DisplayName("참여자 수 오름차순 정렬, Cursor not null")
+    void whenFilteringByParticipantCountCursorAsc() {
+      //given
+      String lastValue = "1";  // 참여자 1명인 방 다음부터
+      String lastId = room0Id.toString();
+
+      Cursor cursor = new Cursor(lastValue, lastId);
+
+      WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword("시청방")
+          .sortBy("participantCount")
+          .direction("asc")
+          .cursor(cursor)
+          .size(10)
+          .build();
+
+      //when
+      List<WatchRoomContentWithParticipantCountDto> result =
+          watchRoomParticipantRepository.getAllWatchRoomContentWithHeadcountDtoPaginated(request);
+
+      //then
+      assertTrue(result.size() > 0);
+      // 참여자 수가 1명보다 많거나, 1명이면서 ID가 더 큰 방들이 나와야 함
+    }
+
+    @Test
     @DisplayName("키워드 없음, 정렬 조건 없음, cursor null")
     void whenNoKeyword() {
       //given
       Cursor cursor = new Cursor(null, null);
 
       WatchRoomSearchInternalDto request = WatchRoomSearchInternalDto.builder()
+          .searchKeyword(null)
           .direction("asc")
           .cursor(cursor)
           .size(10)

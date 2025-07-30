@@ -14,6 +14,8 @@ import team03.mopl.common.dto.Cursor;
 import team03.mopl.common.dto.CursorPageResponseDto;
 import team03.mopl.common.exception.content.ContentNotFoundException;
 import team03.mopl.common.exception.user.UserNotFoundException;
+import team03.mopl.common.exception.watchroom.UnsupportedVideoControlActionException;
+import team03.mopl.common.exception.watchroom.VideoControlPermissionDeniedException;
 import team03.mopl.common.util.CursorCodecUtil;
 import team03.mopl.domain.content.dto.ContentDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomContentWithParticipantCountDto;
@@ -28,7 +30,7 @@ import team03.mopl.domain.watchroom.dto.WatchRoomInfoDto;
 import team03.mopl.domain.watchroom.dto.WatchRoomSearchDto;
 import team03.mopl.domain.watchroom.entity.WatchRoom;
 import team03.mopl.domain.watchroom.entity.WatchRoomParticipant;
-import team03.mopl.domain.watchroom.exception.WatchRoomRoomNotFoundException;
+import team03.mopl.common.exception.watchroom.WatchRoomRoomNotFoundException;
 import team03.mopl.domain.watchroom.repository.WatchRoomMessageRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomParticipantRepository;
 import team03.mopl.domain.watchroom.repository.WatchRoomRepository;
@@ -186,14 +188,14 @@ public class WatchRoomServiceImpl implements WatchRoomService {
     //방장이 아니라면 제어 권한 없음
     if (!watchRoom.getOwner().getId().equals(user.getId())) {
       log.warn("방장이 아닌 사람이 제어 시도");
-      throw new IllegalArgumentException("방장이 아님");
+      throw new VideoControlPermissionDeniedException();
     }
 
     switch (request.videoControlAction()) {
       case PLAY -> watchRoom.play();
       case PAUSE -> watchRoom.pause(request.currentTime());
       case SEEK -> watchRoom.seekTo(request.currentTime());
-      default -> throw new IllegalArgumentException("지원하지 않는 비디오 제어");
+      default -> throw new UnsupportedVideoControlActionException();
     }
 
     WatchRoom savedWatchRoom = watchRoomRepository.save(watchRoom);
