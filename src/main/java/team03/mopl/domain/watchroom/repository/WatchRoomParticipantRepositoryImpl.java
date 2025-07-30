@@ -93,10 +93,10 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
     String likePattern = "%" + searchKeyword + "%";
 
     // 시청방 제목
-    BooleanExpression watchRoomTitleCondition = qWatchRoom.title.toLowerCase().like(likePattern);
+    BooleanExpression watchRoomTitleCondition = qWatchRoom.titleNormalized.toLowerCase().like(likePattern);
 
     // 컨텐츠 제목
-    BooleanExpression contentTitleCondition = qContent.title.toLowerCase().like(likePattern);
+    BooleanExpression contentTitleCondition = qContent.titleNormalized.toLowerCase().like(likePattern);
 
     // 방장 이름
     BooleanExpression ownerNameCondition = qWatchRoom.owner.name.toLowerCase().like(likePattern);
@@ -162,13 +162,13 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
 
     if (isDesc) {
       whereClause.and(
-          qWatchRoom.title.lt(cursorTitle)
-              .or(qWatchRoom.title.eq(cursorTitle).and(qWatchRoom.id.lt(lastId))));
+          qWatchRoom.titleNormalized.lt(cursorTitle)
+              .or(qWatchRoom.titleNormalized.eq(cursorTitle).and(qWatchRoom.id.lt(lastId))));
       return;
     }
     whereClause.and(
-        qWatchRoom.title.gt(cursorTitle)
-            .or(qWatchRoom.title.eq(cursorTitle).and(qWatchRoom.id.gt(lastId))));
+        qWatchRoom.titleNormalized.gt(cursorTitle)
+            .or(qWatchRoom.titleNormalized.eq(cursorTitle).and(qWatchRoom.id.gt(lastId))));
 
   }
 
@@ -198,7 +198,7 @@ public class WatchRoomParticipantRepositoryImpl implements WatchRoomParticipantR
 
     OrderSpecifier<?> primarySort = switch (lowerSortBy) {
       case "createdat" -> isDesc ? qWatchRoom.createdAt.desc() : qWatchRoom.createdAt.asc();
-      case "title" -> isDesc ? qWatchRoom.title.desc() : qWatchRoom.title.asc();
+      case "title" -> isDesc ? qWatchRoom.titleNormalized.desc() : qWatchRoom.titleNormalized.asc();
       default -> isDesc ? qWatchRoomParticipant.countDistinct().desc()
           : qWatchRoomParticipant.countDistinct().asc();
     };
