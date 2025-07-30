@@ -128,7 +128,7 @@ CREATE TABLE "watch_rooms"
 (
     "id"                     UUID PRIMARY KEY                  NOT NULL,
     "title"                  VARCHAR(255)                      NOT NULL,
-    "title_normalized"       VARCHAR(255)  NOT NULL,
+    "title_normalized"       VARCHAR(255) COLLATE "ko_KR.utf8" NOT NULL,
     "content_id"             UUID                              NOT NULL,
     "owner_id"               UUID                              NOT NULL,
     "created_at"             TIMESTAMP        DEFAULT now()    NOT NULL,
