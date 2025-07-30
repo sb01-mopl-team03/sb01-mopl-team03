@@ -21,4 +21,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # OpenSearch 연결 대기를 위한 스크립트 추가
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]
