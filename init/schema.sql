@@ -126,14 +126,15 @@ CREATE TABLE "follows"
 -- 채팅&시청방 테이블
 CREATE TABLE "watch_rooms"
 (
-    "id"                     UUID PRIMARY KEY               NOT NULL,
-    "title"                  VARCHAR(255)                   NOT NULL,
-    "content_id"             UUID                           NOT NULL,
-    "owner_id"               UUID                           NOT NULL,
-    "created_at"             TIMESTAMP        DEFAULT now() NOT NULL,
-    "play_time"              DOUBLE PRECISION DEFAULT 0.0   NOT NULL,
-    "is_playing"             BOOLEAN          DEFAULT FALSE NOT NULL,
-    "video_state_updated_at" TIMESTAMP        DEFAULT now() NOT NULL,
+    "id"                     UUID PRIMARY KEY                  NOT NULL,
+    "title"                  VARCHAR(255)                      NOT NULL,
+    "title_normalized"       VARCHAR(255)  NOT NULL,
+    "content_id"             UUID                              NOT NULL,
+    "owner_id"               UUID                              NOT NULL,
+    "created_at"             TIMESTAMP        DEFAULT now()    NOT NULL,
+    "play_time"              DOUBLE PRECISION DEFAULT 0.0      NOT NULL,
+    "is_playing"             BOOLEAN          DEFAULT FALSE    NOT NULL,
+    "video_state_updated_at" TIMESTAMP        DEFAULT now()    NOT NULL,
     FOREIGN KEY ("owner_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("content_id") REFERENCES "contents" ("id")
 );
