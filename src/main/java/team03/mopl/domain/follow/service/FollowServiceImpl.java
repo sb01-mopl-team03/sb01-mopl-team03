@@ -57,7 +57,7 @@ public class FollowServiceImpl implements FollowService {
 
     // 알림 전송 추가
     notificationService.sendNotification(
-        new NotificationDto(following.getId(), NotificationType.FOLLOWED,
+        new NotificationDto(followingId, NotificationType.FOLLOWED,
             follower.getName()+ "이(가) "+following.getName()+"를 팔로우 했습니다.", false));
     log.info("follow - 팔로우 성공: followerId={}, followingId={}", followerId, followingId);
   }
