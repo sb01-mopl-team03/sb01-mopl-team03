@@ -280,7 +280,7 @@ public class WatchRoomServiceImpl implements WatchRoomService {
 
     Double nowPlayTime =
         (double) Duration.between(watchRoom.getVideoStateUpdatedAt(), LocalDateTime.now())
-            .toSeconds() + watchRoom.getPlayTime();
+            .toSeconds() + watchRoom.getPlayTime() + 1.3;
 
     return WatchRoomInfoDto.builder()
         .id(watchRoom.getId())

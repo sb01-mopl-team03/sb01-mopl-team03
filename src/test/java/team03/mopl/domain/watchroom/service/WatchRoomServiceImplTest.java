@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -536,11 +537,14 @@ class WatchRoomServiceImplTest {
                 .build();
           }).toList();
 
+      LocalDateTime videoStateUpdatedAt = LocalDateTime.now();
+
       UUID chatRoomId = UUID.randomUUID();
       WatchRoom watchRoom = WatchRoom.builder()
           .id(chatRoomId)
           .title("테스트용 시청방")
           .playTime(1.0)
+          .videoStateUpdatedAt(videoStateUpdatedAt)
           .isPlaying(true)
           .owner(user)
           .content(content)
@@ -554,9 +558,13 @@ class WatchRoomServiceImplTest {
       ParticipantsInfoDto participantsInfoDto = new ParticipantsInfoDto(participantDtos,
           participantDtos.size());
 
+      Double expectedNowPlayTime =
+          (double) Duration.between(watchRoom.getVideoStateUpdatedAt(), LocalDateTime.now())
+              .toSeconds() + watchRoom.getPlayTime() + 1.3;
+
       WatchRoomInfoDto expected = WatchRoomInfoDto.builder()
           .id(chatRoomId)
-          .playTime(1.0)
+          .playTime(expectedNowPlayTime)
           .isPlaying(true)
           .content(ContentDto.from(content))
           .participantsInfoDto(participantsInfoDto)
@@ -579,7 +587,7 @@ class WatchRoomServiceImplTest {
       assertEquals(expected.id(), watchRoomInfoDto.id());
       assertEquals(expected.content().title(), watchRoomInfoDto.content().title());
       assertTrue(watchRoomInfoDto.isPlaying());
-      assertEquals(1.0, watchRoomInfoDto.playTime());
+      assertEquals(expectedNowPlayTime, watchRoomInfoDto.playTime());
       assertEquals(expected.participantsInfoDto().participantCount(),
           watchRoomInfoDto.participantsInfoDto().participantCount());
 
