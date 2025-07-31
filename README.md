@@ -145,8 +145,7 @@
 
 
 ## 프로젝트 문서
-[마무리 후 입력 필요]
-👉 [NOTION: (예민한 정보 삭제 후 링크 업로드)]
+👉 [NOTION: 모두의 플리 - 3팀](https://rightful-teacher-7d1.notion.site/03-21b79af88c5d80519dcfdd344dc082eb?source=copy_link)
 </br>
 👉 [PPT: (PPT 제작 후 업로드)]
 </br>
