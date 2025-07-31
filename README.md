@@ -92,9 +92,33 @@
 </br>
 
 ## 📁 파일 구조 [파일 구조 입력 필요]
-.. 파일 구조 입력 ..
+```
+team03.mopl 
+|-- api                     # API 인터페이스 
+|-- common                  # 공통 모듈
+|   |-- config                 # 설정 파일 (Security, Swagger 등) 
+|   |-- dto                    # 공통 DTO 
+|   |-- exception           # 예외 처리 
+|   |-- interceptor         # 인터셉터 
+|   |-- util                   # 유틸리티 
+|-- domain                     # 도메인별 비즈니스 로직 
+|   |-- admin                  # 관리자 기능 
+|   |-- auth                # 인증/인가 
+|   |-- content                # 콘텐츠 
+|   |-- curation               # 큐레이션 
+|   |-- dm                     # 다이렉트 메시지 
+|   |-- follow                 # 팔로우 
+|   |-- notification        # 알림 
+|   |-- oauth2                 # 소셜 로그인 
+|   |-- playlist               # 플레이리스트 
+|   |-- review                 # 리뷰 
+|   |-- subscription        # 구독 
+|   |-- user                   # 사용자 
+|   |-- watchroom           # 실시간 시청방 
+|-- jwt                        # JWT 인증 처리 
+|-- storage                    # 프로필 이미지 저장 (로컬/S3)
+```
 
-</br>
 </br>
 
 ## :pushpin: 팀원별 구현 기능 상세 [이미지 또는 gif 입력 필요]
