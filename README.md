@@ -6,6 +6,8 @@
 ## 🌐 구현 사이트
 👉 [[모두의 플리 접속하기](https://sb01-mopl-team03-fe.vercel.app/)]
 
+</br>
+
 ## 🎞️ 프로젝트 소개
 프로젝트 기간: 2025.06.23 ~ 2025.07.31
 
@@ -16,7 +18,6 @@
 </br> 3️⃣ 나만의 콘텐츠 플레이리스트 만들기
 
 </br>
-</br>
 
 ## :family: 팀원
 | 김경린 | 김창우 | 박유진 | 양병운 | 이유빈 :crown: |
@@ -25,7 +26,6 @@
 | [k01zero](https://github.com/k01zero) | [qwertyuiop4m](https://github.com/qwertyuiop4m)| [yudility](https://github.com/yudility) | [Yang-ByeongUn](https://github.com/Yang-ByeongUn) | [iiyubb](https://github.com/iiyubb) |
 | 콘텐츠 데이터 관리, 배포(CI/CD) | 사용자 관리 | 프론트엔드, DB, 실시간 같이 보기 | 팔로우, DM, 알림 | 콘텐츠 평가 및 큐레이팅 |
 
-</br>
 </br>
 
 ## 🚀 기술 스택
