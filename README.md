@@ -91,6 +91,13 @@
 </br>
 </br>
 
+## 시스템 아키텍처
+<img width="1594" height="788" alt="image" src="https://github.com/user-attachments/assets/7a0417b9-0519-4fb8-985e-b2aab7349a65" />
+
+
+</br>
+</br>
+
 ## 📁 파일 구조 [파일 구조 입력 필요]
 .. 파일 구조 입력 ..
 
