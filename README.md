@@ -147,7 +147,8 @@
 ## 프로젝트 문서
 👉 [NOTION: 모두의 플리 - 3팀](https://rightful-teacher-7d1.notion.site/03-21b79af88c5d80519dcfdd344dc082eb?source=copy_link)
 </br>
-👉 [PPT: (PPT 제작 후 업로드)]
+👉 [PPT: 3팀_모두의플리_발표자료.pdf](https://github.com/user-attachments/files/21523354/3._._.pdf)
+)]
 </br>
 👉 [개인 개발 리포트 (작성 후 업로드)]
     </br> - 김경린:
